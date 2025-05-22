@@ -1,6 +1,6 @@
 # Intelligent Bark Beetle Identifier (IBBI)
 
-* Wrapper for detection and/or classification of mutliple models as they get developed. 
+* Wrapper for detection and/or classification with mutliple models as they get developed. 
 
 Examples: 
 - https://github.com/Heldenkombinat/Logodetect
