@@ -1,7 +1,6 @@
 # Intelligent Bark Beetle Identifier (IBBI)
 
-* Focus on BB detection NOT classification (new repo for classification? or add later on?)
-* Wrapper for detection and/or classification. 
+* Wrapper for detection and/or classification of mutliple models as they get developed. 
 
 Examples: 
 - https://github.com/Heldenkombinat/Logodetect
