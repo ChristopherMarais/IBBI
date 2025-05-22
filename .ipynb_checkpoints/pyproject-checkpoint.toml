@@ -1,0 +1,29 @@
+[project]
+name = "ibbi"
+version = "0.1.0"
+description = "A package for bark and ambrosia beetle identification."
+authors = [
+    {name = "G. Christopher Marais"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.11.10"
+pyright = "^1.1.401"
+pytest = "^8.3.5"
+pre-commit = "^4.2.0"
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.6.14"
+jupyterlab = "^4.4.2"
+notebook = "^7.4.2"
+ipykernel = "^6.29.5"
+
