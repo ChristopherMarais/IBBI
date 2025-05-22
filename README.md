@@ -1,1 +1,1 @@
-# barkbeetle-detection-baselines
+# barkbeetle-detection
