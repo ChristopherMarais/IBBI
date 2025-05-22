@@ -1,0 +1,65 @@
+# .pre-commit-config.yaml
+
+# Set the minimum version of pre-commit that will be used
+# Usually good to keep this somewhat up-to-date
+minimum_pre_commit_version: '3.0.0'
+
+repos:
+  # == Essential Python Code Quality ==
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Find the latest tag/version on Ruff's GitHub: https://github.com/astral-sh/ruff-pre-commit/releases
+    # Your pyproject.toml has ruff = "^0.11.10", but pre-commit often uses specific tags.
+    # Let's assume a more recent ruff version for pre-commit as it's generally safe.
+    # Please verify the latest appropriate tag.
+    rev: 'v0.4.4' # Example, check for the latest stable tag
+    hooks:
+      - id: ruff # Runs the linter
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format # Runs the formatter
+
+  - repo: https://github.com/RobertCraigie/pyright-python
+    # Find the latest tag/version: https://github.com/RobertCraigie/pyright-python/releases
+    # Your pyproject.toml has pyright = "^1.1.401", use a corresponding tag
+    rev: 'v1.1.368' # Example, check for the latest stable tag
+    hooks:
+      - id: pyright
+        # If you have type stubs or other dependencies for pyright, add them here:
+        # additional_dependencies: ["types-requests", "pandas-stubs"]
+
+  # == General Pre-commit Hooks (Good to Have) ==
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0 # Check for latest tag
+    hooks:
+      - id: check-yaml # Checks YAML files for parseable syntax.
+      - id: end-of-file-fixer # Ensures files end with a newline.
+      - id: trailing-whitespace # Trims trailing whitespace.
+      - id: check-toml # Checks TOML files for parseable syntax.
+      - id: check-added-large-files # Prevents committing large files.
+      - id: check-merge-conflict # Checks for files that contain merge conflict strings.
+
+  # == Poetry specific hooks (Optional but recommended) ==
+  - repo: https://github.com/python-poetry/poetry
+    # Match your Poetry version or use a recent compatible tag
+    rev: '1.8.2' # Example, check for latest Poetry tag for hooks
+    hooks:
+      - id: poetry-check # Verifies the pyproject.toml is valid.
+      - id: poetry-lock # Ensures the lock file is consistent with pyproject.toml.
+        # args: ["--no-update"] # Uncomment if you don't want it to update the lock file automatically
+      # - id: poetry-export # Optional: if you want to keep a requirements.txt in sync
+      #   args: ["-f", "requirements.txt", "-o", "requirements.txt"]
+
+# Note on pytest: Pytest is typically run as part of your CI pipeline or manually,
+# not usually as a pre-commit hook, because tests can sometimes be long-running.
+# However, you *can* add it if you have very fast-running tests:
+#  - repo: local
+#    hooks:
+#      - id: pytest
+#        name: pytest
+#        entry: poetry run pytest
+#        language: system
+#        types: [python]
+#        pass_filenames: false # Usually pytest discovers files itself
+
+# Note on MkDocs, JupyterLab, Notebook, ipykernel:
+# These are development tools/applications and don't typically have pre-commit hooks
+# associated with their direct usage, other than general file checks (like YAML for mkdocs.yml).
