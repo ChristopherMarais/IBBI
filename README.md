@@ -10,12 +10,12 @@ Examples:
 
 # How to contribute:
 ```bash
-1. conda env create -f environment.yml
-2. conda activate IBBI
-3. cd <path/to/cloned/repository/IBBI>
-4. poetry config virtualenvs.create false --local
-5. poetry install
-6. poetry run pre-commit install
+conda env create -f environment.yml
+conda activate IBBI
+cd <path/to/cloned/repository/IBBI>
+poetry config virtualenvs.create false --local
+poetry install
+poetry run pre-commit install
 ```
 
 To add a new dependency for the IBBI package use:
