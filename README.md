@@ -1,18 +1,14 @@
 # Intelligent Bark Beetle Identifier (IBBI)
 
-* Wrapper for detection and/or classification with mutliple models as they get developed.
-
-Examples:
-- https://github.com/Heldenkombinat/Logodetect
-- https://github.com/PetervanLunteren/AddaxAI
-- https://github.com/martibosch/detectree
+* Wrapper for detection and/or classification of bark and ambrosia beetles with multiple computer vision models as they get developed.
 
 
 # How to contribute:
+Clone this repository and create a new branch for your changes:
 ```bash
+cd <path/to/cloned/repository/IBBI>
 conda env create -f environment.yml
 conda activate IBBI
-cd <path/to/cloned/repository/IBBI>
 poetry config virtualenvs.create false --local
 poetry install
 poetry run pre-commit install
