@@ -17,14 +17,14 @@ repos:
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format # Runs the formatter
 
-  - repo: https://github.com/RobertCraigie/pyright-python
-    # Find the latest tag/version: https://github.com/RobertCraigie/pyright-python/releases
-    # Your pyproject.toml has pyright = "^1.1.401", use a corresponding tag
-    rev: 'v1.1.368' # Example, check for the latest stable tag
+  - repo: local
     hooks:
-      - id: pyright
-        # If you have type stubs or other dependencies for pyright, add them here:
-        # additional_dependencies: ["types-requests", "pandas-stubs"]
+      - id: pyright-poetry
+        name: pyright (poetry)
+        entry: poetry run pyright
+        language: system
+        types: [python]
+        pass_filenames: false
 
   # == General Pre-commit Hooks (Good to Have) ==
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -47,18 +47,6 @@ repos:
         # args: ["--no-update"] # Uncomment if you don't want it to update the lock file automatically
       # - id: poetry-export # Optional: if you want to keep a requirements.txt in sync
       #   args: ["-f", "requirements.txt", "-o", "requirements.txt"]
-
-# Note on pytest: Pytest is typically run as part of your CI pipeline or manually,
-# not usually as a pre-commit hook, because tests can sometimes be long-running.
-# However, you *can* add it if you have very fast-running tests:
-#  - repo: local
-#    hooks:
-#      - id: pytest
-#        name: pytest
-#        entry: poetry run pytest
-#        language: system
-#        types: [python]
-#        pass_filenames: false # Usually pytest discovers files itself
 
 # Note on MkDocs, JupyterLab, Notebook, ipykernel:
 # These are development tools/applications and don't typically have pre-commit hooks

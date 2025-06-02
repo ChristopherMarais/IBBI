@@ -1,9 +1,8 @@
-# environment.yml
 name: IBBI
 channels:
-  - conda-forge # Add conda-forge, it's the best source for poetry
+  - conda-forge
   - defaults
 dependencies:
   - python=3.11
   - pip
-  - poetry
+  - poetry=2.1.3
