@@ -9,6 +9,8 @@ Clone this repository and create a new branch for your changes:
 cd <path/to/cloned/repository/IBBI>
 conda env create -f environment.yml
 conda activate IBBI
+conda install cudatoolkit -y
+pip install torch torchvision torchaudio
 poetry config virtualenvs.create false --local
 poetry install
 poetry run pre-commit install
