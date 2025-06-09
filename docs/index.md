@@ -15,7 +15,7 @@ IBBI addresses this challenge by providing an accessible, programmatic solution 
 ## Key Features
 
 - **Simple API:** Access powerful detection and classification models with a single function call: `ibbi.create_model()`.
-- **Pre-trained Models:** Leverages pre-trained YOLOv10 models hosted on the Hugging Face Hub for immediate use.
+- **Pre-trained Models:** Leverages pre-trained models hosted on the Hugging Face Hub for immediate use.
 - **Extensible:** Designed to easily incorporate new model architectures in the future.
 - **Research-Focused:** Aims to accelerate ecological research by automating beetle identification.
 
