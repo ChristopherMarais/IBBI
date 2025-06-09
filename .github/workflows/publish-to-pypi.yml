@@ -1,0 +1,45 @@
+name: Publish Python Package to PyPI
+
+on:
+  release:
+    types: [published] # This workflow runs ONLY when you create a new GitHub Release.
+
+jobs:
+  pypi-publish:
+    name: Build and publish package to PyPI
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/ibbi
+    permissions:
+      id-token: write # Required for trusted publishing
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetches all history for dynamic versioning from git tags
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11" # Matches your environment.yml
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      # The key change is here: Install dependencies before building.
+      # This ensures your package has a valid, installable dependency tree.
+      # It also correctly installs the poetry-dynamic-versioning plugin.
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      # The 'poetry self add' command is no longer needed.
+
+      - name: Build package
+        run: poetry build
+        # The version will be automatically set from the Git tag by the plugin
+
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # This action securely publishes the package using trusted publishing.
