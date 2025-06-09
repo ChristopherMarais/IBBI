@@ -2,7 +2,7 @@
 # Import the model definition files first.
 # This ensures that the @register_model decorator runs and populates
 # the model_registry before we try to use it.
-from .models import detection  # noqa: F401
+from .models import classification, detection  # noqa: F401
 
 # Now, import the registry that has been populated.
 from .models._registry import model_registry

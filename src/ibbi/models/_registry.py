@@ -7,7 +7,7 @@ def register_model(fn):
     # 2. A decorator function to easily add models to the registry.
 
     This function takes a model-creating function (like your
-    `yolov10x_beetle_detector` function) and adds it to the
+    `yolov10x_bb_detect_model` function) and adds it to the
     `model_registry` dictionary. The function's name becomes the key.
 
     Args:
