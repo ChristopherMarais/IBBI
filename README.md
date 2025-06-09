@@ -34,7 +34,6 @@ The IBBI package provides a powerful, modern solution to overcome these obstacle
   - [Available Models](#available-models)
   - [Model Training Workflow](#model-training-workflow)
   - [How to Contribute](#how-to-contribute)
-  - [Citing IBBI](#citing-ibbi)
   - [License](#license)
 
 ---
@@ -91,10 +90,10 @@ For a more detailed, hands-on demonstration, please see the example notebook loc
 
 The package provides a factory function `create_model()` to access the following pre-trained models from Huggingface Hub:
 
-| Model Name                 | Task             | Description                                     | Pretrained Weights Repository              | Model Size (Params) | mAP@0.5 | mAP@[.5:.95] |
-|----------------------------|------------------|-------------------------------------------------|--------------------------------------------|---------------------|---------|--------------|
-| yolov10x_bb_detect_model   | Object Detection | Detects bounding boxes of beetles in an image.  | ChristopherMarais/ibbi_yolov10_od_20250601 | 29.5M                | N/A     | N/A          |
-| yolov10x_bb_classify_model | Classification   | Classifies the species of a beetle in an image. | ChristopherMarais/ibbi_yolov10_c_20250608  | 29.5M                 | N/A     | N/A          |
+| Model Name                 | Task             | Pretrained Weights Repository              | Model Size (Params) | mAP@0.5 | mAP@[.5:.95] |
+|----------------------------|------------------|--------------------------------------------|---------------------|---------|--------------|
+| yolov10x_bb_detect_model   | Object Detection | ChristopherMarais/ibbi_yolov10_od_20250601 | 29.5M                | N/A     | N/A          |
+| yolov10x_bb_classify_model | Classification   | ChristopherMarais/ibbi_yolov10_c_20250608  | 29.5M                 | N/A     | N/A          |
 
 A detailed list of available models and their Hugging Face repositories can be found in the [ibbi_model_summary.csv](./docs/assets/data/ibbi_model_summary.csv) file.
 
@@ -108,30 +107,34 @@ The models included in this package were trained using a standardized data flow 
   <img src="./docs/assets/images/Data_flow_ibbi.png" alt="My training workflow">
 </p>
 
-**1. Data Collection & Preprocessing:**
+**1. Data Collection & Aggregation:**
 
-  * A large dataset of bark and ambrosia beetle images was aggregated from multiple sources, including field-collected samples and institutional archives.
-  * Images were cleaned to remove duplicates and low-quality samples.
+  * An initial dataset of 54,421 images was compiled from diverse sources, including field photography from [barkbeetles.info](https://www.barkbeetles.info), lab-based specimen photography, and images from iNaturalist.
+  * This aggregated dataset contained a mix of labeled and unlabeled images. Initially, 17,689 images had species-level labels, while 36,732 had no annotations.
 
-**2. Annotation:**
+**2. Annotation with Human-in-the-Loop:**
 
-  * **For Object Detection:** Bounding boxes were manually drawn around each beetle in the images.
-  * **For Classification:** Each image was labeled with the correct species name.
-  * All labels were verified by taxonomic experts to ensure accuracy.
+  * To create high-quality localization data, a zero-shot object detection model (GroundingDINO) was first used to generate preliminary bounding boxes for the beetles in the images.
+  * Crucially, these automated annotations were then manually reviewed and refined by experts to ensure their accuracy and consistency, creating a reliable ground truth for training.
 
-**3. Data Augmentation:**
+**3. Dataset Preparation and Splitting:**
 
-  * To improve model robustness and prevent overfitting, the training dataset was augmented using techniques such as random rotations, scaling, color jitter, and mosaic augmentation.
+  * A dedicated test set of 2,031 images was created by selecting images only from species with at least 50 representatives. This ensures a balanced and fair evaluation.
+  * The remaining annotated data was split into two distinct training sets based on the task:
+    * Object Detection Training Set (35,274 images): All images with verified bounding boxes (excluding the test set) were used to train the general beetle detection models. This larger dataset helps the models learn to accurately localize beetles under various conditions.
+    * Classification Training Set (11,507 images): A filtered subset containing images with both verified bounding boxes and species-level labels was used to train the fine-grained classification models.
 
-**4. Model Training:**
+**4. Model Training and Fine-Tuning:**
 
-  * The YOLOv10 architecture was used as the base for both the detection and classification models.
-  * The models were trained on high-performance GPUs using the preprocessed and augmented data. Training was monitored for convergence, and hyperparameters were tuned for optimal performance.
+  * Pre-trained model architectures were fine-tuned for each specific task:
+    * Object Detection models were trained on the larger localization dataset to become expert beetle detectors.
+    * Classification models were trained on the fully labeled dataset to specialize in identifying different beetle species.
+  * Data augmentation techniques, including random rotations, scaling, color jitter, and mosaic augmentation, were used throughout training to improve model robustness and prevent over-fitting.
 
-**5. Validation & Deployment:**
+**5. Evaluation and Deployment:**
 
-  * The trained models were evaluated on a held-out test set to measure performance metrics (e.g., mAP for detection, Accuracy for classification).
-  * The final, best-performing model weights were saved and uploaded to Hugging Face Hub, from where the `ibbi` package automatically downloads them.
+  * The performance of all trained models was rigorously measured against the held-out test set to ensure high accuracy for both detection and classification tasks.
+  * The final, best-performing model weights were saved and uploaded to Hugging Face Hub, from where the `ibbi` package automatically downloads them, making them easily accessible to researchers via a simple API.
 
 -----
 
@@ -159,7 +162,7 @@ To add new dependencies, use `poetry add <package-name>` for the main package or
 
 -----
 
-## Citing IBBI
+<!-- ## Citing IBBI
 
 If you use IBBI in your research, please cite the JOSS paper.
 
@@ -169,7 +172,7 @@ If you use IBBI in your research, please cite the JOSS paper.
 
 You can also cite the specific version of the software archive using the DOI provided by Zenodo/figshare.
 
------
+----- -->
 
 ## License
 
