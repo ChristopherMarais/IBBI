@@ -2,7 +2,7 @@ name: Publish Python Package to PyPI
 
 on:
   release:
-    types: [published] # This workflow runs ONLY when you create a new GitHub Release.
+    types: [published, prereleased] # This workflow runs ONLY when you create a new GitHub Release.
 
 jobs:
   pypi-publish:
