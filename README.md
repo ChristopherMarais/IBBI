@@ -104,7 +104,7 @@ A detailed list of available models and their Hugging Face repositories can be f
 The models included in this package were trained using a standardized data flow on a dataset of bark and ambrosia beetle images from multiple different sources to include 63 different species. A list of all the species the current set of classification models were trained on can be found in the [ibbi_species_table.csv](./docs/assets/data/ibbi_species_table.csv) file.
 
 <p align="center">
-  <img src="./docs/assets/images/Data_flow_ibbi.png" alt="My training workflow">
+  <img src="./docs/assets/images/data_flow_ibbi.png" alt="My training workflow">
 </p>
 
 **1. Data Collection & Aggregation:**
