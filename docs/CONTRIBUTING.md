@@ -17,37 +17,38 @@ There are many ways to contribute, from writing tutorials to implementing new mo
 To get started with development, please follow these steps:
 
 1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/ChristopherMarais/ibbi.git](https://github.com/ChristopherMarais/ibbi.git)
-    cd ibbi
-    ```
+```bash
+git clone [https://github.com/ChristopherMarais/ibbi.git](https://github.com/ChristopherMarais/ibbi.git)
+cd ibbi
+```
 
 2.  **Create a Conda environment:**
     We recommend using Conda to manage your environment.
-    ```bash
-    conda env create -f environment.yml
-    conda activate IBBI
-    ```
+```bash
+conda env create -f environment.yml
+conda activate IBBI
+```
 
 3.  **Install dependencies with Poetry:**
     This project uses Poetry for dependency management. The `environment.yml` file sets up Python and pip, and then we use Poetry to install the project dependencies.
-    ```bash
-    # Install PyTorch first, ensuring it matches your hardware (CPU/GPU)
-    # See [https://pytorch.org/get-started/locally/](https://pytorch.org/get-started/locally/) for commands
-    pip install torch torchvision torchaudio
 
-    # Configure Poetry to use the existing Conda environment
-    poetry config virtualenvs.create false --local
+```bash
+# Install PyTorch first, ensuring it matches your hardware (CPU/GPU)
+# See [https://pytorch.org/get-started/locally/](https://pytorch.org/get-started/locally/) for commands
+pip install torch torchvision torchaudio
 
-    # Install project dependencies
-    poetry install --with dev
-    ```
+# Configure Poetry to use the existing Conda environment
+poetry config virtualenvs.create false --local
+
+# Install project dependencies
+poetry install --with dev
+```
 
 4.  **Set up pre-commit hooks:**
     We use `pre-commit` to ensure code quality and consistent formatting.
-    ```bash
-    poetry run pre-commit install
-    ```
+```bash
+poetry run pre-commit install
+```
     The hooks will now run automatically every time you make a commit.
 
 ## Pull Request Process
@@ -60,3 +61,5 @@ To get started with development, please follow these steps:
 6.  In the pull request description, clearly describe the changes you've made and why. If it fixes an existing issue, please reference it (e.g., "Fixes #123").
 
 Thank you again for your interest in contributing!
+
+---
