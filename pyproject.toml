@@ -14,7 +14,6 @@ ultralytics = "8.3.139"
 pandas = "^2.3.0"
 numpy = "^2.2.6"
 pillow = "^11.2.1"
-ipywidgets = "^8.1.7"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.10"
@@ -28,6 +27,8 @@ isort = "^6.0.1"
 black = "^25.1.0"
 notebook = "^7.4.2"
 ipykernel = "^6.29.5"
+ipywidgets = "^8.1.7"
+mkdocstrings = "^0.29.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
