@@ -1,4 +1,4 @@
-# src/ibbi/models/detection.py
+# src/ibbi/models/classification.py
 
 import torch
 from ultralytics import YOLO
@@ -7,12 +7,11 @@ from ..utils.hub import download_from_hf_hub
 from ._registry import register_model
 
 
-class YOLOv10BeetleDetector:
+class YOLOv10BeetleClassifier:
     """
-    A wrapper class for the YOLOv10 beetle detector model.
+    A wrapper class for the YOLOv10 beetle classifier model.
 
-    This class provides a clean interface for both object detection (inference)
-    and feature extraction.
+    This class provides a clean interface for image classification.
     """
 
     def __init__(self, model_path: str):
@@ -30,9 +29,9 @@ class YOLOv10BeetleDetector:
 
     def predict(self, image, **kwargs):
         """
-        Performs object detection inference on an image.
+        Performs image classification on an image.
         """
-        print("Running object detection (predict)...")
+        print("Running image classification (predict)...")
         return self.model.predict(image, **kwargs)
 
     def extract_features(self, image, **kwargs):
@@ -48,20 +47,20 @@ class YOLOv10BeetleDetector:
 
 
 @register_model
-def yolov10x_bb_detect_model(pretrained: bool = False, **kwargs):
+def yolov10x_bb_classify_model(pretrained: bool = False, **kwargs):
     """
-    Factory function for the YOLOv10 beetle detector.
+    Factory function for the YOLOv10 beetle classifier.
 
-    This function now returns a wrapper object that can be used for both
-    inference and feature extraction.
+    This function now returns a wrapper object that can be used for
+    classification.
     """
     if pretrained:
-        repo_id = "ChristopherMarais/ibbi_yolov10_od_20250601"
+        repo_id = "ChristopherMarais/ibbi_yolov10_c_20250608"
         filename = "model.pt"
         local_weights_path = download_from_hf_hub(repo_id=repo_id, filename=filename)
 
     else:
+        # If you have a local, non-pretrained version, specify its path here.
         local_weights_path = "yolov10x.pt"
 
-    # CRITICAL CHANGE: Return an instance of our new wrapper class
-    return YOLOv10BeetleDetector(model_path=local_weights_path)
+    return YOLOv10BeetleClassifier(model_path=local_weights_path)
