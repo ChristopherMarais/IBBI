@@ -1,3 +1,12 @@
+# src/ibbi/__init__.py
+
+"""
+Main initialization file for the ibbi package.
+
+This file exposes the primary user-facing function, `create_model`, which acts as a
+factory for instantiating various beetle detection and classification models.
+"""
+
 # --- IMPORTANT ---
 # Import the model definition files first.
 # This ensures that the @register_model decorator runs and populates
@@ -13,14 +22,33 @@ def create_model(model_name: str, pretrained: bool = False, **kwargs):
     Creates a model from a name.
 
     This factory function is the main entry point for users of the package.
+    It looks up the requested model in the registry, downloads pretrained
+    weights from the Hugging Face Hub if requested, and returns an
+    instantiated model object.
 
     Args:
         model_name (str): Name of the model to create.
-        pretrained (bool): Whether to load pretrained weights.
+        pretrained (bool): Whether to load pretrained weights from the Hugging Face Hub.
+                           Defaults to False.
         **kwargs: Extra arguments to pass to the model-creating function.
 
     Returns:
-        An instance of the requested model.
+        An instance of the requested model (e.g., YOLOv10BeetleDetector or
+        YOLOv10BeetleClassifier).
+
+    Raises:
+        KeyError: If the requested `model_name` is not found in the model registry.
+
+    Example:
+        ```python
+        import ibbi
+
+        # Create a pretrained detection model
+        detector = ibbi.create_model("yolov10x_bb_detect_model", pretrained=True)
+
+        # Create a pretrained classification model
+        classifier = ibbi.create_model("yolov10x_bb_classify_model", pretrained=True)
+        ```
     """
     if model_name not in model_registry:
         available = ", ".join(model_registry.keys())

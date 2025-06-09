@@ -28,6 +28,8 @@ isort = "^6.0.1"
 black = "^25.1.0"
 notebook = "^7.4.2"
 ipykernel = "^6.29.5"
+ipywidgets = "^8.1.7"
+mkdocstrings = "^0.29.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
