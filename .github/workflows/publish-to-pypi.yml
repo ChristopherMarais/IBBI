@@ -8,11 +8,11 @@ jobs:
   pypi-publish:
     name: Build and publish package to PyPI
     runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/ibbi
-    permissions:
-      id-token: write # Required for trusted publishing
+    # environment:
+    #   name: pypi
+    #   url: https://pypi.org/p/ibbi
+    # permissions:
+    #   id-token: write # Required for trusted publishing
 
     steps:
       - name: Checkout repository
@@ -42,4 +42,7 @@ jobs:
 
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with: # <-- ADD THIS BLOCK
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
         # This action securely publishes the package using trusted publishing.
