@@ -79,3 +79,5 @@ testpaths = [
 
 [tool.poetry-dynamic-versioning]
 enable = true
+vcs = "git"
+style = "pep440"
