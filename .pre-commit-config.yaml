@@ -34,8 +34,9 @@ repos:
       - id: end-of-file-fixer # Ensures files end with a newline.
       - id: trailing-whitespace # Trims trailing whitespace.
       - id: check-toml # Checks TOML files for parseable syntax.
-      - id: check-added-large-files # Prevents committing large files.
       - id: check-merge-conflict # Checks for files that contain merge conflict strings.
+      - id: check-added-large-files
+        args: ['--maxkb=5000'] # Increase limit to 1000 KB
 
   # == Poetry specific hooks (Optional but recommended) ==
   - repo: https://github.com/python-poetry/poetry

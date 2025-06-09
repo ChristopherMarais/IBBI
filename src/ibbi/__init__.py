@@ -7,6 +7,8 @@ This file exposes the primary user-facing function, `create_model`, which acts a
 factory for instantiating various beetle detection and classification models.
 """
 
+from typing import Any, Union
+
 # --- IMPORTANT ---
 # Import the model definition files first.
 # This ensures that the @register_model decorator runs and populates
@@ -15,9 +17,14 @@ from .models import classification, detection  # noqa: F401
 
 # Now, import the registry that has been populated.
 from .models._registry import model_registry
+from .models.classification import YOLOv10BeetleClassifier
+from .models.detection import YOLOv10BeetleDetector
+
+# Define a type hint for the models that can be returned
+ModelType = Union[YOLOv10BeetleDetector, YOLOv10BeetleClassifier]
 
 
-def create_model(model_name: str, pretrained: bool = False, **kwargs):
+def create_model(model_name: str, pretrained: bool = False, **kwargs: Any) -> ModelType:
     """
     Creates a model from a name.
 
@@ -30,11 +37,11 @@ def create_model(model_name: str, pretrained: bool = False, **kwargs):
         model_name (str): Name of the model to create.
         pretrained (bool): Whether to load pretrained weights from the Hugging Face Hub.
                            Defaults to False.
-        **kwargs: Extra arguments to pass to the model-creating function.
+        **kwargs (Any): Extra arguments to pass to the model-creating function.
 
     Returns:
-        An instance of the requested model (e.g., YOLOv10BeetleDetector or
-        YOLOv10BeetleClassifier).
+        ModelType: An instance of the requested model (e.g., YOLOv10BeetleDetector or
+                   YOLOv10BeetleClassifier).
 
     Raises:
         KeyError: If the requested `model_name` is not found in the model registry.
