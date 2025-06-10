@@ -1,5 +1,5 @@
 # .github/workflows/publish-docs.yml
-name: Publish Documentation
+name: Publish Documentation MKDocs
 
 on:
   workflow_dispatch: # Allows manual triggering of the workflow
@@ -26,8 +26,11 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction # Installs mkdocs and plugins from pyproject.toml
 
+      - name: Build documentation
+        run: poetry run mkdocs build
+
       - name: Deploy documentation to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # This action runs 'mkdocs build' and deploys the 'site' directory
+          publish_dir: ./site
