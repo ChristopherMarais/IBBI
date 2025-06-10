@@ -1,0 +1,48 @@
+name: Publish Python Package to PyPI
+
+on:
+  release:
+    types: [published, prereleased]
+
+jobs:
+  pypi-publish:
+    name: Build and publish package to PyPI
+    runs-on: ubuntu-latest
+    environment:
+      name: ibbi_pypi
+      url: https://pypi.org/p/ibbi
+    permissions:
+      id-token: write # Required for trusted publishing
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      - name: Remove old build artifacts
+        run: rm -rf dist/
+
+      - name: Set version from tag
+        run: |
+          # This command takes the git tag (e.g., v0.1.0), removes the 'v' prefix,
+          # and then tells poetry to set the project version to that number.
+          VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
+          poetry version $VERSION
+
+      - name: Build package
+        run: poetry build
+
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

@@ -1,0 +1,84 @@
+[tool.poetry]
+name = "ibbi"
+version = "0.0.0"
+description = "A package for bark and ambrosia beetle identification."
+authors = ["G. Christopher Marais"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "ibbi", from = "src" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4.0"
+huggingface-hub = ">=0.32.3,<0.33.0"
+ultralytics = "8.3.139"
+pandas = "^2.3.0"
+numpy = "^2.2.6"
+pillow = "^11.2.1"
+ipywidgets = "^8.1.7"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.11.10"
+pyright = "^1.1.401"
+pytest = "^8.3.5"
+pre-commit = "^4.2.0"
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.6.14"
+jupyterlab = "^4.4.2"
+isort = "^6.0.1"
+black = "^25.1.0"
+notebook = "^7.4.2"
+ipykernel = "^6.29.5"
+ipywidgets = "^8.1.7"
+mkdocstrings = "^0.29.1"
+mkdocstrings-python = "^1.16.12"
+poetry-dynamic-versioning = "^1.8.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
+build-backend = "poetry.core.masonry.api"
+
+
+# --- Tool Configurations ---
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["A", "B", "C4", "E", "W", "F", "I", "UP", "RUF"]
+ignore = [
+    "B007",
+    "E721",
+    "RUF015",
+    "UP038",
+    "C401",
+    "C408",
+    "C409",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.lint.isort]
+known-first-party = ["ibbi"]
+
+
+[tool.pyright]
+include = ["src/ibbi", "tests"]
+exclude = ["**/node_modules", "**/__pycache__"]
+stubPath = "src/stubs"
+reportMissingImports = true
+pythonVersion = "3.11"
+
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+style = "pep440"
+format-latest = "{base}.dev{distance}"
