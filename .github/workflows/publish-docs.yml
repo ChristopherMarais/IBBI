@@ -1,0 +1,33 @@
+# .github/workflows/publish-docs.yml
+name: Publish Documentation
+
+on:
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  deploy-docs:
+    name: Build and Deploy Documentation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to push to the gh-pages branch
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Install dependencies
+        run: poetry install --no-interaction # Installs mkdocs and plugins from pyproject.toml
+
+      - name: Deploy documentation to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # This action runs 'mkdocs build' and deploys the 'site' directory
