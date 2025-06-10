@@ -34,9 +34,14 @@ jobs:
       - name: Remove old build artifacts
         run: rm -rf dist/
 
+      - name: Set version from tag
+        run: |
+          # This command takes the git tag (e.g., v0.1.0), removes the 'v' prefix,
+          # and then tells poetry to set the project version to that number.
+          VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
+          poetry version $VERSION
+
       - name: Build package
-        env:
-          POETRY_DYNAMIC_VERSIONING_BYPASS: ${{ github.ref_name }}
         run: poetry build
 
       - name: Publish package to PyPI
