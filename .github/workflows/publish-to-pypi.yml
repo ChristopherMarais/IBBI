@@ -35,6 +35,8 @@ jobs:
         run: rm -rf dist/
 
       - name: Build package
+        env:
+          POETRY_DYNAMIC_VERSIONING_BYPASS: ${{ github.ref_name }}
         run: poetry build
 
       - name: Publish package to PyPI
