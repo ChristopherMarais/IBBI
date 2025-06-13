@@ -13,18 +13,19 @@ from typing import Any, Union
 # Import the model definition files first.
 # This ensures that the @register_model decorator runs and populates
 # the model_registry before we try to use it.
-from .models import classification, detection  # noqa: F401
+from .models import classification, detection, zero_shot_detection  # noqa: F401
 
 # Now, import the registry that has been populated.
 from .models._registry import model_registry
 from .models.classification import YOLOv10BeetleClassifier
 from .models.detection import YOLOv10BeetleDetector
+from .models.zero_shot_detection import GroundingDINOModel
 
 # Import the new utility function
 from .utils.info import list_models  # noqa: F401
 
 # Define a type hint for the models that can be returned
-ModelType = Union[YOLOv10BeetleDetector, YOLOv10BeetleClassifier]
+ModelType = Union[YOLOv10BeetleDetector, YOLOv10BeetleClassifier, GroundingDINOModel]
 
 
 def create_model(model_name: str, pretrained: bool = False, **kwargs: Any) -> ModelType:
