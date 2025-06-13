@@ -79,7 +79,7 @@ Here are some visual examples of what you can do with `ibbi`.
 
 | Input Image                                        | Object Detection (`detector.predict()`)                  | Object Classification (`classifier.predict()`)            | Zero-Shot Classification (`zs_classifier.predict()`)          |
 | -------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------- |
-| ![Beetles](docs/assets/images/beetles.png) | ![Object Detection](docs/assets/images/beetles_od.png) | ![Object Classification](docs/assets/images/beetles_oc.png) | ![Zero-Shot Classification](docs/assets/images/beetles_zs_oc.png) |
+| ![Beetles](docs/assets/images/beetles.png) | ![Object Detection](docs/assets/images/beetles_od.png) | ![Object Classification](docs/assets/images/beetles_oc.png) | ![Zero-Shot Classification](docs/assets/images/beetles_zsoc.png) |
 
 ---
 
@@ -145,7 +145,7 @@ For a more detailed, hands-on demonstration, please see the example notebook loc
 
 ## Available Models
 
-The package provides a factory function `create_model()` to access pre-trained models from Hugging Face Hub. A detailed list of available models and their Hugging Face repositories can be found in the `src/ibbi/data/ibbi_model_summary.csv` file.
+The package provides a factory function `create_model()` to access pre-trained models from Hugging Face Hub. A detailed list of available models and their Hugging Face repositories can be found in the [`src/ibbi/data/ibbi_model_summary.csv`](src/ibbi/data/ibbi_model_summary.csv) file.
 
 To see a list of available models directly from your Python environment, you can run:
 
