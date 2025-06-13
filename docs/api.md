@@ -1,5 +1,5 @@
 # API Reference
 
-This page provides the auto-generated API documentation for the `ibbi` package.
+This section provides an auto-generated API reference for the `ibbi` package.
 
 ::: ibbi

@@ -1,6 +1,5 @@
 # Intelligent Bark Beetle Identifier (IBBI)
 
-<!-- [![JOSS submission](https://joss.theoj.org/papers/10.21105/joss.01234/status.svg)](https://joss.theoj.org/papers/10.21105/joss.01234) -->
 [![PyPI version](https://badge.fury.io/py/ibbi.svg)](https://badge.fury.io/py/ibbi)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -27,14 +26,60 @@ The IBBI package provides a powerful, modern solution to overcome these obstacle
 ## Table of Contents
 
 - [Intelligent Bark Beetle Identifier (IBBI)](#intelligent-bark-beetle-identifier-ibbi)
-    - [Motivation](#motivation)
+  - [Motivation](#motivation)
   - [Table of Contents](#table-of-contents)
+  - [Workflow: How the Models Were Built](#workflow-how-the-models-were-built)
+  - [Package API and Usage](#package-api-and-usage)
   - [Installation](#installation)
   - [Quick Start](#quick-start)
   - [Available Models](#available-models)
-  - [Model Training Workflow](#model-training-workflow)
   - [How to Contribute](#how-to-contribute)
   - [License](#license)
+
+---
+
+## Workflow: How the Models Were Built
+
+The models in the `ibbi` package are the result of a comprehensive data collection, annotation, and training pipeline. The following diagram illustrates the major components of this workflow.
+
+<p align="center">
+  <img src="docs/assets/images/data_flow_ibbi.png" alt="IBBI Data Flow" width="800">
+</p>
+
+1.  **Data Collection and Zero-Shot Detection:** The process begins with data collection from various sources. A zero-shot detection model is used to perform initial localization of beetles in the images. This is followed by a human-in-the-loop verification process to ensure the accuracy of the bounding box annotations. The data is then split into training and testing sets.
+
+2.  **Model Training Data Curation:** The annotated dataset is curated to create specific training sets for different models:
+    * **Object Detection Models:** All images with verified localization annotations are used to train the object detection models. This provides a large and diverse dataset for learning to accurately locate beetles.
+    * **Object Classification Models:** Only images with both localization annotations and species-level labels are used for training the classification models. Furthermore, to ensure robust training and evaluation, species with fewer than 50 images are excluded. This results in a smaller, but more precisely labeled, dataset for the fine-grained classification task.
+
+3.  **Evaluation and Deployment:**
+    * The held-out **testing data** is used to evaluate the performance of all trained models. You can view the performance metrics for each model using the `ibbi.list_models()` function.
+    * The final models are made available through the package, allowing users to easily download them and the testing dataset for their own research and applications.
+
+---
+
+## Package API and Usage
+
+The `ibbi` package is designed to be simple and intuitive. The core functionalities, inputs, and outputs are summarized in the diagram below.
+
+<p align="center">
+  <img src="docs/assets/images/ibbi_inputs_outputs.png" alt="IBBI Inputs and Outputs" width="800">
+</p>
+
+The main components of the package API are:
+
+* **Inputs**: The primary inputs are images (as file paths, URLs, or PIL/numpy objects) and the name of the desired model as a string.
+* **`model.predict()`**: This is the main prediction function. For detection models, it returns bounding boxes, and for classification models, it returns species classifications.
+* **`model.extract_features()`**: This method allows you to extract deep feature embeddings from the images, which can be used for tasks like clustering or similarity analysis.
+* **Dataset and Model Functions**: The package includes helper functions to `download_dataset()` and `list_models()`, which provides a table of all available models and their performance metrics.
+
+### Usage Examples
+
+Here are some visual examples of what you can do with `ibbi`.
+
+| Input Image                                        | Object Detection (`detector.predict()`)                  | Object Classification (`classifier.predict()`)            | Zero-Shot Classification (`zs_classifier.predict()`)          |
+| -------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------- |
+| ![Beetles](docs/assets/images/beetles.png) | ![Object Detection](docs/assets/images/beetles_od.png) | ![Object Classification](docs/assets/images/beetles_oc.png) | ![Zero-Shot Classification](docs/assets/images/beetles_zs_oc.png) |
 
 ---
 
@@ -52,9 +97,9 @@ Once PyTorch is installed, you can install the package directly from PyPI:
 
 ```bash
 pip install ibbi
-````
+```
 
------
+---
 
 ## Quick Start
 
@@ -65,7 +110,10 @@ import ibbi
 from PIL import Image
 
 # Load an image
-image = Image.open("path/to/your/beetle_image.jpg")
+# image = Image.open("path/to/your/beetle_image.jpg")
+# Or use a URL
+image = "[https://raw.githubusercontent.com/christopher-marais/IBBI/main/docs/assets/images/beetles.png](https://raw.githubusercontent.com/christopher-marais/IBBI/main/docs/assets/images/beetles.png)"
+
 
 # 1. Load a pretrained object detection model or a classification model
 detector = ibbi.create_model("yolov10x_bb_detect_model", pretrained=True)
@@ -76,21 +124,28 @@ classifier = ibbi.create_model("yolov10x_bb_classify_model", pretrained=True)
 detection_results = detector.predict(image)
 classification_results = classifier.predict(image)
 
+print("Detection Results:")
+print(detection_results)
+
+
+print("\nClassification Results:")
+print(classification_results)
+
+
 # 3. You can also extract deep features from all models for other tasks
 # The results will be a tensor of features
 features = classifier.extract_features(image)
+print(f"\nExtracted feature vector shape: {features.shape}")
 
 ```
 
-For a more detailed, hands-on demonstration, please see the example notebook located in the repository: `notebooks/example.ipynb`.
+For a more detailed, hands-on demonstration, please see the example notebook located in the repository: [`notebooks/example.ipynb`](notebooks/example.ipynb).
 
------
+---
 
 ## Available Models
 
-The package provides a factory function `create_model()` to access pre-trained models from Huggingface Hub.
-
-A detailed list of available models and their Hugging Face repositories can be found in the [ibbi_model_summary.csv](./src/ibbi/data/ibbi_model_summary.csv) file.
+The package provides a factory function `create_model()` to access pre-trained models from Hugging Face Hub. A detailed list of available models and their Hugging Face repositories can be found in the `src/ibbi/data/ibbi_model_summary.csv` file.
 
 To see a list of available models directly from your Python environment, you can run:
 
@@ -99,83 +154,12 @@ import ibbi
 ibbi.list_models()
 ```
 
------
-
-## Model Training Workflow
-
-The models included in this package were trained using a standardized data flow on a dataset of bark and ambrosia beetle images from multiple different sources to include 63 different species. A list of all the species the current set of classification models were trained on can be found in the [ibbi_species_table.csv](./docs/assets/data/ibbi_species_table.csv) file.
-
-<p align="center">
-  <img src="./docs/assets/images/data_flow_ibbi.png" alt="My training workflow">
-</p>
-
-**1. Data Collection & Aggregation:**
-
-  * An initial dataset of 54,421 images was compiled from diverse sources, including field photography from [barkbeetles.info](https://www.barkbeetles.info), lab-based specimen photography, and images from iNaturalist.
-  * This aggregated dataset contained a mix of labeled and unlabeled images. Initially, 17,689 images had species-level labels, while 36,732 had no annotations.
-
-**2. Annotation with Human-in-the-Loop:**
-
-  * To create high-quality localization data, a zero-shot object detection model (GroundingDINO) was first used to generate preliminary bounding boxes for the beetles in the images.
-  * Crucially, these automated annotations were then manually reviewed and refined by experts to ensure their accuracy and consistency, creating a reliable ground truth for training.
-
-**3. Dataset Preparation and Splitting:**
-
-  * A dedicated test set of 2,031 images was created by selecting images only from species with at least 50 representatives. This ensures a balanced and fair evaluation.
-  * The remaining annotated data was split into two distinct training sets based on the task:
-    * Object Detection Training Set (35,274 images): All images with verified bounding boxes (excluding the test set) were used to train the general beetle detection models. This larger dataset helps the models learn to accurately localize beetles under various conditions.
-    * Classification Training Set (11,507 images): A filtered subset containing images with both verified bounding boxes and species-level labels was used to train the fine-grained classification models.
-
-**4. Model Training and Fine-Tuning:**
-
-  * Pre-trained model architectures were fine-tuned for each specific task:
-    * Object Detection models were trained on the larger localization dataset to become expert beetle detectors.
-    * Classification models were trained on the fully labeled dataset to specialize in identifying different beetle species.
-  * Data augmentation techniques, including random rotations, scaling, color jitter, and mosaic augmentation, were used throughout training to improve model robustness and prevent over-fitting.
-
-**5. Evaluation and Deployment:**
-
-  * The performance of all trained models was rigorously measured against the held-out test set to ensure high accuracy for both detection and classification tasks.
-  * The final, best-performing model weights were saved and uploaded to Hugging Face Hub, from where the `ibbi` package automatically downloads them, making them easily accessible to researchers via a simple API.
-
------
+---
 
 ## How to Contribute
 
-Contributions are welcome\! If you would like to improve IBBI, please follow these steps:
-
-1.  Clone this repository.
-2.  Create a Conda environment and activate it:
-    ```bash
-    conda env create -f environment.yml
-    conda activate IBBI
-    ```
-3.  Install dependencies using Poetry and set up pre-commit hooks:
-    ```bash
-    pip install torch torchvision torchaudio # Ensure PyTorch is installed first
-    poetry config virtualenvs.create false --local
-    poetry install
-    poetry run pre-commit install
-    ```
-4.  Create a new branch for your feature or bug fix.
-5.  Commit your changes and open a pull request.
-
-To add new dependencies, use `poetry add <package-name>` for the main package or `poetry add --group dev <package-name>` for development dependencies.
-
------
-
-<!-- ## Citing IBBI
-
-If you use IBBI in your research, please cite the JOSS paper.
-
-**(Placeholder) To be added upon acceptance:**
-
-> Marais, C., et al., (2025). IBBI: Intelligent Bark Beetle Identifier. Journal of Open Source Software, X(XX), XXXX. https://www.google.com/search?q=https://doi.org/XX.XXXXX/joss.XXXXX
-
-You can also cite the specific version of the software archive using the DOI provided by Zenodo/figshare.
-
------ -->
+Contributions are welcome! If you would like to improve IBBI, please see the [Contributing Guide](docs/CONTRIBUTING.md).
 
 ## License
 
-This project is licensed under the terms of the MIT License. See the `LICENSE` file for details.
+This project is licensed under the MIT License. See the `LICENSE` file for details.
