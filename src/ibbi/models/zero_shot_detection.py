@@ -22,7 +22,7 @@ class GroundingDINOModel:
 
     def __init__(self, model_id: str = "IDEA-Research/grounding-dino-base"):
         """
-        Initializes the GroundingDINOBeetleDetector.
+        Initializes the GroundingDINOModel.
         """
         self.processor = AutoProcessor.from_pretrained(model_id)
         self.model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id)
@@ -65,16 +65,6 @@ class GroundingDINOModel:
     def extract_features(self, image, text_prompt: str = "object"):
         """
         Extracts deep features (embeddings) from the model for an image.
-
-        Note: For GroundingDINO, these features are conditioned on the text_prompt.
-        For general-purpose clustering, use a generic prompt like "object" or "beetle".
-
-        Args:
-            image: The input image.
-            text_prompt (str): A text prompt to guide feature extraction. Defaults to "object".
-
-        Returns:
-            A tensor of features if successful, otherwise None.
         """
         print(f"Extracting features from GroundingDINO using prompt: '{text_prompt}'...")
 
@@ -95,14 +85,16 @@ class GroundingDINOModel:
         with torch.no_grad():
             outputs = self.model(**inputs)
 
-        if hasattr(outputs, 'image_embeds') and outputs.image_embeds is not None:
-            # The output is of shape (batch_size, num_queries, hidden_dim).
-            # We average across the queries to get a single vector per image.
-            image_embeds = outputs.image_embeds
-            pooled_features = torch.mean(image_embeds, dim=1)
+        # FINAL FIX: Use the correct attribute name found in the debug output.
+        if hasattr(outputs, 'encoder_last_hidden_state_vision') and outputs.encoder_last_hidden_state_vision is not None:
+            vision_features = outputs.encoder_last_hidden_state_vision
+            # Pool the features across all patches to get a single vector for the image.
+            # The shape is (batch_size, num_patches, hidden_dim), so we average over dim 1.
+            pooled_features = torch.mean(vision_features, dim=1)
             return pooled_features
         else:
-            print("Could not extract image embeddings from GroundingDINO.")
+            print("Could not extract 'encoder_last_hidden_state_vision' from GroundingDINO output.")
+            print(f"Available attributes in 'outputs': {dir(outputs)}")
             return None
 
 
