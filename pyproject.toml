@@ -15,6 +15,8 @@ pandas = "^2.3.0"
 numpy = "^2.2.6"
 pillow = "^11.2.1"
 ipywidgets = "^8.1.7"
+datasets = "^3.6.0"
+transformers = "^4.52.4"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.10"
