@@ -88,14 +88,16 @@ For a more detailed, hands-on demonstration, please see the example notebook loc
 
 ## Available Models
 
-The package provides a factory function `create_model()` to access the following pre-trained models from Huggingface Hub:
+The package provides a factory function `create_model()` to access pre-trained models from Huggingface Hub.
 
-| Model Name                 | Task             | Pretrained Weights Repository              | Model Size (Params) | mAP@0.5 | mAP@[.5:.95] |
-|----------------------------|------------------|--------------------------------------------|---------------------|---------|--------------|
-| yolov10x_bb_detect_model   | Object Detection | ChristopherMarais/ibbi_yolov10_od_20250601 | 29.5M                | N/A     | N/A          |
-| yolov10x_bb_classify_model | Classification   | ChristopherMarais/ibbi_yolov10_c_20250608  | 29.5M                 | N/A     | N/A          |
+A detailed list of available models and their Hugging Face repositories can be found in the [ibbi_model_summary.csv](./src/ibbi/data/ibbi_model_summary.csv) file.
 
-A detailed list of available models and their Hugging Face repositories can be found in the [ibbi_model_summary.csv](./docs/assets/data/ibbi_model_summary.csv) file.
+To see a list of available models directly from your Python environment, you can run:
+
+```python
+import ibbi
+ibbi.list_models()
+```
 
 -----
 

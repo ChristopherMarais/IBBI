@@ -1,0 +1,4 @@
+Model Name,Task,Description,Pretrained Weights Repository,Model Size (Params),mAP@0.5,mAP@[.5:.95],Complexity,Hyperparameter Tuned,Paper
+yolov10x_bb_detect_model,Object Detection,Detects bounding boxes of beetles in an image.,https://huggingface.co/ChristopherMarais/ibbi_yolov10_od_20250601,29.5M,N/A,N/A,High,Yes,"https://arxiv.org/abs/2405.14458"
+yolov10x_bb_classify_model,Object Classification,Classifies the species of a beetle in an image.,https://huggingface.co/ChristopherMarais/ibbi_yolov10_c_20250608,29.5M,N/A,N/A,High,Yes,"https://arxiv.org/abs/2405.14458"
+grounding_dino_detect_model,Zero-shot Object Detection,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A

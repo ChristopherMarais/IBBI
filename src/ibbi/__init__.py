@@ -19,6 +19,10 @@ from .models import classification, detection  # noqa: F401
 from .models._registry import model_registry
 from .models.classification import YOLOv10BeetleClassifier
 from .models.detection import YOLOv10BeetleDetector
+from .utils.data import download_dataset  # noqa: F401
+
+# Import the new utility function
+from .utils.info import list_models  # noqa: F401
 
 # Define a type hint for the models that can be returned
 ModelType = Union[YOLOv10BeetleDetector, YOLOv10BeetleClassifier]
@@ -26,36 +30,36 @@ ModelType = Union[YOLOv10BeetleDetector, YOLOv10BeetleClassifier]
 
 def create_model(model_name: str, pretrained: bool = False, **kwargs: Any) -> ModelType:
     """
-    Creates a model from a name.
+        Creates a model from a name.
 
-    This factory function is the main entry point for users of the package.
-    It looks up the requested model in the registry, downloads pretrained
-    weights from the Hugging Face Hub if requested, and returns an
+        This factory function is the main entry point for users of the package.
+        It looks up the requested model in the registry, downloads pretrained
+        weights from the Hugging Face Hub if requested, and returns an
     instantiated model object.
 
-    Args:
-        model_name (str): Name of the model to create.
-        pretrained (bool): Whether to load pretrained weights from the Hugging Face Hub.
-                           Defaults to False.
-        **kwargs (Any): Extra arguments to pass to the model-creating function.
+        Args:
+            model_name (str): Name of the model to create.
+            pretrained (bool): Whether to load pretrained weights from the Hugging Face Hub.
+                               Defaults to False.
+            **kwargs (Any): Extra arguments to pass to the model-creating function.
 
-    Returns:
-        ModelType: An instance of the requested model (e.g., YOLOv10BeetleDetector or
-                   YOLOv10BeetleClassifier).
+        Returns:
+            ModelType: An instance of the requested model (e.g., YOLOv10BeetleDetector or
+                       YOLOv10BeetleClassifier).
 
-    Raises:
-        KeyError: If the requested `model_name` is not found in the model registry.
+        Raises:
+            KeyError: If the requested `model_name` is not found in the model registry.
 
-    Example:
-        ```python
-        import ibbi
+        Example:
+            ```python
+            import ibbi
 
-        # Create a pretrained detection model
-        detector = ibbi.create_model("yolov10x_bb_detect_model", pretrained=True)
+            # Create a pretrained detection model
+            detector = ibbi.create_model("yolov10x_bb_detect_model", pretrained=True)
 
-        # Create a pretrained classification model
-        classifier = ibbi.create_model("yolov10x_bb_classify_model", pretrained=True)
-        ```
+            # Create a pretrained classification model
+            classifier = ibbi.create_model("yolov10x_bb_classify_model", pretrained=True)
+            ```
     """
     if model_name not in model_registry:
         available = ", ".join(model_registry.keys())
