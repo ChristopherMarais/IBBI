@@ -92,7 +92,7 @@ def yolov10x_bb_detect_model(pretrained: bool = False, **kwargs):
         YOLOv10BeetleDetector: An instance of the detector class.
     """
     if pretrained:
-        repo_id = "ChristopherMarais/ibbi_yolov10_od_20250601"
+        repo_id = "IBBI-bio/ibbi_yolov10_od"
         filename = "model.pt"
         local_weights_path = download_from_hf_hub(repo_id=repo_id, filename=filename)
     else:

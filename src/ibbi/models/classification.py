@@ -91,7 +91,7 @@ def yolov10x_bb_classify_model(pretrained: bool = False, **kwargs):
         YOLOv10BeetleClassifier: An instance of the classifier class.
     """
     if pretrained:
-        repo_id = "ChristopherMarais/ibbi_yolov10_c_20250608"
+        repo_id = "IBBI-bio/ibbi_yolov10_oc"
         filename = "model.pt"
         local_weights_path = download_from_hf_hub(repo_id=repo_id, filename=filename)
     else:

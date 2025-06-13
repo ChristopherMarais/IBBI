@@ -19,7 +19,6 @@ from .models import classification, detection  # noqa: F401
 from .models._registry import model_registry
 from .models.classification import YOLOv10BeetleClassifier
 from .models.detection import YOLOv10BeetleDetector
-from .utils.data import download_dataset  # noqa: F401
 
 # Import the new utility function
 from .utils.info import list_models  # noqa: F401
