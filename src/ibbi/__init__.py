@@ -2,30 +2,46 @@
 
 """
 Main initialization file for the ibbi package.
-
-This file exposes the primary user-facing function, `create_model`, which acts as a
-factory for instantiating various beetle detection and classification models.
 """
 
 from typing import Any, Union
 
-# --- IMPORTANT ---
-# Import the model definition files first.
-# This ensures that the @register_model decorator runs and populates
-# the model_registry before we try to use it.
-from .models import classification, detection, zero_shot_detection  # noqa: F401
+# Import model modules to ensure registry is populated
+from .models import (
+    classification,  # noqa: F401
+    detection,  # noqa: F401
+    zero_shot_detection,  # noqa: F401
+)
 
-# Now, import the registry that has been populated.
+# Import the populated registry
 from .models._registry import model_registry
-from .models.classification import YOLOv10BeetleClassifier
-from .models.detection import YOLOv10BeetleDetector
+
+# Import all model classes for type hinting
+from .models.classification import (
+    RTDETRBeetleClassifier,
+    YOLOBeetleClassifier,
+    YOLOEBeetleClassifier,
+)
+from .models.detection import (
+    RTDETRBeetleDetector,
+    YOLOBeetleDetector,
+    YOLOEBeetleDetector,
+    YOLOWorldBeetleDetector,
+)
 from .models.zero_shot_detection import GroundingDINOModel
+from .utils.info import list_models
 
-# Import the new utility function
-from .utils.info import list_models  # noqa: F401
-
-# Define a type hint for the models that can be returned
-ModelType = Union[YOLOv10BeetleDetector, YOLOv10BeetleClassifier, GroundingDINOModel]
+# Define a type hint for all possible model classes
+ModelType = Union[
+    YOLOBeetleDetector,
+    YOLOBeetleClassifier,
+    GroundingDINOModel,
+    RTDETRBeetleDetector,
+    RTDETRBeetleClassifier,
+    YOLOWorldBeetleDetector,
+    YOLOEBeetleDetector,
+    YOLOEBeetleClassifier,
+]
 
 
 def create_model(model_name: str, pretrained: bool = False, **kwargs: Any) -> ModelType:
@@ -70,3 +86,10 @@ def create_model(model_name: str, pretrained: bool = False, **kwargs: Any) -> Mo
     model = model_factory(pretrained=pretrained, **kwargs)
 
     return model
+
+
+__all__ = [
+    "create_model",
+    "list_models",
+    "ModelType",
+]
