@@ -83,7 +83,7 @@ ibbi.list_models()
 
 # 2. Choose and load a pre-trained model by name
 # For this example, we'll use a classification model
-model_name = "yolov10x_bb_classify_model"
+model_name = "yolov10x_bb_multi_class_detect_model"
 model = ibbi.create_model(model_name, pretrained=True)
 
 # 3. Prepare an image (from path, URL, or PIL/Numpy object)

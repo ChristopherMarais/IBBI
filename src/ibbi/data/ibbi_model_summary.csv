@@ -5,8 +5,8 @@ rtdetrx_bb_detect_model,Single-class Object Detection,https://huggingface.co/IBB
 yolov9e_bb_detect_model,Single-class Object Detection,https://huggingface.co/IBBI-bio/ibbi_yolov9_od,58.1M,FALSE,https://arxiv.org/abs/2402.13616,0.731,0.971,0.902,0.958,0.929,5.8,3
 yolov11x_bb_detect_model,Single-class Object Detection,https://huggingface.co/IBBI-bio/ibbi_yolov11_od,56.9M,FALSE,https://www.arxiv.org/abs/2410.17725,0.767,0.967,0.892,0.935,0.913,4,3
 yolov8x_bb_detect_model,Single-class Object Detection,https://huggingface.co/IBBI-bio/ibbi_yolov8_od,68.2M,FALSE,https://arxiv.org/abs/2408.15857,0.697,0.966,0.885,0.951,0.917,4.1,3
-yolov10x_bb_classify_model,Multi-class Object Detection,https://huggingface.co/IBBI-bio/ibbi_yolov10_oc,29.5M,TRUE,https://arxiv.org/abs/2405.14458,0.913,0.922,0.852,0.727,0.785,4.2,100
-rtdetrx_bb_classify_model,Multi-class Object Detection,https://huggingface.co/IBBI-bio/ibbi_rtdetr_oc,76M,FALSE,https://arxiv.org/abs/2304.08069,0.024,0.037,N/A,N/A,N/A,12.3,3
-yolov9e_bb_classify_model,Multi-class Object Detection,https://huggingface.co/IBBI-bio/ibbi_yolov9_oc,58.1M,FALSE,https://arxiv.org/abs/2402.13616,N/A,N/A,N/A,N/A,N/A,5.8,3
-yolov11x_bb_classify_model,Multi-class Object Detection,https://huggingface.co/IBBI-bio/ibbi_yolov11_oc,56.9M,FALSE,https://www.arxiv.org/abs/2410.17725,N/A,N/A,N/A,N/A,N/A,4,3
-yolov8x_bb_classify_model,Multi-class Object Detection,https://huggingface.co/IBBI-bio/ibbi_yolov8_oc,68.2M,FALSE,https://arxiv.org/abs/2408.15857,N/A,N/A,N/A,N/A,N/A,4.1,3
+yolov10x_bb_multi_class_detect_model,Multi-class Object Detection,https://huggingface.co/IBBI-bio/ibbi_yolov10_oc,29.5M,TRUE,https://arxiv.org/abs/2405.14458,0.913,0.922,0.852,0.727,0.785,4.2,100
+rtdetrx_bb_multi_class_detect_model,Multi-class Object Detection,https://huggingface.co/IBBI-bio/ibbi_rtdetr_oc,76M,FALSE,https://arxiv.org/abs/2304.08069,0.024,0.037,N/A,N/A,N/A,12.3,3
+yolov9e_bb_multi_class_detect_model,Multi-class Object Detection,https://huggingface.co/IBBI-bio/ibbi_yolov9_oc,58.1M,FALSE,https://arxiv.org/abs/2402.13616,N/A,N/A,N/A,N/A,N/A,5.8,3
+yolov11x_bb_multi_class_detect_model,Multi-class Object Detection,https://huggingface.co/IBBI-bio/ibbi_yolov11_oc,56.9M,FALSE,https://www.arxiv.org/abs/2410.17725,N/A,N/A,N/A,N/A,N/A,4,3
+yolov8x_bb_multi_class_detect_model,Multi-class Object Detection,https://huggingface.co/IBBI-bio/ibbi_yolov8_oc,68.2M,FALSE,https://arxiv.org/abs/2408.15857,N/A,N/A,N/A,N/A,N/A,4.1,3
