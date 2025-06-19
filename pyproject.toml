@@ -5,6 +5,8 @@ description = "A package for bark and ambrosia beetle identification."
 authors = ["G. Christopher Marais"]
 license = "MIT"
 readme = "README.md"
+documentation = "https://gcmarais.com/IBBI/"
+repository = "https://github.com/ChristopherMarais/IBBI"
 packages = [{ include = "ibbi", from = "src" }]
 
 [tool.poetry.dependencies]
@@ -87,4 +89,4 @@ testpaths = [
 enable = true
 vcs = "git"
 style = "pep440"
-format-latest = "{base}.dev{distance}"
+# format-latest = "{base}.dev{distance}"
