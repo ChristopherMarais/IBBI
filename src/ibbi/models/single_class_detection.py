@@ -1,7 +1,7 @@
 # src/ibbi/models/detection.py
 
 """
-Beetle detection models.
+Single-class beetle object detection models.
 """
 
 import torch
@@ -13,8 +13,8 @@ from ._registry import register_model
 # --- Base Classes for different architectures ---
 
 
-class YOLOBeetleDetector:
-    """A wrapper class for YOLO beetle detection models."""
+class YOLOSingleClassBeetleDetector:
+    """A wrapper class for single-class YOLO beetle detection models."""
 
     def __init__(self, model_path: str):
         self.model = YOLO(model_path)
@@ -34,8 +34,8 @@ class YOLOBeetleDetector:
         return self.classes
 
 
-class RTDETRBeetleDetector:
-    """A wrapper class for RT-DETR beetle detection models."""
+class RTDETRSingleClassBeetleDetector:
+    """A wrapper class for single-class RT-DETR beetle detection models."""
 
     def __init__(self, model_path: str):
         self.model = RTDETR(model_path)
@@ -55,8 +55,8 @@ class RTDETRBeetleDetector:
         return self.classes
 
 
-class YOLOWorldBeetleDetector:
-    """A wrapper class for YOLO-World beetle detection models."""
+class YOLOWorldSingleClassBeetleDetector:
+    """A wrapper class for single-class YOLO-World beetle detection models."""
 
     def __init__(self, model_path: str):
         self.model = YOLOWorld(model_path)
@@ -76,8 +76,8 @@ class YOLOWorldBeetleDetector:
         return self.classes
 
 
-class YOLOEBeetleDetector:
-    """A wrapper class for YOLOE beetle detection models."""
+class YOLOESingleClassBeetleDetector:
+    """A wrapper class for single-class YOLOE beetle detection models."""
 
     def __init__(self, model_path: str):
         self.model = YOLOE(model_path)
@@ -108,7 +108,7 @@ def yolov10x_bb_detect_model(pretrained: bool = False, **kwargs):
         local_weights_path = download_from_hf_hub(repo_id=repo_id, filename=filename)
     else:
         local_weights_path = "yolov10x.pt"
-    return YOLOBeetleDetector(model_path=local_weights_path)
+    return YOLOSingleClassBeetleDetector(model_path=local_weights_path)
 
 
 @register_model
@@ -119,7 +119,7 @@ def yolov8x_bb_detect_model(pretrained: bool = False, **kwargs):
         local_weights_path = download_from_hf_hub(repo_id=repo_id, filename=filename)
     else:
         local_weights_path = "yolov8x.pt"
-    return YOLOBeetleDetector(model_path=local_weights_path)
+    return YOLOSingleClassBeetleDetector(model_path=local_weights_path)
 
 
 @register_model
@@ -130,7 +130,7 @@ def yolov9e_bb_detect_model(pretrained: bool = False, **kwargs):
         local_weights_path = download_from_hf_hub(repo_id=repo_id, filename=filename)
     else:
         local_weights_path = "yolov9e.pt"
-    return YOLOBeetleDetector(model_path=local_weights_path)
+    return YOLOSingleClassBeetleDetector(model_path=local_weights_path)
 
 
 @register_model
@@ -141,7 +141,7 @@ def yolov11x_bb_detect_model(pretrained: bool = False, **kwargs):
         local_weights_path = download_from_hf_hub(repo_id=repo_id, filename=filename)
     else:
         local_weights_path = "yolo11x.pt"
-    return YOLOBeetleDetector(model_path=local_weights_path)
+    return YOLOSingleClassBeetleDetector(model_path=local_weights_path)
 
 
 @register_model
@@ -152,7 +152,7 @@ def yolov12x_bb_detect_model(pretrained: bool = False, **kwargs):
         local_weights_path = download_from_hf_hub(repo_id=repo_id, filename=filename)
     else:
         local_weights_path = "yolo12x.pt"
-    return YOLOBeetleDetector(model_path=local_weights_path)
+    return YOLOSingleClassBeetleDetector(model_path=local_weights_path)
 
 
 @register_model
@@ -163,16 +163,16 @@ def rtdetrx_bb_detect_model(pretrained: bool = False, **kwargs):
         local_weights_path = download_from_hf_hub(repo_id=repo_id, filename=filename)
     else:
         local_weights_path = "rtdetr-x.pt"
-    return RTDETRBeetleDetector(model_path=local_weights_path)
+    return RTDETRSingleClassBeetleDetector(model_path=local_weights_path)
 
 
 @register_model
 def yoloworldv2_bb_detect_model(pretrained: bool = False, **kwargs):
     local_weights_path = "yolov8x-worldv2.pt"
-    return YOLOWorldBeetleDetector(model_path=local_weights_path)
+    return YOLOWorldSingleClassBeetleDetector(model_path=local_weights_path)
 
 
 @register_model
 def yoloe11l_seg_bb_detect_model(pretrained: bool = False, **kwargs):
     local_weights_path = "yoloe-11l-seg.pt"
-    return YOLOEBeetleDetector(model_path=local_weights_path)
+    return YOLOESingleClassBeetleDetector(model_path=local_weights_path)

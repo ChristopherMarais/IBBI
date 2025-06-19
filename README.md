@@ -26,10 +26,11 @@ The IBBI package provides a powerful, modern solution to overcome these obstacle
 ## Table of Contents
 
 - [Intelligent Bark Beetle Identifier (IBBI)](#intelligent-bark-beetle-identifier-ibbi)
-  - [Motivation](#motivation)
+    - [Motivation](#motivation)
   - [Table of Contents](#table-of-contents)
   - [Workflow: How the Models Were Built](#workflow-how-the-models-were-built)
   - [Package API and Usage](#package-api-and-usage)
+    - [Usage Examples](#usage-examples)
   - [Installation](#installation)
   - [Quick Start](#quick-start)
   - [Available Models](#available-models)
@@ -49,8 +50,8 @@ The models in the `ibbi` package are the result of a comprehensive data collecti
 1.  **Data Collection and Zero-Shot Detection:** The process begins with data collection from various sources. A zero-shot detection model is used to perform initial localization of beetles in the images. This is followed by a human-in-the-loop verification process to ensure the accuracy of the bounding box annotations. The data is then split into training and testing sets.
 
 2.  **Model Training Data Curation:** The annotated dataset is curated to create specific training sets for different models:
-    * **Object Detection Models:** All images with verified localization annotations are used to train the object detection models. This provides a large and diverse dataset for learning to accurately locate beetles.
-    * **Object Classification Models:** Only images with both localization annotations and species-level labels are used for training the classification models. Furthermore, to ensure robust training and evaluation, species with fewer than 50 images are excluded. This results in a smaller, but more precisely labeled, dataset for the fine-grained classification task.
+    * **Single-class Object Detection Models:** All images with verified localization annotations are used to train the object detection models. This provides a large and diverse dataset for learning to accurately locate beetles.
+    * **Multi-class Object Detection Models:** Only images with both localization annotations and species-level labels are used for training the classification models. Furthermore, to ensure robust training and evaluation, species with fewer than 50 images are excluded. This results in a smaller, but more precisely labeled, dataset for the fine-grained classification task.
 
 3.  **Evaluation and Deployment:**
     * The held-out **testing data** is used to evaluate the performance of all trained models. You can view the performance metrics for each model using the `ibbi.list_models()` function.
