@@ -17,20 +17,36 @@ logger = logging.getLogger(__name__)
 
 def get_background_images(dataset: Dataset, num_samples: int) -> Tuple[np.ndarray, Sequence[Dict[str, Any]]]:
     """
-    Get a sample of background images from the dataset.
+    Get a sample of background images from the dataset, resizing them to a consistent shape.
     """
     samples = dataset.shuffle().select(range(num_samples))
-    images = [sample["image"].convert("RGB") for sample in samples]  # type: ignore
-    return np.array(images), [dict(s) for s in samples]
+    images_pil = [sample["image"].convert("RGB") for sample in samples]  # type: ignore
+
+    if not images_pil:
+        return np.array([]), []
+
+    # Use the size of the first image as the target size for all others
+    target_size = images_pil[0].size
+    images_resized = [img.resize(target_size) for img in images_pil]
+
+    return np.array(images_resized), [dict(s) for s in samples]
 
 
 def get_example_images(dataset: Dataset, num_samples: int) -> Tuple[np.ndarray, Sequence[Dict[str, Any]]]:
     """
-    Get a sample of example images from the dataset for explanation.
+    Get a sample of example images from the dataset for explanation, resizing them to a consistent shape.
     """
     samples = dataset.shuffle().select(range(num_samples))
-    images = [sample["image"].convert("RGB") for sample in samples]  # type: ignore
-    return np.array(images), [dict(s) for s in samples]
+    images_pil = [sample["image"].convert("RGB") for sample in samples]  # type: ignore
+
+    if not images_pil:
+        return np.array([]), []
+
+    # Use the size of the first image as the target size for all others
+    target_size = images_pil[0].size
+    images_resized = [img.resize(target_size) for img in images_pil]
+
+    return np.array(images_resized), [dict(s) for s in samples]
 
 
 def _prediction_wrapper(model: ModelType, text_prompt: Optional[str] = None) -> Callable:
@@ -102,7 +118,16 @@ def explain_model(
     logger.info("Starting SHAP explanation generation...")
 
     background_np, _ = get_background_images(background_dataset, num_background_samples)
+
+    # Ensure background images were actually loaded before proceeding
+    if background_np.size == 0:
+        raise ValueError("Background dataset is empty or could not be loaded.")
+
     images_to_explain_np, _ = get_example_images(explain_dataset, num_explain_samples)
+
+    # Ensure explanation images were actually loaded
+    if images_to_explain_np.size == 0:
+        raise ValueError("Explanation dataset is empty or could not be loaded.")
 
     prediction_fn = _prediction_wrapper(model, text_prompt=text_prompt)
 
