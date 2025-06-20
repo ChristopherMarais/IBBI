@@ -72,7 +72,7 @@ The main components of the package API are:
 * **Inputs**: The primary inputs are images (as file paths, URLs, or PIL/numpy objects) and the name of the desired model as a string.
 * **`model.predict()`**: This is the main prediction function. For detection models, it returns bounding boxes, and for classification models, it returns species classifications.
 * **`model.extract_features()`**: This method allows you to extract deep feature embeddings from the images, which can be used for tasks like clustering or similarity analysis.
-* **Dataset and Model Functions**: The package includes helper functions to `download_dataset()` and `list_models()`, which provides a table of all available models and their performance metrics.
+* **Dataset and Model Functions**: The package includes helper functions to `get_dataset()` and `list_models()`, which provides a table of all available models and their performance metrics.
 
 ### Usage Examples
 

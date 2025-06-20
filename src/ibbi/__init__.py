@@ -4,10 +4,12 @@
 Main initialization file for the ibbi package.
 """
 
-from typing import Any, Union
+from typing import Any
 
 # Import model modules to ensure registry is populated
+# --- Import ModelType from its new location ---
 from .models import (
+    ModelType,
     multi_class_detection,  # noqa: F401
     single_class_detection,  # noqa: F401
     zero_shot_detection,  # noqa: F401
@@ -15,33 +17,11 @@ from .models import (
 
 # Import the populated registry
 from .models._registry import model_registry
+from .utils.data import get_dataset
 
-# Import all model classes for type hinting
-from .models.multi_class_detection import (
-    RTDETRBeetleMultiClassDetector,
-    YOLOBeetleMultiClassDetector,
-    YOLOEBeetleMultiClassDetector,
-)
-from .models.single_class_detection import (
-    RTDETRSingleClassBeetleDetector,
-    YOLOESingleClassBeetleDetector,
-    YOLOSingleClassBeetleDetector,
-    YOLOWorldSingleClassBeetleDetector,
-)
-from .models.zero_shot_detection import GroundingDINOModel
+# --- Top-level function imports ---
 from .utils.info import list_models
-
-# Define a type hint for all possible model classes
-ModelType = Union[
-    YOLOSingleClassBeetleDetector,
-    YOLOBeetleMultiClassDetector,
-    GroundingDINOModel,
-    RTDETRSingleClassBeetleDetector,
-    RTDETRBeetleMultiClassDetector,
-    YOLOWorldSingleClassBeetleDetector,
-    YOLOESingleClassBeetleDetector,
-    YOLOEBeetleMultiClassDetector,
-]
+from .xai.shap import explain_model
 
 
 def create_model(model_name: str, pretrained: bool = False, **kwargs: Any) -> ModelType:
@@ -91,5 +71,7 @@ def create_model(model_name: str, pretrained: bool = False, **kwargs: Any) -> Mo
 __all__ = [
     "create_model",
     "list_models",
+    "get_dataset",
+    "explain_model",
     "ModelType",
 ]
