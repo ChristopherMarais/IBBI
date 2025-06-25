@@ -21,7 +21,7 @@ from .utils.data import get_dataset
 
 # --- Top-level function imports ---
 from .utils.info import list_models
-from .xai.shap import explain_model
+from .xai.shap import explain_model, plot_explanations
 
 
 def create_model(model_name: str, pretrained: bool = False, **kwargs: Any) -> ModelType:
@@ -74,4 +74,5 @@ __all__ = [
     "get_dataset",
     "explain_model",
     "ModelType",
+    "plot_explanations",
 ]

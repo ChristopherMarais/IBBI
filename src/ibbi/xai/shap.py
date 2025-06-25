@@ -1,159 +1,138 @@
 # src/ibbi/xai/shap.py
 
-import logging
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+"""
+SHAP-based model explainability for IBBI models.
+"""
 
+from typing import Callable, Optional
+
+import matplotlib.pyplot as plt
 import numpy as np
 import shap
-from datasets import Dataset
-from PIL import Image as PILImage
+from PIL import Image
 
-from ibbi.models import GroundingDINOModel, ModelType
-from ibbi.utils.hub import get_model_config_from_hub
-
-# --- Setup logging ---
-logger = logging.getLogger(__name__)
+# Import specific model types to handle them differently
+from ..models import ModelType
+from ..models.zero_shot_detection import GroundingDINOModel
 
 
-def get_background_images(dataset: Dataset, num_samples: int) -> Tuple[np.ndarray, Sequence[Dict[str, Any]]]:
-    """
-    Get a sample of background images from the dataset, resizing them to a consistent shape.
-    """
-    samples = dataset.shuffle().select(range(num_samples))
-    images_pil = [sample["image"].convert("RGB") for sample in samples]  # type: ignore
-
-    if not images_pil:
-        return np.array([]), []
-
-    # Use the size of the first image as the target size for all others
-    target_size = images_pil[0].size
-    images_resized = [img.resize(target_size) for img in images_pil]
-
-    return np.array(images_resized), [dict(s) for s in samples]
-
-
-def get_example_images(dataset: Dataset, num_samples: int) -> Tuple[np.ndarray, Sequence[Dict[str, Any]]]:
-    """
-    Get a sample of example images from the dataset for explanation, resizing them to a consistent shape.
-    """
-    samples = dataset.shuffle().select(range(num_samples))
-    images_pil = [sample["image"].convert("RGB") for sample in samples]  # type: ignore
-
-    if not images_pil:
-        return np.array([]), []
-
-    # Use the size of the first image as the target size for all others
-    target_size = images_pil[0].size
-    images_resized = [img.resize(target_size) for img in images_pil]
-
-    return np.array(images_resized), [dict(s) for s in samples]
+def _prepare_image_for_shap(image_array: np.ndarray) -> np.ndarray:
+    if image_array.max() > 1.0:
+        image_array = image_array.astype(np.float32) / 255.0
+    return image_array
 
 
 def _prediction_wrapper(model: ModelType, text_prompt: Optional[str] = None) -> Callable:
-    """
-    Creates a prediction function that is compatible with the SHAP explainer.
-    """
-
     def predict(image_array: np.ndarray) -> np.ndarray:
-        images = [PILImage.fromarray(image) for image in image_array]
-        predictions: List[np.ndarray] = []
-
+        # Handle GroundingDINOModel which has a different API
         if isinstance(model, GroundingDINOModel):
-            if text_prompt is None:
-                raise ValueError("text_prompt cannot be None for GroundingDINOModel")
-            dino_classes = [s.strip() for s in text_prompt.split(".")]
-            dino_num_classes = len(dino_classes)
-            results = model.predict(images, text_prompt=text_prompt)
+            if not text_prompt:
+                raise ValueError("A 'text_prompt' is required for explaining a GroundingDINOModel.")
+            # For zero-shot models, the "class" is the text prompt itself
+            class_names = [text_prompt]
+            num_classes = 1
+            predictions = np.zeros((image_array.shape[0], num_classes))
+            images_to_predict = [Image.fromarray((img * 255).astype(np.uint8)) for img in image_array]
 
-            for res in results:
-                scores = np.zeros(dino_num_classes)
-                if res and res.confidence is not None and len(res.confidence) > 0:
-                    if res.labels is not None:
-                        for i, label_str in enumerate(res.labels):
-                            try:
-                                label_idx = dino_classes.index(label_str)
-                                scores[label_idx] = max(scores[label_idx], res.confidence[i])
-                            except ValueError:
-                                continue
-                predictions.append(scores)
+            # Call predict without 'verbose' and with 'text_prompt'
+            results = [model.predict(img, text_prompt=text_prompt) for img in images_to_predict]
 
-        else:  # Handle other YOLO-based models
-            model_name = getattr(model.model, "name", None)
-            if not isinstance(model_name, str):
-                raise ValueError("Could not determine model name for config lookup.")
-
-            config = get_model_config_from_hub(model_name)
-            id2label = config.get("id2label", {})
-            class_names = [id2label[str(i)] for i in sorted(int(k) for k in id2label.keys())]
+            for i, res in enumerate(results):
+                # GroundingDINO returns a dictionary with scores
+                if res["scores"].nelement() > 0:
+                    predictions[i, 0] = res["scores"].max().item()
+        else:
+            # This logic works for the other detection models
+            class_names = model.get_classes()
             num_classes = len(class_names)
-            results = model.predict(images, verbose=False)
-
-            for res in results:
-                scores = np.zeros(num_classes)
-                if res.boxes is not None and len(res.boxes) > 0:
+            predictions = np.zeros((image_array.shape[0], num_classes))
+            images_to_predict = [Image.fromarray((img * 255).astype(np.uint8)) for img in image_array]
+            results = model.predict(images_to_predict, verbose=False)
+            for i, res in enumerate(results):
+                if hasattr(res, "boxes") and res.boxes is not None:
                     for box in res.boxes:
                         class_idx = int(box.cls)
-                        if class_idx < num_classes:
-                            conf_value = float(box.conf.item())
-                            scores[class_idx] = max(scores[class_idx], conf_value)
-                predictions.append(scores)
-
-        return np.array(predictions)
+                        confidence = box.conf.item()
+                        predictions[i, class_idx] = max(predictions[i, class_idx], confidence)
+        return predictions
 
     return predict
 
 
 def explain_model(
     model: ModelType,
-    background_dataset: Dataset,
-    explain_dataset: Dataset,
-    num_background_samples: int = 10,
-    num_explain_samples: int = 3,
-    max_evals: int = 500,
+    explain_dataset: list,
+    background_dataset: list,
+    num_explain_samples: int,
+    num_background_samples: int,
+    max_evals: int = 1000,
+    batch_size: int = 50,
+    image_size: tuple = (640, 640),
     text_prompt: Optional[str] = None,
 ) -> shap.Explanation:
     """
     Generates SHAP explanations for a given model.
+    This function is computationally intensive.
     """
-    logger.info("Starting SHAP explanation generation...")
-
-    background_np, _ = get_background_images(background_dataset, num_background_samples)
-
-    # Ensure background images were actually loaded before proceeding
-    if background_np.size == 0:
-        raise ValueError("Background dataset is empty or could not be loaded.")
-
-    images_to_explain_np, _ = get_example_images(explain_dataset, num_explain_samples)
-
-    # Ensure explanation images were actually loaded
-    if images_to_explain_np.size == 0:
-        raise ValueError("Explanation dataset is empty or could not be loaded.")
-
     prediction_fn = _prediction_wrapper(model, text_prompt=text_prompt)
 
-    masker = shap.maskers.Image("inpaint_telea", background_np[0].shape)  # type: ignore
-
+    # Get class names based on the model type
     if isinstance(model, GroundingDINOModel):
-        if text_prompt is None:
-            raise ValueError("text_prompt is required for explaining GroundingDINOModel")
-        output_names = [s.strip() for s in text_prompt.split(".")]
+        if not text_prompt:
+            raise ValueError("A 'text_prompt' is required for explaining a GroundingDINOModel.")
+        output_names = [text_prompt]
     else:
-        model_name = getattr(model.model, "name", None)
-        if not isinstance(model_name, str):
-            raise ValueError("Could not determine model name for config lookup.")
+        output_names = model.get_classes()
 
-        config = get_model_config_from_hub(model_name)
-        id2label = config.get("id2label", {})
-        output_names = [id2label[str(i)] for i in sorted(int(k) for k in id2label.keys())]
+    images_to_explain_pil = [explain_dataset[i]["image"].resize(image_size) for i in range(num_explain_samples)]
+    images_to_explain = [np.array(img) for img in images_to_explain_pil]
+    images_to_explain_norm = [_prepare_image_for_shap(img) for img in images_to_explain]
+    images_to_explain_array = np.array(images_to_explain_norm)
 
+    # FIX: Suppress false positive pyright error for this line.
+    masker = shap.maskers.Image("blur(128,128)", shape=images_to_explain_array[0].shape)  # type: ignore
     explainer = shap.Explainer(prediction_fn, masker, output_names=output_names)
 
-    logger.info(f"Generating SHAP values with max_evals={max_evals}. This may take a while...")
-    shap_values = explainer(
-        images_to_explain_np,
-        max_evals=max_evals,  # type: ignore
-        main_effects=False,
-    )
-    logger.info("SHAP explanation generation complete.")
+    # FIX: Suppress false positive pyright errors for this line.
+    shap_explanation = explainer(images_to_explain_array, max_evals=max_evals, batch_size=batch_size)  # type: ignore
+    shap_explanation.data = np.array(images_to_explain)
+    return shap_explanation
 
-    return shap_values
+
+def plot_explanations(
+    shap_explanation: shap.Explanation, model: ModelType, top_k: int = 5, text_prompt: Optional[str] = None
+) -> None:
+    """
+    Plots SHAP explanations for the top_k predicted classes for each image.
+    """
+    print(f"Displaying SHAP explanations for top {top_k} predictions...")
+
+    images_for_plotting = shap_explanation.data
+    class_names = np.array(shap_explanation.output_names)
+
+    # Pass text_prompt to the wrapper for GroundingDINO
+    prediction_fn = _prediction_wrapper(model, text_prompt=text_prompt)
+    images_norm = np.array([_prepare_image_for_shap(img) for img in images_for_plotting])
+    prediction_scores = prediction_fn(images_norm)
+
+    for i in range(len(images_for_plotting)):
+        print(f"\n--- Explanations for Image {i+1} ---")
+
+        top_indices = np.argsort(prediction_scores[i])[-top_k:][::-1]
+
+        plt.figure(figsize=(5, 5))
+        plt.imshow(images_for_plotting[i])
+        plt.title("Original Image")
+        plt.axis("off")
+        plt.show()
+
+        for class_idx in top_indices:
+            if prediction_scores[i, class_idx] > 0:
+                class_name = class_names[class_idx]
+                score = prediction_scores[i, class_idx]
+                print(f"Explanation for '{class_name}' (Prediction Score: {score:.3f})")
+
+                # FIX: Suppress false positive pyright error for this line.
+                shap_values_for_class = shap_explanation.values[i, :, :, :, class_idx]  # type: ignore
+                image_for_plot = images_for_plotting[i]
+                shap.image_plot(shap_values=shap_values_for_class, pixel_values=image_for_plot, show=True)
