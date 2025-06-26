@@ -116,7 +116,7 @@ results[0].show()
 ```
 
 **Zero-Shot Output:**
-![Zero-shot Classification Example](assets/images/beetles_zs_oc.png)
+![Zero-shot Classification Example](assets/images/beetles_zsoc.png)
 
 ---
 
