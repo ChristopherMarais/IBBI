@@ -176,3 +176,4 @@ print(f"Dataset loaded: {dataset}")
 # You can also iterate through it without downloading everything
 streaming_dataset = ibbi.get_dataset(split="train", streaming=True)
 print(next(iter(streaming_dataset)))
+```
