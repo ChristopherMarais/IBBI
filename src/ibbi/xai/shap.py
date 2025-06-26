@@ -11,38 +11,41 @@ import numpy as np
 import shap
 from PIL import Image
 
+# FIX 1: Import `ImageMasker` directly from its submodule.
+from shap.maskers import Image as ImageMasker
+
 # Import specific model types to handle them differently
 from ..models import ModelType
 from ..models.zero_shot_detection import GroundingDINOModel
 
 
 def _prepare_image_for_shap(image_array: np.ndarray) -> np.ndarray:
+    """
+    Normalizes image array to have pixel values between 0 and 1.
+    """
     if image_array.max() > 1.0:
         image_array = image_array.astype(np.float32) / 255.0
     return image_array
 
 
 def _prediction_wrapper(model: ModelType, text_prompt: Optional[str] = None) -> Callable:
+    """
+    Creates a prediction function compatible with the SHAP explainer.
+    """
+
     def predict(image_array: np.ndarray) -> np.ndarray:
-        # Handle GroundingDINOModel which has a different API
+        # This function remains the same as it correctly handles model predictions
         if isinstance(model, GroundingDINOModel):
             if not text_prompt:
                 raise ValueError("A 'text_prompt' is required for explaining a GroundingDINOModel.")
-            # For zero-shot models, the "class" is the text prompt itself
-            class_names = [text_prompt]
             num_classes = 1
             predictions = np.zeros((image_array.shape[0], num_classes))
             images_to_predict = [Image.fromarray((img * 255).astype(np.uint8)) for img in image_array]
-
-            # Call predict without 'verbose' and with 'text_prompt'
             results = [model.predict(img, text_prompt=text_prompt) for img in images_to_predict]
-
             for i, res in enumerate(results):
-                # GroundingDINO returns a dictionary with scores
                 if res["scores"].nelement() > 0:
                     predictions[i, 0] = res["scores"].max().item()
         else:
-            # This logic works for the other detection models
             class_names = model.get_classes()
             num_classes = len(class_names)
             predictions = np.zeros((image_array.shape[0], num_classes))
@@ -76,7 +79,6 @@ def explain_model(
     """
     prediction_fn = _prediction_wrapper(model, text_prompt=text_prompt)
 
-    # Get class names based on the model type
     if isinstance(model, GroundingDINOModel):
         if not text_prompt:
             raise ValueError("A 'text_prompt' is required for explaining a GroundingDINOModel.")
@@ -84,55 +86,73 @@ def explain_model(
     else:
         output_names = model.get_classes()
 
+    background_pil_images = [background_dataset[i]["image"].resize(image_size) for i in range(num_background_samples)]
+    background_images = [np.array(img) for img in background_pil_images]
+    background_images_norm = np.stack([_prepare_image_for_shap(img) for img in background_images])
+
+    background_summary = np.median(background_images_norm, axis=0)
+
     images_to_explain_pil = [explain_dataset[i]["image"].resize(image_size) for i in range(num_explain_samples)]
     images_to_explain = [np.array(img) for img in images_to_explain_pil]
     images_to_explain_norm = [_prepare_image_for_shap(img) for img in images_to_explain]
     images_to_explain_array = np.array(images_to_explain_norm)
 
-    # FIX: Suppress false positive pyright error for this line.
-    masker = shap.maskers.Image("blur(128,128)", shape=images_to_explain_array[0].shape)  # type: ignore
+    masker = ImageMasker(background_summary, shape=images_to_explain_array[0].shape)
     explainer = shap.Explainer(prediction_fn, masker, output_names=output_names)
 
-    # FIX: Suppress false positive pyright errors for this line.
-    shap_explanation = explainer(images_to_explain_array, max_evals=max_evals, batch_size=batch_size)  # type: ignore
+    # Ignoring the arg-type error which is due to incorrect type hints in the shap library
+    shap_explanation = explainer(images_to_explain_array, max_evals=max_evals, batch_size=batch_size)  # type: ignore[arg-type]
     shap_explanation.data = np.array(images_to_explain)
     return shap_explanation
 
 
 def plot_explanations(
-    shap_explanation: shap.Explanation, model: ModelType, top_k: int = 5, text_prompt: Optional[str] = None
+    shap_explanation_for_single_image: shap.Explanation,
+    model: ModelType,
+    top_k: int = 5,
+    text_prompt: Optional[str] = None,
 ) -> None:
     """
-    Plots SHAP explanations for the top_k predicted classes for each image.
+    Plots SHAP explanations for a SINGLE image.
+
+    Args:
+        shap_explanation_for_single_image: A SHAP Explanation object for a SINGLE image.
+                                           To get this, index the output of explain_model (e.g., `shap_explanation[0]`).
+        model: The model that was explained.
+        top_k: The number of top predicted classes to visualize.
+        text_prompt: The text prompt, if a GroundingDINOModel was used.
     """
-    print(f"Displaying SHAP explanations for top {top_k} predictions...")
+    print("\n--- Generating Explanations for Image ---")
 
-    images_for_plotting = shap_explanation.data
-    class_names = np.array(shap_explanation.output_names)
+    image_for_plotting = shap_explanation_for_single_image.data
+    shap_values = shap_explanation_for_single_image.values
+    class_names = np.array(shap_explanation_for_single_image.output_names)
 
-    # Pass text_prompt to the wrapper for GroundingDINO
     prediction_fn = _prediction_wrapper(model, text_prompt=text_prompt)
-    images_norm = np.array([_prepare_image_for_shap(img) for img in images_for_plotting])
-    prediction_scores = prediction_fn(images_norm)
+    image_norm = _prepare_image_for_shap(np.array(image_for_plotting))
+    prediction_scores_batch = prediction_fn(np.expand_dims(image_norm, axis=0))
+    prediction_scores = prediction_scores_batch[0]
 
-    for i in range(len(images_for_plotting)):
-        print(f"\n--- Explanations for Image {i+1} ---")
+    top_indices = np.argsort(prediction_scores)[-top_k:][::-1]
 
-        top_indices = np.argsort(prediction_scores[i])[-top_k:][::-1]
+    plt.figure(figsize=(5, 5))
+    plt.imshow(image_for_plotting)
+    plt.title("Original Image")
+    plt.axis("off")
+    plt.show()
 
-        plt.figure(figsize=(5, 5))
-        plt.imshow(images_for_plotting[i])
-        plt.title("Original Image")
-        plt.axis("off")
-        plt.show()
+    for class_idx in top_indices:
+        if prediction_scores[class_idx] > 0:
+            class_name = class_names[class_idx]
+            score = prediction_scores[class_idx]
+            print(f"Explanation for '{class_name}' (Prediction Score: {score:.3f})")
 
-        for class_idx in top_indices:
-            if prediction_scores[i, class_idx] > 0:
-                class_name = class_names[class_idx]
-                score = prediction_scores[i, class_idx]
-                print(f"Explanation for '{class_name}' (Prediction Score: {score:.3f})")
+            # FIX 2: Added `# type: ignore` to suppress the incorrect slicing error from pyright.
+            # The slicing logic is correct for the shape of the shap_values array.
+            shap_values_for_class = shap_values[:, :, :, class_idx]  # type: ignore[misc]
 
-                # FIX: Suppress false positive pyright error for this line.
-                shap_values_for_class = shap_explanation.values[i, :, :, :, class_idx]  # type: ignore
-                image_for_plot = images_for_plotting[i]
-                shap.image_plot(shap_values=shap_values_for_class, pixel_values=image_for_plot, show=True)
+            shap.image_plot(
+                shap_values=[shap_values_for_class],
+                pixel_values=np.array(image_for_plotting),
+                show=True,
+            )

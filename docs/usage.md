@@ -18,7 +18,7 @@ The `ibbi` package is designed for simplicity. Here are the core functions you w
 
 ### Listing Available Models
 
-To see all available models and their performance metrics, use `ibbi.list_models()`.
+To see all available models and their performance metrics, use `ibbi.list_models()`. This is useful for choosing the best model for your needs.
 
 ```python
 import ibbi
@@ -30,14 +30,17 @@ print(models_df)
 
 ### Creating a Model
 
-Load any model using `ibbi.create_model()` by passing its name.
+Load any model from the list using `ibbi.create_model()` by passing its name.
 
 ```python
-# Load an object detection model
+# Load a single-class object detection model
 detector = ibbi.create_model("yolov10x_bb_detect_model", pretrained=True)
 
-# Load a species classification model
-classifier = ibbi.create_model("yolov10x_bb_classify_model", pretrained=True)
+# Load a multi-class species detection model
+classifier = ibbi.create_model("yolov10x_bb_multi_class_detect_model", pretrained=True)
+
+# Load a zero-shot detection model
+zs_detector = ibbi.create_model("grounding_dino_detect_model", pretrained=True)
 ```
 
 ---
@@ -46,9 +49,9 @@ classifier = ibbi.create_model("yolov10x_bb_classify_model", pretrained=True)
 
 You can perform inference on images from a file path, a URL, or a PIL Image object.
 
-### Example 1: Object Detection
+### Example 1: Bark Beetle Detection (Single Class)
 
-Object detection models find the location (bounding boxes) of beetles in an image.
+These models find the location (bounding boxes) of any beetle in an image, without identifying the species.
 
 **Input Image:**
 ![Beetles](assets/images/beetles.png)
@@ -73,24 +76,26 @@ results[0].show()
 **Detection Output:**
 ![Object Detection Example](assets/images/beetles_od.png)
 
-### Example 2: Species Classification
+### Example 2: Species Detection (Multi-Class)
 
-Classification models predict the species of a beetle in an image. These models work best on images cropped around a single beetle.
+These models simultaneously find the location of beetles and predict their species.
 
 ```python
-classifier = ibbi.create_model("yolov10x_bb_classify_model", pretrained=True)
+classifier = ibbi.create_model("yolov10x_bb_multi_class_detect_model", pretrained=True)
 
-# This assumes you have an image of a single, cropped beetle
-# For this example, we'll use the same multi-beetle image
+# Use the same multi-beetle image
 results = classifier.predict(image_source)
 
-# The 'results' object contains class probabilities.
-# To see the top prediction:
-top_prediction_index = results[0].probs.top1
-predicted_species = results[0].names[top_prediction_index]
-print(f"Predicted Species: {predicted_species}")
+# The 'results' object contains bounding boxes with predicted species.
+# To see the top prediction for the first detected beetle:
+first_box = results[0].boxes[0]
+predicted_species_index = int(first_box.cls)
+predicted_species = results[0].names[predicted_species_index]
+confidence = float(first_box.conf)
 
-# To display the top 5 predictions and their confidences:
+print(f"Predicted Species: {predicted_species} with confidence: {confidence:.2f}")
+
+# To display the image with bounding boxes and class labels:
 results[0].show()
 ```
 
@@ -99,7 +104,7 @@ results[0].show()
 
 ### Example 3: Zero-Shot Detection
 
-Zero-shot models can detect objects based on a text description, without being explicitly trained on that class.
+Zero-shot models can detect objects based on a text description, without being explicitly trained on that class. This is powerful for detecting objects not in the training data.
 
 ```python
 # Load the zero-shot detection model
@@ -119,7 +124,7 @@ results[0].show()
 
 ### Feature Extraction
 
-All models can extract deep feature embeddings from an image. These are useful for downstream tasks like clustering or similarity analysis.
+All models can extract deep feature embeddings from an image. These vectors are useful for downstream tasks like clustering, similarity analysis, or training other machine learning models.
 
 ```python
 # Assuming 'classifier' is a loaded model
@@ -128,14 +133,46 @@ features = classifier.extract_features(image_source)
 print(f"Extracted feature vector shape: {features.shape}")
 ```
 
-### Downloading the Test Dataset
+### Model Explainability with SHAP
 
-The test dataset used to evaluate the models can be downloaded for your own research and validation.
+Understand *why* a model made a certain prediction using SHAP (SHapley Additive exPlanations). This is crucial for building trust and interpreting the model's decisions by highlighting which pixels were most influential.
 
 ```python
 import ibbi
 
-# Download the dataset (it will be saved to a local cache)
-dataset_path = ibbi.download_dataset()
-print(f"Dataset downloaded to: {dataset_path}")
+# Load a model
+model = ibbi.create_model("yolov10x_bb_multi_class_detect_model", pretrained=True)
+
+# Get a few images to explain and a background dataset
+# Note: Using more images for background_dataset provides better explanations
+explain_data = ibbi.get_dataset(split="train", streaming=True).take(5)
+background_data = ibbi.get_dataset(split="train", streaming=True).skip(5).take(10)
+
+# Generate explanations (this is computationally intensive)
+shap_explanation = ibbi.explain_model(
+    model=model,
+    explain_dataset=list(explain_data),
+    background_dataset=list(background_data),
+    num_explain_samples=1, # Number of images to explain
+    num_background_samples=5 # Number of background images to use
+)
+
+# Plot the explanation for the first image
+ibbi.plot_explanations(shap_explanation[0], model)
 ```
+
+### Loading the Dataset
+
+The dataset used to train and evaluate the models can be loaded for your own research and validation.
+
+```python
+import ibbi
+
+# Load the dataset (it will be downloaded and cached locally)
+# Set streaming=False to download the full dataset
+dataset = ibbi.get_dataset(split="test", streaming=False)
+print(f"Dataset loaded: {dataset}")
+
+# You can also iterate through it without downloading everything
+streaming_dataset = ibbi.get_dataset(split="train", streaming=True)
+print(next(iter(streaming_dataset)))
