@@ -14,40 +14,46 @@ There are many ways to contribute, from writing tutorials to implementing new mo
 
 ## Setting Up Your Development Environment
 
-To get started with development, please follow these steps:
+To get started with development, please follow these steps.
 
 1.  **Clone the repository:**
+    This downloads the project source code to your local machine.
 ```bash
-git clone [https://github.com/ChristopherMarais/ibbi.git](https://github.com/ChristopherMarais/ibbi.git)
+git clone https://github.com/ChristopherMarais/ibbi.git
 cd ibbi
 ```
 
 2.  **Create a Conda environment:**
-    We recommend using Conda to manage your environment.
+    We recommend using Conda to manage your Python environment to avoid conflicts with other projects. This command creates an environment named `ibbi` with Python 3.11.
 ```bash
 conda env create -f environment.yml
 conda activate IBBI
 ```
 
-3.  **Install dependencies with Poetry:**
+1.  **Install dependencies with Poetry:**
     This project uses Poetry for dependency management. The `environment.yml` file sets up Python and pip, and then we use Poetry to install the project dependencies.
 
+2.  **Install dependencies with Poetry:**
+    This project uses Poetry for dependency management. These commands will install all the necessary packages for running and developing `ibbi`.
 ```bash
-# Install PyTorch first, ensuring it matches your hardware (CPU/GPU)
-# See [https://pytorch.org/get-started/locally/](https://pytorch.org/get-started/locally/) for commands
+# Install Poetry itself if you don't have it
+pip install poetry
+
+# Install PyTorch first, as its installation can be system-specific (CPU/GPU)
+# See https://pytorch.org/get-started/locally/ for the correct command
 pip install torch torchvision torchaudio
 
 # Configure Poetry to use the existing Conda environment
 poetry config virtualenvs.create false --local
 
-# Install project dependencies
+# Install all other project dependencies, including development tools
 poetry install --with dev
 ```
 
 4.  **Set up pre-commit hooks:**
-    We use `pre-commit` to ensure code quality and consistent formatting.
+    We use `pre-commit` to automatically run code formatters and linters before each commit. This ensures code quality and a consistent style across the project.
 ```bash
-poetry run pre-commit install
+pre-commit install
 ```
     The hooks will now run automatically every time you make a commit.
 
@@ -61,5 +67,3 @@ poetry run pre-commit install
 6.  In the pull request description, clearly describe the changes you've made and why. If it fixes an existing issue, please reference it (e.g., "Fixes #123").
 
 Thank you again for your interest in contributing!
-
----

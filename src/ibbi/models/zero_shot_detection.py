@@ -1,5 +1,3 @@
-# src/ibbi/models/zero_shot_detection.py
-
 """
 Zero-shot object detection models.
 """
@@ -29,6 +27,15 @@ class GroundingDINOModel:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model.to(self.device)
         print(f"GroundingDINO model loaded on device: {self.device}")
+
+    def get_classes(self):
+        """
+        This method is not applicable to zero-shot models.
+        """
+        raise NotImplementedError(
+            "The GroundingDINOModel is a zero-shot detection model and does not have a fixed set of classes. "
+            "Classes are defined dynamically at inference time via the 'text_prompt' argument in the 'predict' method."
+        )
 
     def predict(self, image, text_prompt: str, box_threshold: float = 0.35, text_threshold: float = 0.25):
         """
@@ -86,7 +93,10 @@ class GroundingDINOModel:
             outputs = self.model(**inputs)
 
         # FINAL FIX: Use the correct attribute name found in the debug output.
-        if hasattr(outputs, 'encoder_last_hidden_state_vision') and outputs.encoder_last_hidden_state_vision is not None:
+        if (
+            hasattr(outputs, "encoder_last_hidden_state_vision")
+            and outputs.encoder_last_hidden_state_vision is not None
+        ):
             vision_features = outputs.encoder_last_hidden_state_vision
             # Pool the features across all patches to get a single vector for the image.
             # The shape is (batch_size, num_patches, hidden_dim), so we average over dim 1.
