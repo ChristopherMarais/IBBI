@@ -74,7 +74,7 @@
     <div data-md-component="skip">
 
 
-        <a href="#welcome-to-ibbi" class="md-skip">
+        <a href="#welcome-to-the-intelligent-bark-beetle-identifier-ibbi" class="md-skip">
           Skip to content
         </a>
 
@@ -431,6 +431,24 @@
 
 </li>
 
+        <li class="md-nav__item">
+  <a href="#workflow-how-the-models-were-built" class="md-nav__link">
+    <span class="md-ellipsis">
+      Workflow: How the Models Were Built
+    </span>
+  </a>
+
+</li>
+
+        <li class="md-nav__item">
+  <a href="#package-api-and-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Package API and Usage
+    </span>
+  </a>
+
+</li>
+
     </ul>
 
 </nav>
@@ -571,6 +589,24 @@
 
 </li>
 
+        <li class="md-nav__item">
+  <a href="#workflow-how-the-models-were-built" class="md-nav__link">
+    <span class="md-ellipsis">
+      Workflow: How the Models Were Built
+    </span>
+  </a>
+
+</li>
+
+        <li class="md-nav__item">
+  <a href="#package-api-and-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Package API and Usage
+    </span>
+  </a>
+
+</li>
+
     </ul>
 
 </nav>
@@ -587,21 +623,35 @@
 
 
 
-<h1 id="welcome-to-ibbi">Welcome to IBBI</h1>
-<p><strong>Intelligent Bark Beetle Identifier (IBBI)</strong> is a Python package that provides a simple and unified interface for detecting and classifying bark and ambrosia beetles from images using state-of-the-art computer vision models.</p>
+<h1 id="welcome-to-the-intelligent-bark-beetle-identifier-ibbi">Welcome to the Intelligent Bark Beetle Identifier (IBBI)</h1>
+<p><strong>IBBI</strong> is a Python package that provides a simple and unified interface for detecting and classifying bark and ambrosia beetles from images using state-of-the-art computer vision models.</p>
 <p>This package is designed to support entomological research by automating the laborious task of beetle identification, enabling high-throughput data analysis for ecological studies, pest management, and biodiversity monitoring.</p>
-<p><img alt="My training workflow" src="assets/images/data_flow_ibbi.png" /></p>
-<h2 id="the-need-for-automation">The Need for Automation</h2>
-<p>The accurate and timely identification of bark and ambrosia beetle species is fundamental to forest health monitoring and pest management. Many species are morphologically similar, making identification a significant bottleneck that requires highly specialized taxonomic expertise.</p>
-<p>IBBI addresses this challenge by providing an accessible, programmatic solution that automates the identification process.</p>
-<h2 id="key-features">Key Features</h2>
+<h3 id="the-need-for-automation">The Need for Automation</h3>
+<p>The accurate and timely identification of bark and ambrosia beetle species is fundamental to forest health monitoring. However, many species are morphologically similar, making identification a significant bottleneck that requires highly specialized taxonomic expertise. IBBI addresses this challenge by providing an accessible, programmatic solution that automates the identification process.</p>
+<hr />
+<h3 id="key-features">Key Features</h3>
 <ul>
 <li><strong>Simple API:</strong> Access powerful detection and classification models with a single function call: <code>ibbi.create_model()</code>.</li>
+<li><strong>Multiple Model Types:</strong><ul>
+<li><strong>Single-Class Detection:</strong> Detect the presence of any beetle in an image.</li>
+<li><strong>Multi-Class Classification:</strong> Identify the species of a beetle from a cropped image.</li>
+<li><strong>Zero-Shot Detection:</strong> Detect beetles using a text prompt, without prior training on that specific class.</li>
+</ul>
+</li>
 <li><strong>Pre-trained Models:</strong> Leverages pre-trained models hosted on the Hugging Face Hub for immediate use.</li>
+<li><strong>Model Explainability:</strong> Understand model predictions using SHAP (SHapley Additive exPlanations) to visualize which parts of an image contribute to the identification.</li>
 <li><strong>Extensible:</strong> Designed to easily incorporate new model architectures in the future.</li>
 <li><strong>Research-Focused:</strong> Aims to accelerate ecological research by automating beetle identification.</li>
 </ul>
-<p>Ready to get started? Check out the <a href="usage/"><strong>Usage Guide</strong></a>.</p>
+<hr />
+<h3 id="workflow-how-the-models-were-built">Workflow: How the Models Were Built</h3>
+<p>The models in <code>ibbi</code> are trained using a detailed workflow, from data collection and annotation to model evaluation. This process ensures high-quality, reliable models for your research.</p>
+<p><img alt="IBBI Workflow" src="assets/images/data_flow_ibbi.png" /></p>
+<hr />
+<h3 id="package-api-and-usage">Package API and Usage</h3>
+<p>The <code>ibbi</code> package is designed for ease of use. The main functions, inputs, and outputs are summarized below.</p>
+<p><img alt="IBBI Inputs and Outputs" src="assets/images/ibbi_inputs_outputs.png" /></p>
+<p>Ready to get started? Check out the <strong><a href="usage/">Usage Guide</a></strong>.</p>
 
 
 
