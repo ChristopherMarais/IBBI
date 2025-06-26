@@ -924,15 +924,17 @@ ibbi.plot_explanations(shap_explanation[0], model)
 </code></pre>
 <h3 id="loading-the-dataset">Loading the Dataset</h3>
 <p>The dataset used to train and evaluate the models can be loaded for your own research and validation.</p>
-<p>```python
-import ibbi</p>
-<h1 id="load-the-dataset-it-will-be-downloaded-and-cached-locally">Load the dataset (it will be downloaded and cached locally)</h1>
-<h1 id="set-streamingfalse-to-download-the-full-dataset">Set streaming=False to download the full dataset</h1>
-<p>dataset = ibbi.get_dataset(split="test", streaming=False)
-print(f"Dataset loaded: {dataset}")</p>
-<h1 id="you-can-also-iterate-through-it-without-downloading-everything">You can also iterate through it without downloading everything</h1>
-<p>streaming_dataset = ibbi.get_dataset(split="train", streaming=True)
-print(next(iter(streaming_dataset)))</p>
+<pre><code class="language-python">import ibbi
+
+# Load the dataset (it will be downloaded and cached locally)
+# Set streaming=False to download the full dataset
+dataset = ibbi.get_dataset(split=&quot;test&quot;, streaming=False)
+print(f&quot;Dataset loaded: {dataset}&quot;)
+
+# You can also iterate through it without downloading everything
+streaming_dataset = ibbi.get_dataset(split=&quot;train&quot;, streaming=True)
+print(next(iter(streaming_dataset)))
+</code></pre>
 
 
 
