@@ -21,7 +21,8 @@ from .utils.data import get_dataset
 
 # --- Top-level function imports ---
 from .utils.info import list_models
-from .xai.shap import explain_model, plot_explanations
+from .xai.shap import plot_explanations, shap_explain
+from .xai.tcav import auto_tcav_explain
 
 
 def create_model(model_name: str, pretrained: bool = False, **kwargs: Any) -> ModelType:
@@ -72,7 +73,8 @@ __all__ = [
     "create_model",
     "list_models",
     "get_dataset",
-    "explain_model",
+    "shap_explain",
+    "auto_tcav_explain",
     "ModelType",
     "plot_explanations",
 ]

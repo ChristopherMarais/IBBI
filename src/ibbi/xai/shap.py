@@ -62,7 +62,7 @@ def _prediction_wrapper(model: ModelType, text_prompt: Optional[str] = None) -> 
     return predict
 
 
-def explain_model(
+def shap_explain(
     model: ModelType,
     explain_dataset: list,
     background_dataset: list,
@@ -117,7 +117,7 @@ def plot_explanations(
 
     Args:
         shap_explanation_for_single_image: A SHAP Explanation object for a SINGLE image.
-                                           To get this, index the output of explain_model (e.g., `shap_explanation[0]`).
+                                           To get this, index the output of shap_explain (e.g., `shap_explanation[0]`).
         model: The model that was explained.
         top_k: The number of top predicted classes to visualize.
         text_prompt: The text prompt, if a GroundingDINOModel was used.

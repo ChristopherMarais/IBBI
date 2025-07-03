@@ -149,7 +149,7 @@ explain_data = ibbi.get_dataset(split="train", streaming=True).take(5)
 background_data = ibbi.get_dataset(split="train", streaming=True).skip(5).take(10)
 
 # Generate explanations (this is computationally intensive)
-shap_explanation = ibbi.explain_model(
+shap_explanation = ibbi.shap_explain(
     model=model,
     explain_dataset=list(explain_data),
     background_dataset=list(background_data),
