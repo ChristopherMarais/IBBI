@@ -240,7 +240,7 @@ A detailed list can also be found in the [`src/ibbi/data/ibbi_model_summary.csv`
 
 ## How to Contribute
 
-Contributions are welcome! If you would like to improve IBBI, please see the [Contributing Guide](CONTRIBUTING.md).
+Contributions are welcome! If you would like to improve IBBI, please see the [Contributing Guide](docs/CONTRIBUTING.md).
 
 ## License
 
