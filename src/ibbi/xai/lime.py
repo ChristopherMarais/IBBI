@@ -32,7 +32,7 @@ def _prediction_wrapper(model: ModelType, text_prompt: Optional[str] = None) -> 
 
         Args:
             image_array (np.ndarray): A numpy array of perturbed images from LIME,
-                                      with shape (num_images, height, width, channels).
+                                    with shape (num_images, height, width, channels).
 
         Returns:
             np.ndarray: A numpy array of prediction probabilities for each class.
@@ -109,7 +109,7 @@ def explain_with_lime(
         batch_size (int, optional): The number of samples to predict on in a single batch.
                                     Defaults to 50.
         num_samples (int, optional): The number of perturbations to generate for LIME.
-                                     Defaults to 1000.
+                                    Defaults to 1000.
         top_labels (int, optional): The number of top labels to consider. Defaults to 5.
         num_features (int, optional): The number of superpixels to generate. Defaults to 100000.
 
@@ -157,9 +157,9 @@ def plot_lime_explanation(
         explanation (lime_image.ImageExplanation): The LIME explanation object.
         image (Image.Image): The original, full-resolution input image.
         top_k (int, optional): The number of top predicted classes to visualize.
-                               Defaults to 1.
+                                Defaults to 1.
         alpha (float, optional): The transparency of the color overlay.
-                                 Defaults to 0.6.
+                                Defaults to 0.6.
     """
     # 1. Display the original image first for reference
     plt.figure(figsize=(5, 5))
