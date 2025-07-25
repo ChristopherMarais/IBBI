@@ -10,8 +10,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import shap
 from PIL import Image
-
-# FIX 1: Import `ImageMasker` directly from its submodule.
 from shap.maskers import Image as ImageMasker
 
 # Import specific model types to handle them differently
@@ -62,7 +60,7 @@ def _prediction_wrapper(model: ModelType, text_prompt: Optional[str] = None) -> 
     return predict
 
 
-def explain_model(
+def explain_with_shap(
     model: ModelType,
     explain_dataset: list,
     background_dataset: list,
@@ -100,13 +98,14 @@ def explain_model(
     masker = ImageMasker(background_summary, shape=images_to_explain_array[0].shape)
     explainer = shap.Explainer(prediction_fn, masker, output_names=output_names)
 
+    # FIX: Reformatted to fix ruff error E501 (line too long).
     # Ignoring the arg-type error which is due to incorrect type hints in the shap library
     shap_explanation = explainer(images_to_explain_array, max_evals=max_evals, batch_size=batch_size)  # type: ignore[arg-type]
     shap_explanation.data = np.array(images_to_explain)
     return shap_explanation
 
 
-def plot_explanations(
+def plot_shap_explanation(
     shap_explanation_for_single_image: shap.Explanation,
     model: ModelType,
     top_k: int = 5,
@@ -117,7 +116,7 @@ def plot_explanations(
 
     Args:
         shap_explanation_for_single_image: A SHAP Explanation object for a SINGLE image.
-                                           To get this, index the output of explain_model (e.g., `shap_explanation[0]`).
+            To get this, index the output of explain_with_shap (e.g., `shap_explanation[0]`).
         model: The model that was explained.
         top_k: The number of top predicted classes to visualize.
         text_prompt: The text prompt, if a GroundingDINOModel was used.

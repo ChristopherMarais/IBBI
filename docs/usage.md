@@ -149,7 +149,7 @@ explain_data = ibbi.get_dataset(split="train", streaming=True).take(5)
 background_data = ibbi.get_dataset(split="train", streaming=True).skip(5).take(10)
 
 # Generate explanations (this is computationally intensive)
-shap_explanation = ibbi.explain_model(
+shap_explanation = ibbi.explain_with_shap(
     model=model,
     explain_dataset=list(explain_data),
     background_dataset=list(background_data),
@@ -158,7 +158,7 @@ shap_explanation = ibbi.explain_model(
 )
 
 # Plot the explanation for the first image
-ibbi.plot_explanations(shap_explanation[0], model)
+ibbi.plot_shap_explanation(shap_explanation[0], model)
 ```
 
 ### Loading the Dataset

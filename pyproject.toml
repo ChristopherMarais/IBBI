@@ -22,6 +22,7 @@ transformers = "^4.52.4"
 hf-xet = "^1.1.3"
 shap = "^0.48.0"
 slicer = "^0.0.8"
+lime = "^0.2.0.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.10"
