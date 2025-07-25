@@ -80,7 +80,7 @@ The main components are:
 * **Inputs**: Images (file paths, URLs, PIL/numpy objects) and a model name string.
 * **`model.predict()`**: The main prediction function. Returns bounding boxes, scores, and class labels.
 * **`model.extract_features()`**: Extracts deep feature embeddings from images for downstream tasks.
-* **Helper Functions**: `get_dataset()` to load the training/test data, `list_models()` to see available models, and `explain_model()` to visualize model predictions using SHAP.
+* **Helper Functions**: `get_dataset()` to load the training/test data, `list_models()` to see available models, and `explain_with_shap()` to visualize model predictions using SHAP.
 
 ### Usage Examples
 
@@ -208,7 +208,7 @@ explain_data = ibbi.get_dataset(split="train", streaming=True).take(5)
 background_data = ibbi.get_dataset(split="train", streaming=True).skip(5).take(10)
 
 # Generate explanations (this is computationally intensive)
-shap_explanation = ibbi.explain_model(
+shap_explanation = ibbi.explain_with_shap(
     model=model,
     explain_dataset=list(explain_data),
     background_dataset=list(background_data),
@@ -217,7 +217,7 @@ shap_explanation = ibbi.explain_model(
 )
 
 # Plot the explanation for the first image
-ibbi.plot_explanations(shap_explanation[0], model)
+ibbi.plot_shap_explanation(shap_explanation[0], model)
 ```
 
 ---
