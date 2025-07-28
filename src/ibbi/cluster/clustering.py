@@ -1,12 +1,13 @@
 import hdbscan
 import numpy as np
 
+
 def perform_hdbscan(
     embeddings: np.ndarray,
     min_cluster_size: int = 5,
-    min_samples: int = None,
-    metric: str = 'euclidean',
-    prediction_data: bool = True
+    min_samples: int = 0,
+    metric: str = "cosine",
+    prediction_data: bool = True,
 ):
     """
     Performs HDBSCAN clustering on the given embeddings.
@@ -44,7 +45,7 @@ def perform_hdbscan(
         min_samples=min_samples,
         metric=metric,
         prediction_data=prediction_data,
-        gen_min_span_tree=True # Useful for visualization
+        gen_min_span_tree=True,  # Useful for visualization
     )
 
     clusterer.fit(embeddings)
