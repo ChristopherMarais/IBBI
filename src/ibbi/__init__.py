@@ -12,6 +12,7 @@ from .models import (
     ModelType,
     multi_class_detection,  # noqa: F401
     single_class_detection,  # noqa: F401
+    untrained,  # noqa: F401
     zero_shot_detection,  # noqa: F401
 )
 
