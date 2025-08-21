@@ -11,7 +11,7 @@ repos:
     # Your pyproject.toml has ruff = "^0.11.10", but pre-commit often uses specific tags.
     # Let's assume a more recent ruff version for pre-commit as it's generally safe.
     # Please verify the latest appropriate tag.
-    rev: 'v0.4.4' # Example, check for the latest stable tag
+    rev: 'v0.12.9' # Example, check for the latest stable tag
     hooks:
       - id: ruff # Runs the linter
         args: [--fix, --exit-non-zero-on-fix]
@@ -28,7 +28,7 @@ repos:
 
   # == General Pre-commit Hooks (Good to Have) ==
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0 # Check for latest tag
+    rev: v6.0.0 # Check for latest tag
     hooks:
       - id: check-yaml # Checks YAML files for parseable syntax.
       - id: end-of-file-fixer # Ensures files end with a newline.
@@ -41,7 +41,7 @@ repos:
   # == Poetry specific hooks (Optional but recommended) ==
   - repo: https://github.com/python-poetry/poetry
     # Match your Poetry version or use a recent compatible tag
-    rev: '1.8.2' # Example, check for latest Poetry tag for hooks
+    rev: '2.1.3' # Example, check for latest Poetry tag for hooks
     hooks:
       - id: poetry-check # Verifies the pyproject.toml is valid.
       - id: poetry-lock # Ensures the lock file is consistent with pyproject.toml.

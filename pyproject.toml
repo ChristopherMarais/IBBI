@@ -9,6 +9,14 @@ documentation = "https://gcmarais.com/IBBI/"
 repository = "https://github.com/ChristopherMarais/IBBI"
 packages = [{ include = "ibbi", from = "src" }]
 
+[tool.setuptools.package-data]
+"ibbi.data" = ["*.csv"]
+
+[[tool.poetry.source]]
+name = "pytorch_cu128"
+url = "https://download.pytorch.org/whl/cu128"
+priority = "explicit"
+
 [tool.poetry.dependencies]
 python = ">=3.11,<4.0"
 huggingface-hub = ">=0.32.3,<0.33.0"
@@ -23,6 +31,12 @@ hf-xet = "^1.1.3"
 shap = "^0.48.0"
 slicer = "^0.0.8"
 lime = "^0.2.0.1"
+scikit-bio = "^0.7.0"
+timm = "^1.0.19"
+umap-learn = "^0.5.9.post2"
+hdbscan = "^0.8.40"
+torch = { version = ">=2.1", source = "pytorch_cu128" }
+torchvision = { version = ">=0.16.0", source = "pytorch_cu128" }
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.10"
@@ -40,9 +54,6 @@ ipywidgets = "^8.1.7"
 mkdocstrings = "^0.29.1"
 mkdocstrings-python = "^1.16.12"
 poetry-dynamic-versioning = "^1.8.2"
-# torch = "^2.7.1"
-# torchvision = "^0.22.1"
-# torchaudio = "^2.7.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]

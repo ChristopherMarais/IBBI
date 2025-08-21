@@ -36,9 +36,6 @@ conda activate IBBI
 2.  **Install dependencies with Poetry:**
     This project uses Poetry for dependency management. These commands will install all the necessary packages for running and developing `ibbi`.
 ```bash
-# Install Poetry itself if you don't have it
-pip install poetry
-
 # Install PyTorch first, as its installation can be system-specific (CPU/GPU)
 # See https://pytorch.org/get-started/locally/ for the correct command
 pip install torch torchvision torchaudio
@@ -55,7 +52,7 @@ poetry install --with dev
 ```bash
 pre-commit install
 ```
-    The hooks will now run automatically every time you make a commit.
+The hooks will now run automatically every time you make a commit.
 
 ## Pull Request Process
 

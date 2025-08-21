@@ -6,12 +6,16 @@ Main initialization file for the ibbi package.
 
 from typing import Any
 
+from .evaluate.features import EmbeddingEvaluator
+from .evaluate.performance import classification_performance, object_detection_performance
+
 # Import model modules to ensure registry is populated
 # --- Import ModelType from its new location ---
 from .models import (
     ModelType,
     multi_class_detection,  # noqa: F401
     single_class_detection,  # noqa: F401
+    untrained,  # noqa: F401
     zero_shot_detection,  # noqa: F401
 )
 
@@ -78,4 +82,7 @@ __all__ = [
     "plot_shap_explanation",
     "explain_with_lime",
     "plot_lime_explanation",
+    "classification_performance",
+    "object_detection_performance",
+    "EmbeddingEvaluator",
 ]
