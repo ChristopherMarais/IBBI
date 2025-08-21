@@ -1,5 +1,4 @@
-# MODIFICATION: Added 'cast' to the import from 'typing'
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 import numpy as np
 import pandas as pd
@@ -40,6 +39,8 @@ if TYPE_CHECKING:
     import umap
     from skbio.stats.distance import mantel
 
+from importlib import resources as pkg_resources
+
 
 class EmbeddingEvaluator:
     """
@@ -51,9 +52,6 @@ class EmbeddingEvaluator:
     evaluation metrics.
     """
 
-    # MODIFICATION: Added explicit type annotations for instance attributes.
-    # This solves the error on line 212 by ensuring the type checker
-    # always knows `processed_data` is a NumPy array that can be indexed.
     embeddings: np.ndarray
     processed_data: np.ndarray
     predicted_labels: np.ndarray
@@ -162,7 +160,7 @@ class EmbeddingEvaluator:
         self.predicted_labels = clusterer.fit_predict(self.processed_data)
         print("HDBSCAN clustering complete.")
 
-    def evaluate_against_truth(self, true_labels: np.ndarray) -> Dict[str, float]:
+    def evaluate_against_truth(self, true_labels: np.ndarray) -> dict[str, float]:
         """
         Calculates external clustering validation metrics against ground truth labels.
 
@@ -176,7 +174,7 @@ class EmbeddingEvaluator:
                 array must be the same length as the original embeddings.
 
         Returns:
-            Dict[str, float]: A dictionary containing the calculated scores:
+            dict[str, float]: A dictionary containing the calculated scores:
                 - "ARI": The Adjusted Rand Index, ranging from -1 (bad) to 1 (perfect).
                 - "NMI": The Normalized Mutual Information, ranging from 0 (bad) to 1 (perfect).
         """
@@ -184,7 +182,7 @@ class EmbeddingEvaluator:
         nmi = normalized_mutual_info_score(true_labels, self.predicted_labels)
         return {"ARI": ari, "NMI": nmi}
 
-    def evaluate_cluster_structure(self) -> Dict[str, float]:
+    def evaluate_cluster_structure(self) -> dict[str, float]:
         """
         Calculates internal clustering validation metrics based on cluster structure.
 
@@ -194,7 +192,7 @@ class EmbeddingEvaluator:
         excluded from these calculations.
 
         Returns:
-            Dict[str, float]: A dictionary containing the calculated scores:
+            dict[str, float]: A dictionary containing the calculated scores:
                 - "Silhouette_Score": Measures how similar an object is to its
                   own cluster compared to other clusters. Ranges from -1 to 1,
                   where higher is better.
@@ -220,10 +218,10 @@ class EmbeddingEvaluator:
         self,
         true_labels: np.ndarray,
         embedding_metric: str = "cosine",
-        ext_dist_path: str = "../data/ibbi_species_distance_matrix.csv",
+        # The ext_dist_path parameter is removed as it's no longer used.
         ext_dist_matrix: Optional[np.ndarray] = None,
-        ext_dist_labels: Optional[List[str]] = None,
-    ) -> Tuple[float, float, int]:
+        ext_dist_labels: Optional[list[str]] = None,
+    ) -> tuple[float, float, int]:
         """
         Calculates Mantel correlation between embedding distances and an external distance matrix.
 
@@ -234,24 +232,22 @@ class EmbeddingEvaluator:
         The external distance matrix can be provided in two ways:
         1. As a CSV file via `ext_dist_path` (default behavior).
         2. Directly as a NumPy array and a list of labels via `ext_dist_matrix` and
-           `ext_dist_labels`.
+        `ext_dist_labels`.
 
         Args:
             true_labels (np.ndarray): 1D array of shape `(n_samples,)` containing the
                 ground truth labels for each embedding.
             embedding_metric (str, optional): Metric for calculating distances between
                 embedding centroids. Defaults to 'cosine'.
-            ext_dist_path (str, optional): File path to the external distance matrix CSV.
-                Used if `ext_dist_matrix` is None. Defaults to 'phylogenetic_distances.csv'.
             ext_dist_matrix (Optional[np.ndarray], optional): A pre-loaded square 2D
                 NumPy array of external distances. If provided, `ext_dist_labels` must
                 also be provided. Defaults to None.
-            ext_dist_labels (Optional[List[str]], optional): A list of labels for the
+            ext_dist_labels (Optional[list[str]], optional): A list of labels for the
                 rows/columns of `ext_dist_matrix`. Required if `ext_dist_matrix` is
                 provided. Defaults to None.
 
         Returns:
-            Tuple[float, float, int]: A tuple containing the Mantel 'r' coefficient,
+            tuple[float, float, int]: A tuple containing the Mantel 'r' coefficient,
                 the p-value, and the number of common items used in the test.
 
         Raises:
@@ -273,29 +269,24 @@ class EmbeddingEvaluator:
         centroid_index: pd.Index = grouped_centroids.index
 
         embedding_dist_matrix = pd.DataFrame(
+            # stubs are too strict and don't recognize string metrics.
             squareform(pdist(centroids, metric=embedding_metric)),  # type: ignore
             index=centroid_index,
             columns=centroid_index,
         )
 
-        # --- 2. Load or construct the external distance matrix ---
-        if ext_dist_matrix is not None:
-            if ext_dist_labels is None:
-                raise ValueError("`ext_dist_labels` must be provided with `ext_dist_matrix`.")
-            if ext_dist_matrix.ndim != 2 or ext_dist_matrix.shape[0] != ext_dist_matrix.shape[1]:
-                raise ValueError("`ext_dist_matrix` must be a square 2D array.")
-            if not np.all(np.diag(ext_dist_matrix) == 0):
-                raise ValueError("The diagonal of `ext_dist_matrix` must be all zeros.")
-            if ext_dist_matrix.shape[0] != len(ext_dist_labels):
-                raise ValueError("The dimensions of `ext_dist_matrix` must match the length of `ext_dist_labels`.")
-
-            ext_index = pd.Index(ext_dist_labels)
-            ext_matrix_df = pd.DataFrame(ext_dist_matrix, index=ext_index, columns=ext_index)
-        else:
-            try:
-                ext_matrix_df = pd.read_csv(ext_dist_path, index_col=0)
-            except FileNotFoundError as e:
-                raise FileNotFoundError(f"External distance matrix file not found at: {ext_dist_path}") from e
+        try:
+            # This context manager finds the data file within the installed package
+            # and provides a valid, temporary path to it. This is the core fix.
+            # FIX: Use a new variable name 'data_file_path' to avoid type conflict.
+            with pkg_resources.path("ibbi.data", "ibbi_species_distance_matrix.csv") as data_file_path:
+                ext_matrix_df = pd.read_csv(str(data_file_path), index_col=0)
+        except FileNotFoundError as e:
+            # This error is now more informative if the file is missing from the package.
+            raise FileNotFoundError(
+                "The 'ibbi_species_distance_matrix.csv' file was not found within the package data. "
+                "Ensure the package was installed correctly with the data file included."
+            ) from e
 
         # --- 3. Align matrices and run test ---
         common_labels = sorted(set(embedding_dist_matrix.index) & set(ext_matrix_df.index))
@@ -309,10 +300,9 @@ class EmbeddingEvaluator:
         embedding_dist_aligned = embedding_dist_matrix.loc[common_labels, common_labels]
         ext_dist_aligned = ext_matrix_df.loc[common_labels, common_labels]
 
-        # MODIFICATION: Use `cast` to explicitly tell the type checker the return type
-        # of the `mantel` function. This solves the `__getitem__` and `Argument` errors.
+        # Use `cast` to explicitly tell the type checker the return type
         mantel_result = mantel(embedding_dist_aligned, ext_dist_aligned)
-        typed_mantel_result = cast(Tuple[float, float, int], mantel_result)
+        typed_mantel_result = cast(tuple[float, float, int], mantel_result)
 
         r_val = typed_mantel_result[0]
         p_val = typed_mantel_result[1]

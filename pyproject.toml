@@ -9,6 +9,9 @@ documentation = "https://gcmarais.com/IBBI/"
 repository = "https://github.com/ChristopherMarais/IBBI"
 packages = [{ include = "ibbi", from = "src" }]
 
+[tool.setuptools.package-data]
+"ibbi.data" = ["*.csv"]
+
 [[tool.poetry.source]]
 name = "pytorch_cu128"
 url = "https://download.pytorch.org/whl/cu128"
