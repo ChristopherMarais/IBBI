@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Optional, cast
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import pdist, squareform
+from sklearn.cluster import HDBSCAN
 from sklearn.metrics import (
     adjusted_rand_score,
     davies_bouldin_score,
@@ -19,13 +20,6 @@ except ImportError:
     _umap_available = False
 
 try:
-    import hdbscan
-
-    _hdbscan_available = True
-except ImportError:
-    _hdbscan_available = False
-
-try:
     from skbio.stats.distance import mantel
 
     _skbio_available = True
@@ -35,7 +29,6 @@ except ImportError:
 # Use TYPE_CHECKING to hint all optional imports to static analysis tools.
 # This resolves all "possibly unbound" variable errors.
 if TYPE_CHECKING:
-    import hdbscan
     import umap
     from skbio.stats.distance import mantel
 
@@ -121,13 +114,10 @@ class EmbeddingEvaluator:
                 reproducibility of the dimensionality reduction. Defaults to 42.
 
         Raises:
-            ImportError: If `use_umap` is True and 'umap-learn' is not installed,
-                         or if 'hdbscan' is not installed.
+            ImportError: If `use_umap` is True and 'umap-learn' is not installed.
         """
         if use_umap and not _umap_available:
             raise ImportError("UMAP is selected but 'umap-learn' is not installed.")
-        if not _hdbscan_available:
-            raise ImportError("HDBSCAN is required but 'hdbscan' is not installed.")
 
         self.embeddings = embeddings
         self.processed_data = embeddings
@@ -151,7 +141,7 @@ class EmbeddingEvaluator:
 
         # --- 2. Clustering ---
         print("Performing HDBSCAN clustering...")
-        clusterer = hdbscan.HDBSCAN(
+        clusterer = HDBSCAN(
             min_cluster_size=min_cluster_size,
             min_samples=min_samples,
             cluster_selection_epsilon=cluster_selection_epsilon,
