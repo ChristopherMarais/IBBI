@@ -4,7 +4,6 @@
 Utilities for dataset handling.
 """
 
-import tempfile
 import zipfile
 from pathlib import Path
 from typing import Union
@@ -12,6 +11,9 @@ from typing import Union
 from datasets import Dataset, DatasetDict, IterableDataset, IterableDatasetDict, load_dataset
 from huggingface_hub import hf_hub_download
 from PIL import Image
+
+# Import the cache utility to manage download locations
+from .cache import get_cache_dir
 
 
 def get_dataset(
@@ -23,7 +25,8 @@ def get_dataset(
     Loads a dataset from the Hugging Face Hub.
 
     This function is a wrapper around `datasets.load_dataset` and returns
-    the raw Dataset object, allowing for direct manipulation.
+    the raw Dataset object, allowing for direct manipulation. By default,
+    it downloads data to a local '.cache' directory where the script is run.
 
     Args:
         repo_id (str): The Hugging Face Hub repository ID of the dataset.
@@ -53,11 +56,11 @@ def get_dataset(
             print(example['image'])
         ```
     """
-    print(f"Loading dataset '{repo_id}' from Hugging Face Hub...")
+    print(f"Loading dataset '{repo_id}' into local directory...")
     try:
-        # Load the dataset from the hub
+        # '.cache' folder relative to the script's execution path.
         dataset: Union[Dataset, DatasetDict, IterableDataset, IterableDatasetDict] = load_dataset(
-            repo_id, split=split, trust_remote_code=True, **kwargs
+            repo_id, split=split, trust_remote_code=True, cache_dir=".", **kwargs
         )
 
         # Ensure that the returned object is a Dataset
@@ -78,7 +81,8 @@ def get_shap_background_dataset() -> list[dict]:
     Downloads, unzips, and loads the default IBBI SHAP background dataset.
 
     This function fetches a specific .zip file of images, not a standard
-    `datasets` object. The data is cached locally for subsequent runs.
+    `datasets` object. The data is downloaded and stored in the package's
+    central cache directory for subsequent runs.
 
     Returns:
         A list of dictionaries, where each dict has an "image" key with a PIL Image object.
@@ -86,21 +90,32 @@ def get_shap_background_dataset() -> list[dict]:
     repo_id = "IBBI-bio/ibbi_shap_dataset"
     filename = "ibbi_shap_dataset.zip"
 
-    print(f"Loading SHAP background dataset from '{repo_id}'...")
-    downloaded_zip_path = hf_hub_download(repo_id=repo_id, filename=filename, repo_type="dataset")
+    # Use the centralized cache directory for SHAP data
+    cache_dir = get_cache_dir()
+
+    print(f"Loading SHAP background dataset from '{repo_id}' into cache: {cache_dir}")
+    downloaded_zip_path = hf_hub_download(
+        repo_id=repo_id, filename=filename, repo_type="dataset", cache_dir=str(cache_dir)
+    )
 
     print("Decompressing SHAP background dataset...")
     background_images = []
-    with tempfile.TemporaryDirectory() as temp_dir:
-        with zipfile.ZipFile(downloaded_zip_path, "r") as zip_ref:
-            zip_ref.extractall(temp_dir)
 
-        image_dir = Path(temp_dir) / "shap_dataset" / "images" / "train"
-        image_paths = list(image_dir.glob("*"))
+    # This prevents re-unzipping on every run.
+    unzip_dir = Path(downloaded_zip_path).parent / "unzipped_shap_data"
+    unzip_dir.mkdir(exist_ok=True)
 
-        for img_path in image_paths:
-            with Image.open(img_path) as img:
-                background_images.append({"image": img.copy()})
+    with zipfile.ZipFile(downloaded_zip_path, "r") as zip_ref:
+        # Only extract if the directory is empty to avoid re-extraction
+        if not any(unzip_dir.iterdir()):
+            zip_ref.extractall(unzip_dir)
+
+    image_dir = unzip_dir / "shap_dataset" / "images" / "train"
+    image_paths = list(image_dir.glob("*"))
+
+    for img_path in image_paths:
+        with Image.open(img_path) as img:
+            background_images.append({"image": img.copy()})
 
     print("SHAP background dataset loaded successfully.")
     return background_images
