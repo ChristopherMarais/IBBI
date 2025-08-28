@@ -62,4 +62,4 @@ def eva02_base_patch14_224_mim_in22k_features_model(pretrained: bool = True, **k
 
 @register_model
 def convformer_b36_features_model(pretrained: bool = True, **kwargs):
-    return UntrainedFeatureExtractor(model_name="caformer_b36")
+    return UntrainedFeatureExtractor(model_name="caformer_b36.sail_in22k_ft_in1k_384")

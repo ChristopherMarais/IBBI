@@ -5,7 +5,7 @@ Single-class beetle object detection models.
 """
 
 import torch
-from ultralytics import RTDETR, YOLO, YOLOE, YOLOWorld
+from ultralytics import RTDETR, YOLO
 
 from ..utils.hub import download_from_hf_hub
 from ._registry import register_model
@@ -53,51 +53,6 @@ class RTDETRSingleClassBeetleDetector:
 
     def get_classes(self) -> list[str]:
         return self.classes
-
-
-class YOLOWorldSingleClassBeetleDetector:
-    """A wrapper class for single-class YOLO-World beetle detection models."""
-
-    def __init__(self, model_path: str):
-        self.model = YOLOWorld(model_path)
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model.to(self.device)
-        self.classes = list(self.model.names.values())
-        print(f"YOLO-World Model loaded on device: {self.device}")
-
-    def predict(self, image, **kwargs):
-        return self.model.predict(image, **kwargs)
-
-    def extract_features(self, image, **kwargs):
-        features = self.model.embed(image, **kwargs)
-        return features[0] if features else None
-
-    def get_classes(self) -> list[str]:
-        return self.classes
-
-
-class YOLOESingleClassBeetleDetector:
-    """A wrapper class for single-class YOLOE beetle detection models."""
-
-    def __init__(self, model_path: str):
-        self.model = YOLOE(model_path)
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model.to(self.device)
-        self.classes = list(self.model.names.values())
-        print(f"YOLOE Model loaded on device: {self.device}")
-
-    def predict(self, image, **kwargs):
-        return self.model.predict(image, **kwargs)
-
-    def extract_features(self, image, **kwargs):
-        features = self.model.embed(image, **kwargs)
-        return features[0] if features else None
-
-    def get_classes(self) -> list[str]:
-        return self.classes
-
-
-# --- Factory Functions for Detection Models (No changes below) ---
 
 
 @register_model
@@ -164,15 +119,3 @@ def rtdetrx_bb_detect_model(pretrained: bool = False, **kwargs):
     else:
         local_weights_path = "rtdetr-x.pt"
     return RTDETRSingleClassBeetleDetector(model_path=local_weights_path)
-
-
-@register_model
-def yoloworldv2_bb_detect_model(pretrained: bool = False, **kwargs):
-    local_weights_path = "yolov8x-worldv2.pt"
-    return YOLOWorldSingleClassBeetleDetector(model_path=local_weights_path)
-
-
-@register_model
-def yoloe11l_seg_bb_detect_model(pretrained: bool = False, **kwargs):
-    local_weights_path = "yoloe-11l-seg.pt"
-    return YOLOESingleClassBeetleDetector(model_path=local_weights_path)
