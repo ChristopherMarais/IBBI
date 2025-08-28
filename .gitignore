@@ -1,7 +1,10 @@
 /site
-*__pycache__/
+__pycache__/
+*/**/__pycache__/
+*ibbi_test_data/
 
-# Jupyter Notebook
 *.ipynb_checkpoints
 *.pt
 *.pyc
+*test.ipynb
+*.arrow

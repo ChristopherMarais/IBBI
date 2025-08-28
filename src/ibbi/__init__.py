@@ -22,7 +22,7 @@ from .models import (
 # Import the populated registry
 from .models._registry import model_registry
 from .utils.cache import clean_cache, get_cache_dir
-from .utils.data import get_dataset
+from .utils.data import get_dataset, get_shap_background_dataset
 
 # --- Top-level function imports ---
 from .utils.info import list_models
@@ -84,6 +84,7 @@ __all__ = [
     "explain_with_shap",
     "get_cache_dir",
     "get_dataset",
+    "get_shap_background_dataset",
     "list_models",
     "object_detection_performance",
     "plot_lime_explanation",
