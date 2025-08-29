@@ -27,6 +27,7 @@ from .untrained import (
     UntrainedFeatureExtractor,
     convformer_b36_features_model,
     dinov2_vitl14_lvd142m_features_model,
+    dinov3_vitl16_lvd1689m_features_model,
     eva02_base_patch14_224_mim_in22k_features_model,
 )
 from .zero_shot_detection import (
@@ -52,6 +53,7 @@ __all__ = [
     "ModelType",
     "convformer_b36_features_model",
     "dinov2_vitl14_lvd142m_features_model",
+    "dinov3_vitl16_lvd1689m_features_model",
     "eva02_base_patch14_224_mim_in22k_features_model",
     "grounding_dino_detect_model",
     "rtdetrx_bb_detect_model",

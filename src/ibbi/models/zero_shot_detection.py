@@ -64,7 +64,7 @@ class GroundingDINOModel:
         results = self.processor.post_process_grounded_object_detection(
             outputs,
             inputs.input_ids,
-            box_threshold=box_threshold,
+            threshold=box_threshold,  # Corrected argument name
             text_threshold=text_threshold,
             target_sizes=[image_pil.size[::-1]],
         )
@@ -98,8 +98,6 @@ class GroundingDINOModel:
             and outputs.encoder_last_hidden_state_vision is not None
         ):
             vision_features = outputs.encoder_last_hidden_state_vision
-            # Pool the features across all patches to get a single vector for the image.
-            # The shape is (batch_size, num_patches, hidden_dim), so we average over dim 1.
             pooled_features = torch.mean(vision_features, dim=1)
             return pooled_features
         else:
