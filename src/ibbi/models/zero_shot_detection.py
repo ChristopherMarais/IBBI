@@ -3,6 +3,7 @@ Zero-shot object detection models.
 """
 
 from io import BytesIO
+from typing import Union
 
 import numpy as np
 import requests
@@ -38,9 +39,27 @@ class GroundingDINOModel:
             "Classes are defined dynamically at inference time via the 'text_prompt' argument in the 'predict' method."
         )
 
-    def predict(self, image, text_prompt: str, box_threshold: float = 0.35, text_threshold: float = 0.25):
+    def predict(
+        self,
+        image,
+        text_prompt: str,
+        box_threshold: float = 0.25,
+        text_threshold: float = 0.25,
+        verbose: bool = False,
+    ):
         """
         Performs zero-shot object detection on an image given a text prompt.
+
+        Args:
+            image: The input image (file path, URL, numpy array, or PIL image).
+            text_prompt (str): The text prompt describing the objects to detect.
+            box_threshold (float, optional): Threshold for bounding box confidence. Defaults to 0.35.
+            text_threshold (float, optional): Threshold for text relevance. Defaults to 0.25.
+            verbose (bool, optional): If True, prints detailed detection results to the console.
+                                      Defaults to False.
+
+        Returns:
+            dict: A dictionary containing the detection results ('scores', 'labels', 'boxes').
         """
         print(f"Running GroundingDINO detection for prompt: '{text_prompt}'...")
 
@@ -64,10 +83,21 @@ class GroundingDINOModel:
         results = self.processor.post_process_grounded_object_detection(
             outputs,
             inputs.input_ids,
-            threshold=box_threshold,  # Corrected argument name
+            # FIX: Changed 'box_threshold' to 'threshold' to match the updated library
+            threshold=box_threshold,
             text_threshold=text_threshold,
             target_sizes=[image_pil.size[::-1]],
         )
+
+        # NEW: If verbose is True, print the detailed results
+        if verbose:
+            print("\n--- Detection Results ---")
+            result_dict = results[0]
+            # The key for text labels is now 'text_labels'
+            for score, label, box in zip(result_dict["scores"], result_dict["text_labels"], result_dict["boxes"]):
+                print(f"- Label: '{label}', Confidence: {score:.4f}, Box: {[round(c, 2) for c in box.tolist()]}")
+            print("-------------------------\n")
+
         return results[0]
 
     def extract_features(self, image, text_prompt: str = "object"):
@@ -123,12 +153,22 @@ class YOLOWorldModel:
         """
         return list(self.model.names.values())
 
-    def set_classes(self, classes: list[str]):
+    def set_classes(self, classes: Union[list[str], str]):
         """
         Sets the classes for the model to detect.
+
+        Args:
+            classes (Union[list[str], str]): A list of class names or a single
+                string with classes separated by " . ". For example: "person . car".
         """
-        self.model.set_classes(classes)
-        print(f"YOLOWorld classes set to: {classes}")
+        # NEW: Check if the input is a string and parse it
+        if isinstance(classes, str):
+            class_list = [c.strip() for c in classes.split(" . ")]
+        else:
+            class_list = classes
+
+        self.model.set_classes(class_list)
+        print(f"YOLOWorld classes set to: {class_list}")
 
     def predict(self, image, **kwargs):
         """
