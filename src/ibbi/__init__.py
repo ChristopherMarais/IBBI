@@ -21,7 +21,8 @@ from .models import (
 
 # Import the populated registry
 from .models._registry import model_registry
-from .utils.data import get_dataset
+from .utils.cache import clean_cache, get_cache_dir
+from .utils.data import get_dataset, get_shap_background_dataset
 
 # --- Top-level function imports ---
 from .utils.info import list_models
@@ -74,15 +75,18 @@ def create_model(model_name: str, pretrained: bool = False, **kwargs: Any) -> Mo
 
 
 __all__ = [
-    "create_model",
-    "list_models",
-    "get_dataset",
-    "explain_with_shap",
-    "ModelType",
-    "plot_shap_explanation",
-    "explain_with_lime",
-    "plot_lime_explanation",
-    "classification_performance",
-    "object_detection_performance",
     "EmbeddingEvaluator",
+    "ModelType",
+    "classification_performance",
+    "clean_cache",
+    "create_model",
+    "explain_with_lime",
+    "explain_with_shap",
+    "get_cache_dir",
+    "get_dataset",
+    "get_shap_background_dataset",
+    "list_models",
+    "object_detection_performance",
+    "plot_lime_explanation",
+    "plot_shap_explanation",
 ]

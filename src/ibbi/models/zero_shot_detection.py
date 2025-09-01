@@ -9,6 +9,7 @@ import requests
 import torch
 from PIL import Image
 from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
+from ultralytics import YOLOWorld
 
 from ._registry import register_model
 
@@ -63,7 +64,7 @@ class GroundingDINOModel:
         results = self.processor.post_process_grounded_object_detection(
             outputs,
             inputs.input_ids,
-            box_threshold=box_threshold,
+            threshold=box_threshold,  # Corrected argument name
             text_threshold=text_threshold,
             target_sizes=[image_pil.size[::-1]],
         )
@@ -92,20 +93,55 @@ class GroundingDINOModel:
         with torch.no_grad():
             outputs = self.model(**inputs)
 
-        # FINAL FIX: Use the correct attribute name found in the debug output.
         if (
             hasattr(outputs, "encoder_last_hidden_state_vision")
             and outputs.encoder_last_hidden_state_vision is not None
         ):
             vision_features = outputs.encoder_last_hidden_state_vision
-            # Pool the features across all patches to get a single vector for the image.
-            # The shape is (batch_size, num_patches, hidden_dim), so we average over dim 1.
             pooled_features = torch.mean(vision_features, dim=1)
             return pooled_features
         else:
             print("Could not extract 'encoder_last_hidden_state_vision' from GroundingDINO output.")
             print(f"Available attributes in 'outputs': {dir(outputs)}")
             return None
+
+
+class YOLOWorldModel:
+    """
+    A wrapper class for the YOLOWorld zero-shot object detection model.
+    """
+
+    def __init__(self, model_path: str):
+        self.model = YOLOWorld(model_path)
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model.to(self.device)
+        print(f"YOLO-World model loaded on device: {self.device}")
+
+    def get_classes(self):
+        """
+        Returns the classes the model is currently set to detect.
+        """
+        return list(self.model.names.values())
+
+    def set_classes(self, classes: list[str]):
+        """
+        Sets the classes for the model to detect.
+        """
+        self.model.set_classes(classes)
+        print(f"YOLOWorld classes set to: {classes}")
+
+    def predict(self, image, **kwargs):
+        """
+        Performs zero-shot object detection on an image.
+        """
+        return self.model.predict(image, **kwargs)
+
+    def extract_features(self, image, **kwargs):
+        """
+        Extracts deep features (embeddings) from the model for an image.
+        """
+        features = self.model.embed(image, **kwargs)
+        return features[0] if features else None
 
 
 @register_model
@@ -117,3 +153,13 @@ def grounding_dino_detect_model(pretrained: bool = True, **kwargs):
         print("Warning: `pretrained=False` has no effect. GroundingDINO is always loaded from pretrained weights.")
     model_id = kwargs.get("model_id", "IDEA-Research/grounding-dino-base")
     return GroundingDINOModel(model_id=model_id)
+
+
+@register_model
+def yoloworldv2_bb_detect_model(pretrained: bool = True, **kwargs):
+    """
+    Factory function for the YOLOWorld beetle detector.
+    Note: `pretrained` flag is for consistency; this model always loads local weights.
+    """
+    local_weights_path = "yolov8x-worldv2.pt"
+    return YOLOWorldModel(model_path=local_weights_path)
