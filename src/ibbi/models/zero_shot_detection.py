@@ -83,17 +83,14 @@ class GroundingDINOModel:
         results = self.processor.post_process_grounded_object_detection(
             outputs,
             inputs.input_ids,
-            # FIX: Changed 'box_threshold' to 'threshold' to match the updated library
             threshold=box_threshold,
             text_threshold=text_threshold,
             target_sizes=[image_pil.size[::-1]],
         )
 
-        # NEW: If verbose is True, print the detailed results
         if verbose:
             print("\n--- Detection Results ---")
             result_dict = results[0]
-            # The key for text labels is now 'text_labels'
             for score, label, box in zip(result_dict["scores"], result_dict["text_labels"], result_dict["boxes"]):
                 print(f"- Label: '{label}', Confidence: {score:.4f}, Box: {[round(c, 2) for c in box.tolist()]}")
             print("-------------------------\n")
@@ -151,7 +148,7 @@ class YOLOWorldModel:
         """
         Returns the classes the model is currently set to detect.
         """
-        return list(self.model.names.values())
+        return self.model.names
 
     def set_classes(self, classes: Union[list[str], str]):
         """
@@ -161,13 +158,14 @@ class YOLOWorldModel:
             classes (Union[list[str], str]): A list of class names or a single
                 string with classes separated by " . ". For example: "person . car".
         """
-        # NEW: Check if the input is a string and parse it
         if isinstance(classes, str):
             class_list = [c.strip() for c in classes.split(" . ")]
         else:
             class_list = classes
 
-        self.model.set_classes(class_list)
+        with torch.enable_grad():
+            self.model.set_classes(class_list)
+
         print(f"YOLOWorld classes set to: {class_list}")
 
     def predict(self, image, **kwargs):
