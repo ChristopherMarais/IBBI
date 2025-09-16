@@ -8,6 +8,8 @@ from typing import Any
 
 from .evaluate.features import EmbeddingEvaluator
 from .evaluate.performance import classification_performance, object_detection_performance
+from .explain.lime import explain_with_lime, plot_lime_explanation
+from .explain.shap import explain_with_shap, plot_shap_explanation
 
 # Import model modules to ensure registry is populated
 # --- Import ModelType from its new location ---
@@ -26,8 +28,6 @@ from .utils.data import get_dataset, get_shap_background_dataset
 
 # --- Top-level function imports ---
 from .utils.info import list_models
-from .xai.lime import explain_with_lime, plot_lime_explanation
-from .xai.shap import explain_with_shap, plot_shap_explanation
 
 
 def create_model(model_name: str, pretrained: bool = False, **kwargs: Any) -> ModelType:

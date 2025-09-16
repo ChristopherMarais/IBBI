@@ -5,7 +5,7 @@ Highly optimized LIME-based model explainability for IBBI models,
 featuring batched predictions and faster segmentation.
 """
 
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
@@ -92,12 +92,12 @@ def explain_with_lime(
     model: ModelType,
     image: Image.Image,
     text_prompt: Optional[str] = None,
-    image_size: Tuple[int, int] = (640, 640),
+    image_size: tuple[int, int] = (640, 640),
     batch_size: int = 50,
     num_samples: int = 1000,
     top_labels: int = 5,
     num_features: int = 100000,
-) -> Tuple[lime_image.ImageExplanation, Image.Image]:
+) -> tuple[lime_image.ImageExplanation, Image.Image]:
     """
     Generates LIME explanations for a single image using batched predictions
     and a faster segmentation algorithm.
@@ -114,7 +114,7 @@ def explain_with_lime(
         num_features (int, optional): The number of superpixels to generate. Defaults to 100000.
 
     Returns:
-        Tuple[lime_image.ImageExplanation, Image.Image]: The LIME explanation object and the original image.
+        tuple[lime_image.ImageExplanation, Image.Image]: The LIME explanation object and the original image.
     """
     original_image = image  # Keep the original for plotting
     image_to_explain = image.resize(image_size)
