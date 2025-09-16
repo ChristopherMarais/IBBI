@@ -14,7 +14,7 @@ from shap import maskers
 
 # Import specific model types to handle them differently
 from ..models import ModelType
-from ..models.zero_shot_detection import GroundingDINOModel
+from ..models.zero_shot import GroundingDINOModel
 
 
 def _prepare_image_for_shap(image_array: np.ndarray) -> np.ndarray:
