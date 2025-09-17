@@ -1,4 +1,4 @@
-# src/ibbi/xai/shap.py
+# src/ibbi/explain/shap.py
 
 """
 SHAP-based model explainability for IBBI models using PartitionExplainer.
@@ -54,12 +54,14 @@ def _prediction_wrapper(model: ModelType, text_prompt: Optional[str] = None) -> 
             class_names = model.get_classes()
             num_classes = len(class_names)
             predictions = np.zeros((num_images, num_classes))
-            results = model.predict(images_to_predict, verbose=False)
+            results = model.predict(images_to_predict, verbose=False)  # Use the wrapper's predict method
+            if not isinstance(results, list):
+                results = [results]
             for i, res in enumerate(results):
-                if hasattr(res, "boxes") and res.boxes is not None:
-                    for box in res.boxes:
-                        class_idx = int(box.cls)
-                        confidence = box.conf.item()
+                if res and res.get("boxes"):
+                    for j, box in enumerate(res["boxes"]):
+                        class_idx = list(class_names).index(res["labels"][j])
+                        confidence = res["scores"][j]
                         predictions[i, class_idx] = max(predictions[i, class_idx], confidence)
         return predictions
 
@@ -102,14 +104,13 @@ def explain_with_shap(
     masker = maskers.Image("blur(16, 16)", images_to_explain_norm[0].shape)
 
     print(f"Using a background dataset of {len(background_images_norm)} images.")
-    explainer = shap.PartitionExplainer(prediction_fn, masker)
+    explainer = shap.PartitionExplainer(prediction_fn, masker, output_names=output_names)
 
     print(f"Generating SHAP explanations for {num_explain_samples} images...")
     shap_values = explainer(images_to_explain_norm, max_evals=max_evals, main_effects=False)
 
     # Assign correct metadata to the explanation object
     shap_values.data = images_to_explain_np
-    shap_values.output_names = output_names
 
     return shap_values
 
@@ -145,21 +146,16 @@ def plot_shap_explanation(
     plt.title("Original Image")
     plt.axis("off")
     plt.show()
+    shap_values_for_plot = shap_values[..., top_indices]  # type: ignore
+    class_names_for_plot = class_names[top_indices]
 
-    for class_idx in top_indices:
-        if prediction_scores[class_idx] > 0:
-            class_name = class_names[class_idx]
-            score = prediction_scores[class_idx]
-            print(f"Explanation for '{class_name}' (Prediction Score: {score:.3f})")
+    if np.all(shap_values == 0):
+        print("⚠️  Warning: SHAP values are all zero. The plot will be empty.")
+        print("   This can happen if the model's prediction is not sensitive to the masking.")
 
-            shap_values_for_class = shap_values[:, :, :, class_idx]  # type: ignore
-
-            if np.all(shap_values_for_class == 0):
-                print("⚠️  Warning: SHAP values are all zero. The plot will be empty.")
-                print("   This can happen if the model's prediction is not sensitive to the masking.")
-
-            shap.image_plot(
-                shap_values=[shap_values_for_class],
-                pixel_values=image_for_plotting,
-                show=True,
-            )
+    shap.image_plot(
+        shap_values=[shap_values_for_plot] if isinstance(shap_values_for_plot, np.ndarray) else shap_values_for_plot,
+        pixel_values=image_for_plotting,
+        labels=np.array([class_names_for_plot]),
+        show=True,
+    )

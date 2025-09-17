@@ -13,7 +13,7 @@ from .datasets import get_dataset, get_shap_background_dataset
 
 # --- High-level classes for streamlined workflow ---
 from .evaluate import Evaluator
-from .explain import Explainer
+from .explain import Explainer, plot_lime_explanation, plot_shap_explanation
 from .models import ModelType
 from .models._registry import model_registry
 from .utils.cache import clean_cache, get_cache_dir
@@ -69,4 +69,6 @@ __all__ = [
     "get_dataset",
     "get_shap_background_dataset",
     "list_models",
+    "plot_lime_explanation",
+    "plot_shap_explanation",
 ]

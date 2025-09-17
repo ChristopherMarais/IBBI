@@ -107,7 +107,16 @@ def object_detection_performance(
             recalls = tp_cumsum / (num_gt_boxes + np.finfo(float).eps)
             precisions = tp_cumsum / (tp_cumsum + fp_cumsum + np.finfo(float).eps)
 
-            ap = np.trapz(precisions, recalls)
+            # --- Start of corrected section ---
+            recalls = np.concatenate(([0.0], recalls, [1.0]))
+            precisions = np.concatenate(([0.0], precisions, [0.0]))
+
+            for j in range(len(precisions) - 2, -1, -1):
+                precisions[j] = max(precisions[j], precisions[j + 1])
+
+            recall_indices = np.where(recalls[1:] != recalls[:-1])[0]
+            ap = np.sum((recalls[recall_indices + 1] - recalls[recall_indices]) * precisions[recall_indices + 1])
+            # --- End of corrected section ---
             aps[class_id] = ap
 
         per_threshold_scores[f"mAP@{iou_threshold:.2f}"] = np.mean(list(aps.values())) if aps else 0.0

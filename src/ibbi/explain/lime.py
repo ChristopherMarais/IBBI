@@ -27,7 +27,7 @@ def _prediction_wrapper(model: ModelType, text_prompt: Optional[str] = None) -> 
     This version processes the entire batch of images as a single tensor.
     """
 
-    def predict(image_array: np.ndarray) -> np.ndarray:
+    def predict(image_array: np.ndarray, verbose: bool = False) -> np.ndarray:
         """
         Batched prediction function for LIME.
         """
@@ -61,7 +61,7 @@ def _prediction_wrapper(model: ModelType, text_prompt: Optional[str] = None) -> 
             num_classes = len(class_names)
             predictions = np.zeros((image_array.shape[0], num_classes))
 
-            results = model.model(image_tensor)
+            results = model.model(image_tensor, verbose=verbose)
 
             for i, res in enumerate(results):
                 if hasattr(res, "boxes") and res.boxes is not None:

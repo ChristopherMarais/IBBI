@@ -122,6 +122,7 @@ class EmbeddingEvaluator:
     def compare_to_distance_matrix(
         self,
         true_labels: np.ndarray,
+        label_map: Optional[dict[int, str]] = None,
         embedding_metric: str = "cosine",
         ext_dist_matrix: Optional[np.ndarray] = None,
         ext_dist_labels: Optional[list[str]] = None,
@@ -140,6 +141,9 @@ class EmbeddingEvaluator:
         grouped_centroids = df.groupby("label").mean()
         centroids: np.ndarray = grouped_centroids.to_numpy()
         centroid_index: pd.Index = grouped_centroids.index
+        if label_map:
+            # Map integer labels to species names
+            centroid_index = centroid_index.map(label_map)
 
         embedding_dist_matrix = pd.DataFrame(
             squareform(pdist(centroids, metric=embedding_metric)),  # type: ignore

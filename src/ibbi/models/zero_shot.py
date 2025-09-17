@@ -1,3 +1,5 @@
+# src/ibbi/models/zero_shot.py
+
 """
 Zero-shot object detection models.
 """
@@ -49,17 +51,6 @@ class GroundingDINOModel:
     ):
         """
         Performs zero-shot object detection on an image given a text prompt.
-
-        Args:
-            image: The input image (file path, URL, numpy array, or PIL image).
-            text_prompt (str): The text prompt describing the objects to detect.
-            box_threshold (float, optional): Threshold for bounding box confidence. Defaults to 0.35.
-            text_threshold (float, optional): Threshold for text relevance. Defaults to 0.25.
-            verbose (bool, optional): If True, prints detailed detection results to the console.
-                                      Defaults to False.
-
-        Returns:
-            dict: A dictionary containing the detection results ('scores', 'labels', 'boxes').
         """
         print(f"Running GroundingDINO detection for prompt: '{text_prompt}'...")
 
@@ -95,6 +86,8 @@ class GroundingDINOModel:
                 print(f"- Label: '{label}', Confidence: {score:.4f}, Box: {[round(c, 2) for c in box.tolist()]}")
             print("-------------------------\n")
 
+        results[0]["boxes"] = [box.tolist() for box in results[0]["boxes"]]
+
         return results[0]
 
     def extract_features(self, image, text_prompt: str = "object"):
@@ -126,7 +119,7 @@ class GroundingDINOModel:
         ):
             vision_features = outputs.encoder_last_hidden_state_vision
             pooled_features = torch.mean(vision_features, dim=1)
-            return pooled_features
+            return pooled_features.detach()
         else:
             print("Could not extract 'encoder_last_hidden_state_vision' from GroundingDINO output.")
             print(f"Available attributes in 'outputs': {dir(outputs)}")
@@ -153,10 +146,6 @@ class YOLOWorldModel:
     def set_classes(self, classes: Union[list[str], str]):
         """
         Sets the classes for the model to detect.
-
-        Args:
-            classes (Union[list[str], str]): A list of class names or a single
-                string with classes separated by " . ". For example: "person . car".
         """
         if isinstance(classes, str):
             class_list = [c.strip() for c in classes.split(" . ")]
@@ -172,12 +161,19 @@ class YOLOWorldModel:
         """
         Performs zero-shot object detection on an image.
         """
-        return self.model.predict(image, **kwargs)
+        results = self.model.predict(image, **kwargs)
+
+        result_dict = {"scores": [], "labels": [], "boxes": []}
+
+        if results and hasattr(results[0], "boxes") and results[0].boxes is not None:
+            for box in results[0].boxes:
+                result_dict["scores"].append(box.conf.item())
+                result_dict["labels"].append(self.model.names[int(box.cls)])
+                result_dict["boxes"].append(box.xyxy[0].tolist())
+
+        return result_dict
 
     def extract_features(self, image, **kwargs):
-        """
-        Extracts deep features (embeddings) from the model for an image.
-        """
         features = self.model.embed(image, **kwargs)
         return features[0] if features else None
 
@@ -197,7 +193,6 @@ def grounding_dino_detect_model(pretrained: bool = True, **kwargs):
 def yoloworldv2_bb_detect_model(pretrained: bool = True, **kwargs):
     """
     Factory function for the YOLOWorld beetle detector.
-    Note: `pretrained` flag is for consistency; this model always loads local weights.
     """
     local_weights_path = "yolov8x-worldv2.pt"
     return YOLOWorldModel(model_path=local_weights_path)

@@ -7,10 +7,11 @@ Provides the high-level Evaluator class for assessing model performance.
 from typing import Any, Optional, Union
 
 import numpy as np
-import torch
 from tqdm import tqdm
 
 from ..models import ModelType
+from ..models.feature_extractors import HuggingFaceFeatureExtractor
+from ..models.zero_shot import GroundingDINOModel
 from .classification import classification_performance
 from .embeddings import EmbeddingEvaluator
 from .object_detection import object_detection_performance
@@ -32,27 +33,59 @@ class Evaluator:
             predict_kwargs = {}
 
         print("Running classification evaluation...")
-        true_labels = [item["label"] for item in dataset]
+
+        if isinstance(self.model, (HuggingFaceFeatureExtractor, GroundingDINOModel)):
+            print("Warning: Classification evaluation is not supported for this model type.")
+            return {}
+
+        if not hasattr(self.model, "get_classes") or not callable(self.model.get_classes):
+            print("Warning: Model does not have a 'get_classes' method for class mapping. Skipping classification.")
+            return {}
+
+        model_classes = self.model.get_classes()
+        class_name_to_idx = {v: k for k, v in enumerate(model_classes)}
+        true_labels = []
+        items_for_prediction = []
+
+        for item in dataset:
+            if "objects" in item and "category" in item["objects"] and item["objects"]["category"]:
+                label_name = item["objects"]["category"][0]
+                if label_name in class_name_to_idx:
+                    true_labels.append(class_name_to_idx[label_name])
+                    items_for_prediction.append(item)
+
+        if not true_labels:
+            print(
+                "Warning: No valid labels found in the dataset that match the model's classes. Skipping classification."
+            )
+            return {}
+
         predicted_labels = []
 
         print("Making predictions for classification report...")
-        for item in tqdm(dataset):
+        for i, item in enumerate(tqdm(items_for_prediction)):
             results = self.model.predict(item["image"], verbose=False, **predict_kwargs)
-            if not results:
+            true_label_for_item = true_labels[i]
+
+            if not results or not results.get("labels"):
                 predicted_labels.append(-1)
                 continue
 
-            # Check if boxes exist before trying to access them
-            pred_classes = {int(box.cls) for res in results if res.boxes is not None for box in res.boxes}
+            pred_labels_for_item = results.get("labels", [])
+            pred_classes = {class_name_to_idx[label] for label in pred_labels_for_item if label in class_name_to_idx}
 
-            if item["label"] in pred_classes:
-                predicted_labels.append(item["label"])
-            elif pred_classes:
-                # Fallback to the highest confidence prediction
-                all_boxes = [box for res in results if res.boxes is not None for box in res.boxes]
-                if all_boxes:
-                    highest_conf_box = max(all_boxes, key=lambda b: b.conf.item())
-                    predicted_labels.append(int(highest_conf_box.cls))
+            if true_label_for_item in pred_classes:
+                predicted_labels.append(true_label_for_item)
+            elif pred_labels_for_item:
+                # Find the label with the highest score
+                scores = results.get("scores", [])
+                if scores:
+                    highest_conf_idx = np.argmax(scores)
+                    highest_conf_label = pred_labels_for_item[highest_conf_idx]
+                    if highest_conf_label in class_name_to_idx:
+                        predicted_labels.append(class_name_to_idx[highest_conf_label])
+                    else:
+                        predicted_labels.append(-1)
                 else:
                     predicted_labels.append(-1)
             else:
@@ -70,33 +103,52 @@ class Evaluator:
             predict_kwargs = {}
 
         print("Running object detection evaluation...")
+
+        if isinstance(self.model, (HuggingFaceFeatureExtractor, GroundingDINOModel)):
+            print("Warning: Object detection evaluation is not supported for this model type.")
+            return {}
+
+        if not hasattr(self.model, "get_classes") or not callable(self.model.get_classes):
+            print("Warning: Model does not have a 'get_classes' method for class mapping. Skipping object detection.")
+            return {}
+
+        model_classes = self.model.get_classes()
+        class_name_to_idx = {v: k for k, v in enumerate(model_classes)}
+
         gt_boxes, gt_labels, gt_image_ids = [], [], []
         pred_boxes, pred_labels, pred_scores, pred_image_ids = [], [], [], []
 
         print("Extracting ground truth and making predictions for mAP...")
         for i, item in enumerate(tqdm(dataset)):
-            if "bboxes" in item and "cls" in item and item["cls"] is not None:
-                for j in range(len(item["cls"])):
-                    gt_boxes.append(item["bboxes"][j])
-                    gt_labels.append(item["cls"][j])
-                    gt_image_ids.append(i)
+            if "objects" in item and "bbox" in item["objects"] and "category" in item["objects"]:
+                for j in range(len(item["objects"]["category"])):
+                    label_name = item["objects"]["category"][j]
+                    if label_name in class_name_to_idx:
+                        bbox = item["objects"]["bbox"][j]
+                        # Convert [x, y, width, height] to [x1, y1, x2, y2]
+                        x1, y1, w, h = bbox
+                        x2 = x1 + w
+                        y2 = y1 + h
+                        gt_boxes.append([x1, y1, x2, y2])
+                        gt_labels.append(class_name_to_idx[label_name])
+                        gt_image_ids.append(i)
 
             results = self.model.predict(item["image"], verbose=False, **predict_kwargs)
             if not results:
                 continue
 
-            for res in results:
-                if hasattr(res, "boxes") and res.boxes is not None:
-                    for box in res.boxes:
-                        box_coords = box.xyxy[0]
-                        if isinstance(box_coords, torch.Tensor):
-                            box_coords = box_coords.cpu().numpy()
-                        pred_boxes.append(box_coords.flatten())
-                        pred_labels.append(int(box.cls))
-                        pred_scores.append(float(box.conf))
-                        pred_image_ids.append(i)
+            if results and results.get("boxes"):
+                for box, label, score in zip(results["boxes"], results["labels"], results["scores"]):
+                    box_coords = np.array(box)
+                    pred_boxes.append(box_coords.flatten())
+                    if label in class_name_to_idx:
+                        pred_labels.append(class_name_to_idx[label])
+                    else:
+                        pred_labels.append(-1)  # Or handle unknown labels as needed
+                    pred_scores.append(score)
+                    pred_image_ids.append(i)
 
-        return object_detection_performance(
+        performance_results = object_detection_performance(
             np.array(gt_boxes),
             gt_labels,
             gt_image_ids,
@@ -106,6 +158,17 @@ class Evaluator:
             pred_image_ids,
             iou_thresholds=iou_thresholds,
         )
+
+        # Map integer class IDs in the results back to class names for the final output
+        if "per_class_AP_at_last_iou" in performance_results:
+            class_aps = performance_results["per_class_AP_at_last_iou"]
+            idx_to_class_name = dict(enumerate(model_classes))
+            named_class_aps = {
+                idx_to_class_name.get(class_id, f"unknown_class_{class_id}"): ap for class_id, ap in class_aps.items()
+            }
+            performance_results["per_class_AP_at_last_iou"] = named_class_aps
+
+        return performance_results
 
     def embeddings(
         self,
@@ -120,9 +183,24 @@ class Evaluator:
         if extract_kwargs is None:
             extract_kwargs = {}
 
+        model_classes = []
+        if hasattr(self.model, "get_classes") and callable(self.model.get_classes):
+            try:
+                model_classes = self.model.get_classes()
+            except NotImplementedError:
+                pass
+
+        class_name_to_idx = {v: k for k, v in enumerate(model_classes)} if model_classes else None
+
+        if not class_name_to_idx:
+            print("Warning: Model does not have a 'names' attribute for class mapping. Skipping embeddings evaluation.")
+            return {}
+
         print("Extracting embeddings for evaluation...")
         embeddings_list = [self.model.extract_features(item["image"], **extract_kwargs) for item in tqdm(dataset)]
-        embeddings = np.array([emb.flatten() for emb in embeddings_list if emb is not None])
+
+        # Handle tensor to numpy conversion
+        embeddings = np.array([emb.cpu().numpy().flatten() for emb in embeddings_list if emb is not None])
 
         if embeddings.shape[0] == 0:
             print("Warning: Could not extract any valid embeddings from the dataset.")
@@ -133,15 +211,36 @@ class Evaluator:
         results = {}
         results.update(evaluator.evaluate_cluster_structure())
 
-        if "label" in dataset.column_names:
-            true_labels = np.array([item["label"] for item in dataset])
-            results.update(evaluator.evaluate_against_truth(true_labels))
+        # Initialize with default values
+        results["mantel_correlation"] = {"r": None, "p_value": None, "n_items": 0}
 
-            try:
-                mantel_corr, p_val, n = evaluator.compare_to_distance_matrix(true_labels)
-                results["mantel_correlation"] = {"r": mantel_corr, "p_value": p_val, "n_items": n}
-            except (ImportError, FileNotFoundError, ValueError) as e:
-                print(f"Could not run Mantel test: {e}")
+        if "objects" in dataset[0] and "category" in dataset[0]["objects"]:
+            true_labels = []
+            valid_indices = []
+            for i, item in enumerate(dataset):
+                if "objects" in item and "category" in item["objects"] and item["objects"]["category"]:
+                    label_name = item["objects"]["category"][0]
+                    if label_name in class_name_to_idx:
+                        true_labels.append(class_name_to_idx[label_name])
+                        valid_indices.append(i)
+
+            if true_labels:
+                true_labels = np.array(true_labels)
+                results.update(evaluator.evaluate_against_truth(true_labels))
+
+                try:
+                    # Ensure embeddings match the labels being tested
+                    valid_embeddings = embeddings[valid_indices]
+                    evaluator_for_mantel = EmbeddingEvaluator(valid_embeddings, use_umap=False)
+
+                    label_map = {i: str(name) for i, name in enumerate(model_classes)}
+
+                    mantel_corr, p_val, n = evaluator_for_mantel.compare_to_distance_matrix(
+                        true_labels, label_map=label_map
+                    )
+                    results["mantel_correlation"] = {"r": mantel_corr, "p_value": p_val, "n_items": n}
+                except (ImportError, FileNotFoundError, ValueError) as e:
+                    print(f"Could not run Mantel test: {e}")
 
         return results
 

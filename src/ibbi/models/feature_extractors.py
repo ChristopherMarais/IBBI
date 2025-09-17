@@ -1,4 +1,4 @@
-# src/ibbi/models/untrained.py
+# src/ibbi/models/feature_extractors.py
 
 """
 Untrained models for feature extraction.
@@ -37,21 +37,16 @@ class UntrainedFeatureExtractor:
         else:
             raise TypeError("Image must be a PIL Image or a file path.")
 
-        # Add a check to ensure self.transforms is a single callable function
         if not callable(self.transforms):
-            # This error will be raised if it's unexpectedly a tuple
             raise TypeError("The transform object is not callable. Check the 'separate' argument in create_transform.")
 
-        # Now, Pylance knows self.transforms is callable and the error will disappear.
         transformed_img = self.transforms(img)
-
-        # Explicitly ensure the output is a tensor before further operations
         input_tensor = torch.as_tensor(transformed_img).unsqueeze(0).to(self.device)
 
         features = self.model.forward_features(input_tensor)  # type: ignore
         output = self.model.forward_head(features, pre_logits=True)  # type: ignore
 
-        return output.detach().cpu().numpy()
+        return output.detach()
 
     def get_classes(self) -> list[str]:
         raise NotImplementedError("This model is for feature extraction only and does not have classes.")
@@ -61,8 +56,10 @@ class HuggingFaceFeatureExtractor:
     """A wrapper class for using pretrained Hugging Face models for feature extraction."""
 
     def __init__(self, model_name: str):
-        self.feature_extractor = pipeline(task="image-feature-extraction", model=model_name)
-        print(f"{model_name} model loaded successfully using the pipeline.")
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        device_id = 0 if self.device == "cuda" else -1
+        self.feature_extractor = pipeline(task="image-feature-extraction", model=model_name, device=device_id)
+        print(f"{model_name} model loaded successfully using the pipeline on device: {self.device}")
 
     def predict(self, image, **kwargs):
         raise NotImplementedError("This model is for feature extraction only and does not support prediction.")
@@ -75,13 +72,9 @@ class HuggingFaceFeatureExtractor:
         else:
             raise TypeError("Image must be a PIL Image or a file path.")
 
-        # The pipeline returns a list containing a numpy array of all token embeddings.
         embedding = self.feature_extractor(img, **kwargs)
-
-        # This gives us a single, representative feature vector for the image.
         global_features = np.array(embedding)[0, 0, :]
-
-        return global_features
+        return torch.tensor(global_features).to(self.device)
 
     def get_classes(self) -> list[str]:
         raise NotImplementedError("This model is for feature extraction only and does not have classes.")
@@ -104,5 +97,4 @@ def convformer_b36_features_model(pretrained: bool = True, **kwargs):
 
 @register_model
 def dinov3_vitl16_lvd1689m_features_model(pretrained: bool = True, **kwargs):
-    # Use the HuggingFaceFeatureExtractor with the IBBI-bio model
     return HuggingFaceFeatureExtractor(model_name="IBBI-bio/dinov3-vitl16-pretrain-lvd1689m")

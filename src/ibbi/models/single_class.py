@@ -1,4 +1,4 @@
-# src/ibbi/models/detection.py
+# src/ibbi/models/single_class.py
 
 """
 Single-class beetle object detection models.
@@ -9,8 +9,6 @@ from ultralytics import RTDETR, YOLO
 
 from ..utils.hub import download_from_hf_hub
 from ._registry import register_model
-
-# --- Base Classes for different architectures ---
 
 
 class YOLOSingleClassBeetleDetector:
@@ -24,7 +22,17 @@ class YOLOSingleClassBeetleDetector:
         print(f"YOLO Model loaded on device: {self.device}")
 
     def predict(self, image, **kwargs):
-        return self.model.predict(image, **kwargs)
+        results = self.model.predict(image, **kwargs)
+
+        result_dict = {"scores": [], "labels": [], "boxes": []}
+
+        if results and hasattr(results[0], "boxes") and results[0].boxes is not None:
+            for box in results[0].boxes:
+                result_dict["scores"].append(box.conf.item())
+                result_dict["labels"].append(self.model.names[int(box.cls)])
+                result_dict["boxes"].append(box.xyxy[0].tolist())
+
+        return result_dict
 
     def extract_features(self, image, **kwargs):
         features = self.model.embed(image, **kwargs)
@@ -45,7 +53,17 @@ class RTDETRSingleClassBeetleDetector:
         print(f"RT-DETR Model loaded on device: {self.device}")
 
     def predict(self, image, **kwargs):
-        return self.model.predict(image, **kwargs)
+        results = self.model.predict(image, **kwargs)
+
+        result_dict = {"scores": [], "labels": [], "boxes": []}
+
+        if results and hasattr(results[0], "boxes") and results[0].boxes is not None:
+            for box in results[0].boxes:
+                result_dict["scores"].append(box.conf.item())
+                result_dict["labels"].append(self.model.names[int(box.cls)])
+                result_dict["boxes"].append(box.xyxy[0].tolist())
+
+        return result_dict
 
     def extract_features(self, image, **kwargs):
         features = self.model.embed(image, **kwargs)
