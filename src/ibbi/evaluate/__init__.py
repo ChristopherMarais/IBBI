@@ -1,9 +1,5 @@
 # src/ibbi/evaluate/__init__.py
 
-"""
-Provides the high-level Evaluator class for assessing model performance.
-"""
-
 from typing import Any, Optional, Union
 
 import numpy as np
@@ -42,7 +38,11 @@ class Evaluator:
             print("Warning: Model does not have a 'get_classes' method for class mapping. Skipping classification.")
             return {}
 
-        model_classes = self.model.get_classes()
+        raw_model_classes = self.model.get_classes()
+        if isinstance(raw_model_classes, dict):
+            model_classes = list(raw_model_classes.values())
+        else:
+            model_classes = raw_model_classes
         class_name_to_idx = {v: k for k, v in enumerate(model_classes)}
         true_labels = []
         items_for_prediction = []
@@ -91,7 +91,11 @@ class Evaluator:
             else:
                 predicted_labels.append(-1)
 
-        return classification_performance(np.array(true_labels), np.array(predicted_labels), **kwargs)
+        # This removes the duplicate 'target_names' argument from kwargs if it exists
+        kwargs.pop("target_names", None)
+        return classification_performance(
+            np.array(true_labels), np.array(predicted_labels), target_names=model_classes, **kwargs
+        )
 
     def object_detection(
         self, dataset, iou_thresholds: Union[float, list[float]] = 0.5, predict_kwargs: Optional[dict[str, Any]] = None
@@ -112,8 +116,13 @@ class Evaluator:
             print("Warning: Model does not have a 'get_classes' method for class mapping. Skipping object detection.")
             return {}
 
-        model_classes = self.model.get_classes()
+        raw_model_classes = self.model.get_classes()
+        if isinstance(raw_model_classes, dict):
+            model_classes: list[str] = list(raw_model_classes.values())
+        else:
+            model_classes: list[str] = raw_model_classes
         class_name_to_idx = {v: k for k, v in enumerate(model_classes)}
+        idx_to_name = dict(enumerate(model_classes))
 
         gt_boxes, gt_labels, gt_image_ids = [], [], []
         pred_boxes, pred_labels, pred_scores, pred_image_ids = [], [], [], []
@@ -125,7 +134,6 @@ class Evaluator:
                     label_name = item["objects"]["category"][j]
                     if label_name in class_name_to_idx:
                         bbox = item["objects"]["bbox"][j]
-                        # Convert [x, y, width, height] to [x1, y1, x2, y2]
                         x1, y1, w, h = bbox
                         x2 = x1 + w
                         y2 = y1 + h
@@ -144,7 +152,7 @@ class Evaluator:
                     if label in class_name_to_idx:
                         pred_labels.append(class_name_to_idx[label])
                     else:
-                        pred_labels.append(-1)  # Or handle unknown labels as needed
+                        pred_labels.append(-1)
                     pred_scores.append(score)
                     pred_image_ids.append(i)
 
@@ -159,14 +167,17 @@ class Evaluator:
             iou_thresholds=iou_thresholds,
         )
 
-        # Map integer class IDs in the results back to class names for the final output
         if "per_class_AP_at_last_iou" in performance_results:
             class_aps = performance_results["per_class_AP_at_last_iou"]
-            idx_to_class_name = dict(enumerate(model_classes))
             named_class_aps = {
-                idx_to_class_name.get(class_id, f"unknown_class_{class_id}"): ap for class_id, ap in class_aps.items()
+                idx_to_name.get(class_id, f"unknown_class_{class_id}"): ap for class_id, ap in class_aps.items()
             }
             performance_results["per_class_AP_at_last_iou"] = named_class_aps
+
+        if "sample_results" in performance_results:
+            performance_results["sample_results"]["label"] = performance_results["sample_results"]["label"].map(
+                idx_to_name
+            )
 
         return performance_results
 
@@ -183,23 +194,9 @@ class Evaluator:
         if extract_kwargs is None:
             extract_kwargs = {}
 
-        model_classes = []
-        if hasattr(self.model, "get_classes") and callable(self.model.get_classes):
-            try:
-                model_classes = self.model.get_classes()
-            except NotImplementedError:
-                pass
-
-        class_name_to_idx = {v: k for k, v in enumerate(model_classes)} if model_classes else None
-
-        if not class_name_to_idx:
-            print("Warning: Model does not have a 'names' attribute for class mapping. Skipping embeddings evaluation.")
-            return {}
-
         print("Extracting embeddings for evaluation...")
         embeddings_list = [self.model.extract_features(item["image"], **extract_kwargs) for item in tqdm(dataset)]
 
-        # Handle tensor to numpy conversion
         embeddings = np.array([emb.cpu().numpy().flatten() for emb in embeddings_list if emb is not None])
 
         if embeddings.shape[0] == 0:
@@ -209,38 +206,52 @@ class Evaluator:
         evaluator = EmbeddingEvaluator(embeddings, use_umap=use_umap, **kwargs)
 
         results = {}
-        results.update(evaluator.evaluate_cluster_structure())
+        results["internal_cluster_validation"] = evaluator.evaluate_cluster_structure()
 
-        # Initialize with default values
-        results["mantel_correlation"] = {"r": None, "p_value": None, "n_items": 0}
-
-        if "objects" in dataset[0] and "category" in dataset[0]["objects"]:
+        if (
+            "objects" in dataset.features
+            and hasattr(dataset.features["objects"], "feature")
+            and "category" in dataset.features["objects"].feature
+        ):
             true_labels = []
             valid_indices = []
+            unique_labels_lst = list(set(cat for item in dataset for cat in item["objects"]["category"]))
+            unique_labels = sorted(unique_labels_lst)
+            name_to_idx = {name: i for i, name in enumerate(unique_labels)}
+            idx_to_name = dict(enumerate(unique_labels))
+
             for i, item in enumerate(dataset):
                 if "objects" in item and "category" in item["objects"] and item["objects"]["category"]:
                     label_name = item["objects"]["category"][0]
-                    if label_name in class_name_to_idx:
-                        true_labels.append(class_name_to_idx[label_name])
+                    if label_name in name_to_idx:
+                        true_labels.append(name_to_idx[label_name])
                         valid_indices.append(i)
 
             if true_labels:
                 true_labels = np.array(true_labels)
-                results.update(evaluator.evaluate_against_truth(true_labels))
+                results["external_cluster_validation"] = evaluator.evaluate_against_truth(true_labels)
+                results["sample_results"] = evaluator.get_sample_results(true_labels, label_map=idx_to_name)
 
                 try:
-                    # Ensure embeddings match the labels being tested
-                    valid_embeddings = embeddings[valid_indices]
-                    evaluator_for_mantel = EmbeddingEvaluator(valid_embeddings, use_umap=False)
+                    if len(np.unique(true_labels)) >= 3:
+                        valid_embeddings = embeddings[valid_indices]
+                        evaluator_for_mantel = EmbeddingEvaluator(valid_embeddings, use_umap=False)
 
-                    label_map = {i: str(name) for i, name in enumerate(model_classes)}
+                        mantel_corr, p_val, n, per_class_df = evaluator_for_mantel.compare_to_distance_matrix(
+                            true_labels, label_map=idx_to_name
+                        )
+                        results["mantel_correlation"] = {"r": mantel_corr, "p_value": p_val, "n_items": n}
+                        results["per_class_centroids"] = per_class_df
+                    else:
+                        print("Not enough unique labels in the dataset subset to run the Mantel test.")
 
-                    mantel_corr, p_val, n = evaluator_for_mantel.compare_to_distance_matrix(
-                        true_labels, label_map=label_map
-                    )
-                    results["mantel_correlation"] = {"r": mantel_corr, "p_value": p_val, "n_items": n}
                 except (ImportError, FileNotFoundError, ValueError) as e:
                     print(f"Could not run Mantel test: {e}")
+            else:
+                results["sample_results"] = evaluator.get_sample_results()
+        else:
+            print("Dataset does not have the required 'objects' and 'category' fields for external validation.")
+            results["sample_results"] = evaluator.get_sample_results()
 
         return results
 

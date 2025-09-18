@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import Any, Union
 
 import numpy as np
+import pandas as pd
 
 
 def _calculate_iou(boxA, boxB):
@@ -30,19 +31,39 @@ def object_detection_performance(
     pred_labels: list[int],
     pred_scores: list[float],
     pred_image_ids: list[Any],
-    iou_thresholds: Union[float, list[float]] = 0.5,
+    iou_thresholds: Union[float, list[float], np.ndarray] | None = None,
+    confidence_threshold: float = 0.5,
 ) -> dict[str, Any]:
     """
-    Calculates mean Average Precision (mAP) over one or more IoU thresholds.
+    Calculates a comprehensive suite of object detection metrics.
     """
+    if iou_thresholds is None:
+        iou_thresholds = np.arange(0.5, 1.0, 0.05)
+
     if isinstance(iou_thresholds, (int, float)):
         iou_thresholds = [iou_thresholds]
 
+    all_classes = sorted(set(gt_labels) | set(pred_labels))
+
     # --- Data Restructuring ---
-    gt_by_image = defaultdict(lambda: {"boxes": [], "labels": []})
+    gt_by_image = defaultdict(lambda: {"boxes": [], "labels": [], "used": []})
     for box, label, image_id in zip(gt_boxes, gt_labels, gt_image_ids):
         gt_by_image[image_id]["boxes"].append(box)
         gt_by_image[image_id]["labels"].append(label)
+        gt_by_image[image_id]["used"].append(False)
+
+    sample_results = []
+    for image_id, data in gt_by_image.items():
+        for i in range(len(data["boxes"])):
+            sample_results.append(
+                {
+                    "image_id": image_id,
+                    "type": "ground_truth",
+                    "box": data["boxes"][i],
+                    "label": data["labels"][i],
+                    "score": None,
+                }
+            )
 
     preds_by_class = defaultdict(list)
     gt_counts_by_class = defaultdict(int)
@@ -52,9 +73,18 @@ def object_detection_performance(
             gt_counts_by_class[label] += 1
 
     for box, label, score, image_id in zip(pred_boxes, pred_labels, pred_scores, pred_image_ids):
-        preds_by_class[label].append({"box": box, "score": score, "image_id": image_id})
+        if score >= confidence_threshold:
+            preds_by_class[label].append({"box": box, "score": score, "image_id": image_id})
+            sample_results.append(
+                {
+                    "image_id": image_id,
+                    "type": "prediction",
+                    "box": box,
+                    "label": label,
+                    "score": score,
+                }
+            )
 
-    all_classes = sorted(set(gt_labels) | set(pred_labels))
     per_threshold_scores = {}
     aps_last_iou = {}
 
@@ -74,32 +104,31 @@ def object_detection_performance(
 
             tp = np.zeros(len(class_preds))
             fp = np.zeros(len(class_preds))
-            gt_matched = {img_id: np.zeros(len(data["boxes"])) for img_id, data in gt_by_image.items()}
 
             for i, pred in enumerate(class_preds):
-                gt_info_for_class = [
-                    (j, box)
-                    for j, box in enumerate(gt_by_image[pred["image_id"]]["boxes"])
-                    if gt_by_image[pred["image_id"]]["labels"][j] == class_id
-                ]
-
+                gt_data = gt_by_image[pred["image_id"]]
                 best_iou = -1.0
-                best_gt_original_idx = -1
+                best_gt_idx = -1
 
-                for original_idx, gt_box in gt_info_for_class:
-                    iou = _calculate_iou(pred["box"], gt_box)
-                    if iou > best_iou:
-                        best_iou = iou
-                        best_gt_original_idx = original_idx
+                for j, gt_box in enumerate(gt_data["boxes"]):
+                    if gt_data["labels"][j] == class_id:
+                        iou = _calculate_iou(pred["box"], gt_box)
+                        if iou > best_iou:
+                            best_iou = iou
+                            best_gt_idx = j
 
-                if best_iou >= iou_threshold and best_gt_original_idx != -1:
-                    if not gt_matched[pred["image_id"]][best_gt_original_idx]:
+                if best_iou >= iou_threshold:
+                    if not gt_data["used"][best_gt_idx]:
                         tp[i] = 1
-                        gt_matched[pred["image_id"]][best_gt_original_idx] = 1
+                        gt_data["used"][best_gt_idx] = True
                     else:
                         fp[i] = 1
                 else:
                     fp[i] = 1
+
+            # Reset 'used' flags for the next IoU threshold
+            for data in gt_by_image.values():
+                data["used"] = [False] * len(data["boxes"])
 
             tp_cumsum = np.cumsum(tp)
             fp_cumsum = np.cumsum(fp)
@@ -107,7 +136,6 @@ def object_detection_performance(
             recalls = tp_cumsum / (num_gt_boxes + np.finfo(float).eps)
             precisions = tp_cumsum / (tp_cumsum + fp_cumsum + np.finfo(float).eps)
 
-            # --- Start of corrected section ---
             recalls = np.concatenate(([0.0], recalls, [1.0]))
             precisions = np.concatenate(([0.0], precisions, [0.0]))
 
@@ -116,7 +144,6 @@ def object_detection_performance(
 
             recall_indices = np.where(recalls[1:] != recalls[:-1])[0]
             ap = np.sum((recalls[recall_indices + 1] - recalls[recall_indices]) * precisions[recall_indices + 1])
-            # --- End of corrected section ---
             aps[class_id] = ap
 
         per_threshold_scores[f"mAP@{iou_threshold:.2f}"] = np.mean(list(aps.values())) if aps else 0.0
@@ -125,7 +152,8 @@ def object_detection_performance(
     final_map_averaged = np.mean(list(per_threshold_scores.values())) if per_threshold_scores else 0.0
 
     return {
-        "mAP_averaged": final_map_averaged,
+        "mAP": final_map_averaged,
         "per_class_AP_at_last_iou": aps_last_iou,
         "per_threshold_scores": per_threshold_scores,
+        "sample_results": pd.DataFrame(sample_results),
     }
