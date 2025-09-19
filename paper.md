@@ -70,10 +70,10 @@ The models provided in `ibbi` are the result of a comprehensive data pipeline (F
 The package supports four primary tasks:
 - **Single-class Object Detection**: Identifies and localizes any bark and ambrosia beetles in an image, returning bounding box coordinates. This is ideal for processing raw images from traps or collection sheets and is based on fine-tuned high-performance architectures like YOLO [@redmon2016] and detection transformers [@lv2023rtdetr].
 - **Zero-Shot Object Detection**: Detects arbitrary objects in an image based on a user-provided text prompt. This powerful feature uses the GroundingDINO model [@liu2023grounding] and allows for flexible analysis beyond predefined categories. However, this model has not been fine-tuned specifically on bark and ambrosia beetle images.
-- **Multi-class Object Detection**: Predicts the species of a beetle from an image, returning species class probabilities. This currently suopports 63 species and is also based on fine-tuned high-performance architectures like YOLO [@redmon2016] and detection transformers [@lv2023rtdetr]. However, it is important to note that the models are not fine tuned on a dataset as large as the one used for single-class object detection, and therefore may not perform as well on images that are not tightly cropped around the specimen. This task is the main focus for the future roadmap of the package, with plans to expand the number of species supported and improve model performance.
-- **Feature Extraction**: Generates deep-learning feature embeddings (vectors) from an image. This task is available fro models of all tasks. These feature embeddings can be used for downstream tasks like clustering, similarity analysis, or visual search engines.
+- **Multi-class Object Detection**: Predicts the species of a beetle from an image, returning species class probabilities. This currently supports 63 species and is also based on fine-tuned high-performance architectures like YOLO [@redmon2016] and detection transformers [@lv2023rtdetr]. However, it is important to note that the models are not fine tuned on a dataset as large as the one used for single-class object detection, and therefore may not perform as well on images that are not tightly cropped around the specimen. This task is the main focus for the future roadmap of the package, with plans to expand the number of species supported and improve model performance.
+- **Feature Extraction**: Generates deep-learning feature embeddings (vectors) from an image. This task is available for models of all tasks. These feature embeddings can be used for downstream tasks like clustering, similarity analysis, or visual search engines.
 
-### A typical workflow is demonstrated below:
+### A typical Workflow:
 ```python
 import ibbi
 from PIL import Image
@@ -90,10 +90,10 @@ model = ibbi.create_model(model_name, pretrained=True)
 image = Image.open("path/to/beetle_image.jpg")
 
 # 4. Run inference
-results = model.predict(image) # Returns a list of prediction objects
+results = model.predict(image)
 
 # 5. Extract features
-features = model.extract_features(image) # Returns a torch.Tensor feature embedding of the image
+features = model.extract_features(image)
 ```
 
 ### Inputs, Outputs, and Hardware
@@ -126,4 +126,4 @@ The authors declare that they have no conflicts of interest.
 
 # Acknowledgements
 
-We thank the numerous collaborators, students, and technicians in the Hulcr lab at the University of Florida who have contributed to the collection, curation, and annotation of the image dataset that made this work possible. We also acknowledge [IMPORTANT TO MENTION FUNDING BODIES] for their financial support.
+We thank the numerous collaborators, students, and technicians in the Hulcr lab at the University of Florida who have contributed to the collection, curation, and annotation of the image dataset that made this work possible. We also acknowledge the National Science Foundation, the USDA Forest Service, and the Florida Forest Service for their financial support.
