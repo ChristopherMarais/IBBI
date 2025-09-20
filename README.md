@@ -129,16 +129,13 @@ Using `ibbi` is straightforward. Load a model and immediately use it for inferen
 import ibbi
 
 # --- List Available Models ---
-# The `ibbi` package provides a handy function to see all available models.
-print("Available models in the `ibbi` package:")
 ibbi.list_models()
 
 # --- Create a Model ---
-# Let's create a multi-class object detection model for classifying bark beetles.
 classifier = ibbi.create_model(model_name="species_classifier", pretrained=True)
-# For more specific models, refer to the model list
-# and replace model_name with your choice.
-# e.g., "yolov12x_bb_multi_class_detect_model"
+
+# --- Perform Inference ---
+results = classifier.predict("path/to/your/image.jpg")
 
 ```
 
@@ -151,24 +148,63 @@ For more detailed demonstrations, please see the example notebooks located in th
 To see a list of available models and their performance metrics directly from Python, run:
 
 ```python
-
+ibbi.list_models()
 ```
+Replace `model_name` with one of the available model names to use those models.
 
 **Model Summary Table**
 
+The most detailed version of the table can also be found [`here`](src/ibbi/data/ibbi_model_summary.csv).
 
-A detailed list can also be found in the [`src/ibbi/data/ibbi_model_summary.csv`](src/ibbi/data/ibbi_model_summary.csv) file.
+| **Model Name**                                      | **Tasks**                                                              | **Pretrained Weights Repository**                                                 | **Paper**                            | **Embedding vector shape** | **# of images fine-tuned** | **mAP@[.5:.95]** | **F1-score (Macro)** | **Silhouette score** | **Cluster Purity** |
+|-----------------------------------------------------|------------------------------------------------------------------------|-----------------------------------------------------------------------------------|--------------------------------------|----------------------------|----------------------------|------------------|----------------------|----------------------|--------------------|
+| **grounding_dino_detect_model**                     | Zero-shot Object Detection (Prompt: 'bark beetle'), Feature extraction | https://huggingface.co/IDEA-Research/grounding-dino-base                          | https://arxiv.org/abs/2303.05499     | (1, 256)                   | 0                          | 0.673            | 0.969                | -0.239               | 0.997              |
+| **yoloworldv2_bb_detect_model**                     | Zero-shot Object Detection (Prompt: 'bark beetle'), Feature extraction | https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8x-worldv2.pt | https://arxiv.org/pdf/2401.17270v2   | ( , 640)                   | 0                          | 0.004            | 0.007                | 0.686                | 0.577              |
+| **yolov8x_bb_detect_model**                         | Single-class Object Detection, Feature extraction                      | https://huggingface.co/IBBI-bio/ibbi_yolov8_od                                    | https://arxiv.org/abs/2408.15857     | ( , 640)                   | 46 781                     | 0.985            | 0.988                | 0.558                | 0.554              |
+| **yolov9e_bb_detect_model**                         | Single-class Object Detection, Feature extraction                      | https://huggingface.co/IBBI-bio/ibbi_yolov9_od                                    | https://arxiv.org/abs/2402.13616     | ( , 512)                   | 46 781                     | 0.987            | 0.989                | 0.338                | 0.568              |
+| **yolov10x_bb_detect_model**                        | Single-class Object Detection, Feature extraction                      | https://huggingface.co/IBBI-bio/ibbi_yolov10_od                                   | https://arxiv.org/abs/2405.14458     | ( , 640)                   | 46 781                     | 0.990            | 0.987                | 0.428                | 0.559              |
+| **yolov11x_bb_detect_model**                        | Single-class Object Detection, Feature extraction                      | https://huggingface.co/IBBI-bio/ibbi_yolov11_od                                   | https://www.arxiv.org/abs/2410.17725 | ( , 768)                   | 46 781                     | 0.989            | 0.989                | 0.656                | 0.569              |
+| **yolov12x_bb_detect_model**                        | Multi-class Object Detection, Feature extraction                       | https://huggingface.co/IBBI-bio/ibbi_yolov12_oc                                   | https://arxiv.org/pdf/2502.12524     | ( , 768)                   | 46 781                     | 0.913            | 0.755                | TBD                  | TBD                |
+| **rtdetrx_bb_detect_model**                         | Single-class Object Detection, Feature extraction                      | https://huggingface.co/IBBI-bio/ibbi_rtdetr_od                                    | https://arxiv.org/abs/2304.08069     | ( , 384)                   | 46 781                     | 0.885            | 0.890                | 0.386                | 0.534              |
+| **yolov8x_bb_multi_class_detect_model**             | Multi-class Object Detection, Feature extraction                       | https://huggingface.co/IBBI-bio/ibbi_yolov8_oc                                    | https://arxiv.org/abs/2408.15857     | ( , 640)                   | 11 507                     | 0.916            | 0.844                | 0.529                | 0.428              |
+| **yolov9e_bb_multi_class_detect_model**             | Multi-class Object Detection, Feature extraction                       | https://huggingface.co/IBBI-bio/ibbi_yolov9_oc                                    | https://arxiv.org/abs/2402.13616     | ( , 512)                   | 11 507                     | 0.918            | 0.868                | 0.227                | 0.957              |
+| **yolov10x_bb_multi_class_detect_model**            | Multi-class Object Detection, Feature extraction                       | https://huggingface.co/IBBI-bio/ibbi_yolov10_oc                                   | https://arxiv.org/abs/2405.14458     | ( , 640)                   | 11 507                     | 0.913            | 0.785                | 0.279                | 0.453              |
+| **yolov11x_bb_multi_class_detect_model**            | Multi-class Object Detection, Feature extraction                       | https://huggingface.co/IBBI-bio/ibbi_yolov11_oc                                   | https://www.arxiv.org/abs/2410.17725 | ( , 768)                   | 11 507                     | 0.917            | 0.762                | 0.386                | 0.403              |
+| **yolov12x_bb_multi_class_detect_model**            | Multi-class Object Detection, Feature extraction                       | https://huggingface.co/IBBI-bio/ibbi_yolov12_oc                                   | https://arxiv.org/pdf/2502.12524     | ( , 768)                   | 12 507                     | 0.919            | 0.894                | TBD                  | TBD                |
+| **rtdetrx_bb_multi_class_detect_model**             | Multi-class Object Detection, Feature extraction                       | https://huggingface.co/IBBI-bio/ibbi_rtdetr_oc                                    | https://arxiv.org/abs/2304.08069     | ( , 384)                   | 11 507                     | 0.885            | 0.890                | -0.030               | 0.940              |
+| **dinov2_vitl14_lvd142m_features_model**            | Feature extraction                                                     | https://huggingface.co/timm/vit_large_patch14_clip_336.laion2b_ft_in12k_in1k      | https://arxiv.org/html/2304.07193v2  | (1, 1024)                  | 0                          | N/A              | N/A                  | 0.262                | 0.475              |
+| **dinov3_vitl16_lvd1689m_features_model**           | Feature extraction                                                     | https://huggingface.co/IBBI-bio/dinov3-vitl16-pretrain-lvd1689m                   | https://arxiv.org/pdf/2508.10104     | ( , 384)                   | 0                          | N/A              | N/A                  | 0.543                | 0.487              |
+| **eva02_base_patch14_224_mim_in22k_features_model** | Feature extraction                                                     | https://huggingface.co/timm/eva02_base_patch14_224.mim_in22k                      | https://arxiv.org/pdf/2303.11331     | (1, 768)                   | 0                          | N/A              | N/A                  | -0.174               | 0.944              |
+| **convformer_b36_features_model**                   | Feature extraction                                                     | https://huggingface.co/timm/caformer_b36.sail_in22k_ft_in1k_384                   | https://arxiv.org/pdf/2210.13452     | (1, 768)                   | 0                          | N/A              | N/A                  | 0.100                | 0.880              |
 
 ---
+---
+
 
 ## Advanced Usage
 
+For more detailed examples, please see the example notebooks located in the [`notebooks/`](notebooks/) folder of the repository. Additionally the Documentation site at **[gcmarais.com/IBBI](https://gcmarais.com/IBBI/)** contains more in-depth explanations and examples.
+
 **Inference**
+
+Use inference to identify and locate bark and ambrosia beetles in an image.
+
 ```python
+# --- Create a Model ---
+classifier = ibbi.create_model(model_name="species_classifier", pretrained=True)
 
+# --- Perform Inference ---
+results = classifier.predict("path/to/your/image.jpg")
 ```
+First, create a model using the `ibbi.create_model()` function. You can specify the `model_name` from the available models listed by `ibbi.list_models()`. Set `pretrained=True` to load the pre-trained weights.
 
-**Examples:**
+The results from the `predict()` method will return a list of dictionaries containing the following keys:
+
+- `labels`: The predicted class label.
+- `scores`: The confidence score of the prediction.
+- `boxes`: The bounding box coordinates (if applicable).
+
+NOTE: This only works for zero-shot, single-class, and multi-class detection models. Feature extraction models do not have a `predict()` method.
 
 <table style="width: 100%; border: none;">
   <thead>
@@ -189,31 +225,76 @@ A detailed list can also be found in the [`src/ibbi/data/ibbi_model_summary.csv`
   </tbody>
 </table>
 
+---
+
 **Feature Extraction**
 
 All models can extract deep feature embeddings from an image. These vectors are useful for downstream tasks like clustering or similarity analysis.
 
 ```python
+# --- Create a Model ---
+feature_extractor = ibbi.create_model(model_name="species_classifier", pretrained=True)
 
+# --- Perform Inference ---
+results = feature_extractor.extract_features("path/to/your/image.jpg")
 ```
+
+The results from the `extract_features()` method will return a NumPy array of shape `(1, embedding_dimension)`. Different models will have different embedding dimensions, which can be found in the model summary table above.
+
+NOTE: We recommend to create different instances of the model for inference and feature extraction to avoid any potential conflicts.
+
+---
 
 **Model Evaluation**
 
-**Model Explainability**
-
-Understand *why* a model made a certain prediction using SHAP. This is crucial for building trust and interpreting the model's decisions by highlighting which pixels were most influential.
+Evaluate model performance on a held-out test set using the `ibbi.Evaluator()` wrapper. This wrapper provides methods for computing classification, object detection, and embedding/clustering metrics to estimate the quality of feature embeddings.
 
 ```python
+# --- Import Data ---
+data = ibbi.get_dataset()
 
+# --- Create a Model ---
+model = ibbi.create_model(model_name="species_classifier", pretrained=True)
+
+# --- Create an Evaluator ---
+evaluator = ibbi.Evaluator(model=model, dataset=data)
+
+# --- Classification Metrics ---
+classification_results = evaluator.classification()
+
+# --- Object Detection Metrics ---
+od_results = evaluator.object_detection()
+
+# --- Embedding & Clustering Metrics ---
+embedding_results = evaluator.embeddings()
 ```
 
+You can customize the evaluation by providing your own dataset in our expected format.
 
+---
 
+**Model Explainability**
+
+Understand *why* a model made a certain prediction. This is crucial for interpreting the model's decisions by highlighting which pixels were most influential.
+
+```python
+# --- Create a Model ---
+model = ibbi.create_model(model_name="species_classifier", pretrained=True)
+
+# --- Create an Explainer ---
+explainer = ibbi.Explainer(model=model)
+
+# --- Explain with SHAP ---
+shap_results = explainer.with_shap(explain_dataset=["path/to/your/image1.jpg", "path/to/your/image2.jpg"])
+
+# --- Explain with LIME ---
+lime_results = explainer.with_lime(image="path/to/your/image.jpg")
+```
 ---
 
 ## How to Contribute
 
-Contributions are welcome! If you would like to improve IBBI, please see the [Contributing Guide](docs/CONTRIBUTING.md).
+Contributions are welcome! If you would like to improve IBBI, please see the [Contribution Guide](docs/CONTRIBUTING.md).
 
 ## License
 
