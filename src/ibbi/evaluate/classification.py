@@ -23,9 +23,37 @@ def classification_performance(
     sample_weight: Optional[np.ndarray] = None,
     zero_division: Union[str, int] = "warn",  # type: ignore
 ) -> dict[str, Any]:
-    """
-    Calculates a comprehensive suite of classification metrics, providing granular control
-    over hyperparameters and returning detailed, sample-level results.
+    """Calculates a comprehensive suite of classification metrics.
+
+    This function provides a detailed analysis of classification performance by computing a variety
+    of metrics. It returns a dictionary containing not only overall performance scores but also
+    detailed reports like a confusion matrix and a classification report from scikit-learn.
+    It also provides sample-level results, which can be useful for in-depth error analysis.
+
+    Args:
+        true_labels (np.ndarray): An array of ground truth labels for each sample.
+        predicted_labels (np.ndarray): An array of predicted labels for each sample.
+        target_names (Optional[list[str]], optional): A list of display names for the target classes.
+                                                     If not provided, labels will be used as names. Defaults to None.
+        average (str, optional): The averaging method to use for precision, recall, and F1-score.
+                                 Common options are 'micro', 'macro', and 'weighted'. Defaults to "macro".
+        sample_weight (Optional[np.ndarray], optional): An array of weights to apply to each sample.
+                                                        Defaults to None.
+        zero_division (Union[str, int], optional): Sets the value to return when there is a zero division.
+                                                   Can be "warn", 0, or 1. Defaults to "warn".
+
+    Returns:
+        dict[str, Any]: A dictionary containing the following performance metrics:
+                        - "accuracy": The overall accuracy score.
+                        - "balanced_accuracy": The balanced accuracy score, which is useful for imbalanced datasets.
+                        - f"{average}_precision": The precision score, averaged according to the `average` parameter.
+                        - f"{average}_recall": The recall score, averaged according to the `average` parameter.
+                        - f"{average}_f1_score": The F1-score, averaged according to the `average` parameter.
+                        - "cohen_kappa": Cohen's Kappa score, which measures inter-annotator agreement.
+                        - "matthews_corrcoef": The Matthews Correlation Coefficient, a robust metric for binary classification.
+                        - "confusion_matrix_df": A pandas DataFrame representing the confusion matrix.
+                        - "classification_report": A dictionary containing a detailed classification report from scikit-learn.
+                        - "sample_results": A pandas DataFrame with the true and predicted labels for each sample.
     """
     labels_lst_unsorted = list(set(true_labels) | set(predicted_labels))
     labels_lst = sorted(labels_lst_unsorted)

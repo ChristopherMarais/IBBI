@@ -38,16 +38,35 @@ if TYPE_CHECKING:
 
 
 def _cluster_purity(y_true, y_pred):
-    """
-    Calculates cluster purity.
+    """Calculates cluster purity.
+
+    This is a simple metric to evaluate the quality of a clustering result by measuring the
+    extent to which each cluster contains data points from a single true class.
+
+    Args:
+        y_true (array-like): The ground truth labels.
+        y_pred (array-like): The predicted cluster labels.
+
+    Returns:
+        float: The cluster purity score, ranging from 0 to 1, where 1 indicates perfect purity.
     """
     contingency_matrix = np.histogram2d(y_true, y_pred, bins=(len(np.unique(y_true)), len(np.unique(y_pred))))[0]
     return np.sum(np.amax(contingency_matrix, axis=0)) / np.sum(contingency_matrix)
 
 
 class EmbeddingEvaluator:
-    """
-    A unified class to evaluate feature embeddings.
+    """A unified class to evaluate feature embeddings.
+
+    This class provides a comprehensive suite of tools for evaluating the quality of
+    feature embeddings. It can perform dimensionality reduction using UMAP, cluster the
+    embeddings using HDBSCAN, and then calculate a variety of internal and external
+    validation metrics.
+
+    Attributes:
+        embeddings (np.ndarray): The raw, high-dimensional feature embeddings.
+        processed_data (np.ndarray): The embeddings after optional UMAP dimensionality reduction.
+                                     This is the data used for clustering.
+        predicted_labels (np.ndarray): The cluster labels assigned by HDBSCAN.
     """
 
     embeddings: np.ndarray
@@ -71,8 +90,32 @@ class EmbeddingEvaluator:
         allow_single_cluster: bool = False,
         random_state: int = 42,
     ):
-        """
-        Initializes the evaluator, performing dimensionality reduction and clustering.
+        """Initializes the evaluator, performing dimensionality reduction and clustering.
+
+        Args:
+            embeddings (np.ndarray): A 2D numpy array of feature embeddings, where each row is a sample.
+            use_umap (bool, optional): If True, UMAP will be used for dimensionality reduction before clustering.
+                                     Defaults to True.
+            n_neighbors (int, optional): UMAP parameter. The number of nearest neighbors to consider for manifold approximation.
+                                      See `umap.UMAP` for more details. Defaults to 15.
+            n_components (int, optional): UMAP parameter. The dimension of the space to embed into.
+                                        See `umap.UMAP` for more details. Defaults to 2.
+            min_dist (float, optional): UMAP parameter. The minimum distance between embedded points.
+                                      See `umap.UMAP` for more details. Defaults to 0.1.
+            umap_metric (str, optional): UMAP parameter. The metric to use for distance computation in the high-dimensional space.
+                                       See `umap.UMAP` for more details. Defaults to "cosine".
+            min_cluster_size (int, optional): HDBSCAN parameter. The minimum size of clusters.
+                                            See `sklearn.cluster.HDBSCAN` for more details. Defaults to 15.
+            min_samples (Optional[int], optional): HDBSCAN parameter. The number of samples in a neighborhood for a point
+                                                 to be considered as a core point. See `sklearn.cluster.HDBSCAN` for more details.
+                                                 Defaults to None.
+            cluster_selection_epsilon (float, optional): HDBSCAN parameter. A distance threshold. Clusters below this value will be merged.
+                                                         See `sklearn.cluster.HDBSCAN` for more details. Defaults to 0.0.
+            hdbscan_metric (str, optional): HDBSCAN parameter. The metric to use for clustering.
+                                          See `sklearn.cluster.HDBSCAN` for more details. Defaults to "euclidean".
+            allow_single_cluster (bool, optional): HDBSCAN parameter. Whether to allow HDBSCAN to return a single cluster.
+                                                  See `sklearn.cluster.HDBSCAN` for more details. Defaults to False.
+            random_state (int, optional): The random state for UMAP for reproducibility. Defaults to 42.
         """
         if use_umap and not _umap_available:
             raise ImportError("UMAP is selected but 'umap-learn' is not installed.")
@@ -109,12 +152,18 @@ class EmbeddingEvaluator:
         self.predicted_labels = clusterer.fit_predict(self.processed_data)
         print("HDBSCAN clustering complete.")
 
-    def get_sample_results(
-        self, true_labels: Optional[np.ndarray] = None, label_map: Optional[dict[int, str]] = None
-    ) -> pd.DataFrame:
-        """
-        Returns a DataFrame with true labels (if provided) and predicted cluster
-        labels for each sample, with text labels if a map is provided.
+    def get_sample_results(self, true_labels: Optional[np.ndarray] = None, label_map: Optional[dict[int, str]] = None) -> pd.DataFrame:
+        """Returns a DataFrame with true and predicted cluster labels for each sample.
+
+        Args:
+            true_labels (Optional[np.ndarray], optional): The ground truth labels for each sample.
+                                                         If provided, they will be included in the output DataFrame.
+                                                         Defaults to None.
+            label_map (Optional[dict[int, str]], optional): A dictionary to map integer labels to string names.
+                                                          Defaults to None.
+
+        Returns:
+            pd.DataFrame: A DataFrame with columns for true and predicted labels.
         """
         results_df = pd.DataFrame()
         if true_labels is not None:
@@ -126,15 +175,18 @@ class EmbeddingEvaluator:
         if label_map:
             # Map predicted labels, handling noise (-1) separately
             predicted_map = {k: v for k, v in label_map.items() if k != -1}
-            results_df["predicted_label"] = (
-                results_df["predicted_label"].map(lambda x: predicted_map.get(x)).fillna("Noise")
-            )
+            results_df["predicted_label"] = results_df["predicted_label"].map(lambda x: predicted_map.get(x)).fillna("Noise")
 
         return results_df
 
     def evaluate_against_truth(self, true_labels: np.ndarray) -> pd.DataFrame:
-        """
-        Calculates external clustering validation metrics against ground truth labels.
+        """Calculates external clustering validation metrics against ground truth labels.
+
+        Args:
+            true_labels (np.ndarray): An array of ground truth labels for each sample.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing external validation metrics like ARI, NMI, V-Measure, and Cluster Purity.
         """
         # Filter out noise from predictions for a fair comparison
         mask = self.predicted_labels != -1
@@ -161,14 +213,15 @@ class EmbeddingEvaluator:
         return pd.DataFrame([metrics])
 
     def evaluate_cluster_structure(self) -> pd.DataFrame:
-        """
-        Calculates internal clustering validation metrics based on cluster structure.
+        """Calculates internal clustering validation metrics based on cluster structure.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing internal validation metrics like Silhouette Score,
+                          Davies-Bouldin Index, and Calinski-Harabasz Index.
         """
         mask = self.predicted_labels != -1
         if np.sum(mask) < 2 or len(set(self.predicted_labels[mask])) < 2:
-            return pd.DataFrame(
-                [{"Silhouette_Score": -1.0, "Davies-Bouldin_Index": -1.0, "Calinski-Harabasz_Index": -1.0}]
-            )
+            return pd.DataFrame([{"Silhouette_Score": -1.0, "Davies-Bouldin_Index": -1.0, "Calinski-Harabasz_Index": -1.0}])
 
         filtered_data = self.processed_data[mask]
         filtered_labels = self.predicted_labels[mask]
@@ -187,8 +240,22 @@ class EmbeddingEvaluator:
         embedding_metric: str = "cosine",
         ext_dist_matrix_path: str = "ibbi_species_distance_matrix.csv",
     ) -> tuple[float, float, int, pd.DataFrame]:
-        """
-        Calculates Mantel correlation between embedding distances and an external distance matrix.
+        """Calculates Mantel correlation between embedding distances and an external distance matrix.
+        The default is to use a distance matrix based on phylogenetic and taxonomic distance between species.
+
+        Args:
+            true_labels (np.ndarray): An array of ground truth labels for each sample.
+            label_map (Optional[dict[int, str]], optional): A dictionary to map integer labels to string names.
+                                                          Defaults to None.
+            embedding_metric (str, optional): The distance metric to use for the embedding space.
+                                            Defaults to "cosine".
+            ext_dist_matrix_path (str, optional): The path to the external distance matrix file.
+                                                  Defaults to "ibbi_species_distance_matrix.csv".
+
+        Returns:
+            tuple[float, float, int, pd.DataFrame]: A tuple containing the Mantel correlation coefficient (r),
+                                                     the p-value, the number of items compared, and a DataFrame
+                                                     of per-class centroids.
         """
         if not _skbio_available:
             raise ImportError("Mantel test requires 'scikit-bio' to be installed.")
@@ -225,10 +292,7 @@ class EmbeddingEvaluator:
         common_labels = sorted(common_labels_list)
 
         if len(common_labels) < 3:
-            raise ValueError(
-                "Need at least 3 overlapping labels between embedding groups and "
-                "the external matrix to run Mantel test."
-            )
+            raise ValueError("Need at least 3 overlapping labels between embedding groups and the external matrix to run Mantel test.")
 
         embedding_dist_aligned = embedding_dist_matrix.loc[common_labels, common_labels]
         ext_dist_aligned = ext_matrix_df.loc[common_labels, common_labels]

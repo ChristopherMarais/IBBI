@@ -1,7 +1,10 @@
 # src/ibbi/utils/data.py
 
 """
-Utilities for dataset handling.
+This module provides utility functions for dataset handling within the `ibbi` package.
+It includes functions for downloading, caching, and loading datasets from the Hugging Face Hub,
+ensuring that users have easy and efficient access to the data required for model
+evaluation and explainability tasks.
 """
 
 import zipfile
@@ -22,35 +25,35 @@ def get_dataset(
     split: str = "train",
     **kwargs,
 ) -> Dataset:
-    """
-    Downloads and loads a dataset from the Hugging Face Hub into a specified local directory.
+    """Downloads and loads a dataset from the Hugging Face Hub.
 
-    This function ensures the dataset is stored in a folder with a clean name.
-    If the dataset already exists locally, the download is skipped.
+    This function facilitates the use of datasets hosted on the Hugging Face Hub by
+    handling the download and caching process. It downloads the dataset to a local
+    directory, and on subsequent calls, it will load the data directly from the local
+    cache to save time and bandwidth.
 
     Args:
-        repo_id (str): The Hugging Face Hub repository ID of the dataset.
-                         Defaults to "IBBI-bio/ibbi_test_data".
-        local_dir (str): The desired local directory name to store the dataset.
-                         Defaults to "ibbi_test_data".
-        split (str): The dataset split to use (e.g., "train", "test").
-                         Defaults to "train".
-        **kwargs: Additional keyword arguments passed directly to
-                  `datasets.load_dataset`.
+        repo_id (str, optional): The repository ID of the dataset on the Hugging Face Hub.
+                                 Defaults to "IBBI-bio/ibbi_test_data".
+        local_dir (str, optional): The name of the local directory where the dataset will be stored.
+                                   Defaults to "ibbi_test_data".
+        split (str, optional): The name of the dataset split to load (e.g., "train", "test", "validation").
+                               Defaults to "train".
+        **kwargs: Additional keyword arguments that will be passed directly to the
+                  `datasets.load_dataset` function. This allows for advanced customization
+                  of the data loading process.
 
     Returns:
-        Dataset: The loaded dataset object from the Hugging Face Hub.
+        Dataset: The loaded dataset as a `datasets.Dataset` object.
 
     Raises:
-        TypeError: If the loaded object is not of type `Dataset`.
+        TypeError: If the object loaded for the specified split is not of type `datasets.Dataset`.
     """
     dataset_path = Path(local_dir)
 
     if not dataset_path.exists():
         print(f"Dataset not found locally. Downloading from '{repo_id}' to '{dataset_path}'...")
-        snapshot_download(
-            repo_id=repo_id, repo_type="dataset", local_dir=str(dataset_path), local_dir_use_symlinks=False
-        )
+        snapshot_download(repo_id=repo_id, repo_type="dataset", local_dir=str(dataset_path), local_dir_use_symlinks=False)
         print("Download complete.")
     else:
         print(f"Found cached dataset at '{dataset_path}'. Loading from disk.")
@@ -61,9 +64,7 @@ def get_dataset(
         )
 
         if not isinstance(dataset, Dataset):
-            raise TypeError(
-                f"Expected a 'Dataset' object for split '{split}', but received type '{type(dataset).__name__}'."
-            )
+            raise TypeError(f"Expected a 'Dataset' object for split '{split}', but received type '{type(dataset).__name__}'.")
 
         print("Dataset loaded successfully.")
         return dataset
@@ -73,20 +74,23 @@ def get_dataset(
 
 
 def get_shap_background_dataset(image_size: tuple[int, int] = (224, 224)) -> list[dict]:
-    """
-    Downloads, unzips, and loads the default IBBI SHAP background dataset.
+    """Downloads, unzips, and loads the default IBBI SHAP background dataset.
 
-    This function fetches a specific .zip file of images, not a standard
-    `datasets` object. The data is downloaded and stored in the package's
-    central cache directory for subsequent runs. If the data is already
-    unzipped in the cache, it will be loaded directly without re-downloading.
+    This function is specifically designed to fetch the background dataset required for the
+    SHAP (SHapley Additive exPlanations) explainability method. It handles the download of a
+    zip archive from the Hugging Face Hub, extracts its contents, and loads the images into
+    memory. The data is stored in the package's central cache directory to avoid re-downloads.
 
     Args:
-        image_size (tuple[int, int], optional): The target size (width, height) to resize
-                                                the images to. Defaults to (224, 224).
+        image_size (tuple[int, int], optional): The target size (width, height) to which the
+                                                background images will be resized. This should
+                                                match the input size expected by the model being
+                                                explained. Defaults to (224, 224).
 
     Returns:
-        A list of dictionaries, where each dict has an "image" key with a resized PIL Image object.
+        list[dict]: A list of dictionaries, where each dictionary has an "image" key with a
+                    resized PIL Image object. This format is ready to be used with the
+                    `ibbi.Explainer.with_shap` method.
     """
     repo_id = "IBBI-bio/ibbi_shap_dataset"
     filename = "ibbi_shap_dataset.zip"
@@ -96,9 +100,7 @@ def get_shap_background_dataset(image_size: tuple[int, int] = (224, 224)) -> lis
 
     if not image_dir.exists() or not any(image_dir.iterdir()):
         print(f"SHAP background data not found in cache. Downloading from '{repo_id}'...")
-        downloaded_zip_path = hf_hub_download(
-            repo_id=repo_id, filename=filename, repo_type="dataset", cache_dir=str(cache_dir)
-        )
+        downloaded_zip_path = hf_hub_download(repo_id=repo_id, filename=filename, repo_type="dataset", cache_dir=str(cache_dir))
 
         print("Decompressing SHAP background dataset...")
         unzip_dir.mkdir(exist_ok=True)

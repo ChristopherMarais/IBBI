@@ -41,7 +41,7 @@ clip = {git = "https://github.com/openai/CLIP.git"}
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.10"
-pyright = "^1.1.401"
+pyright = "^1.1.405"
 pytest = "^8.3.5"
 pre-commit = "^4.2.0"
 mkdocs = "^1.6.1"
@@ -64,7 +64,7 @@ build-backend = "poetry.core.masonry.api"
 # --- Tool Configurations ---
 
 [tool.ruff]
-line-length = 120
+line-length = 150
 
 [tool.ruff.lint]
 select = ["A", "B", "C4", "E", "W", "F", "I", "UP", "RUF"]

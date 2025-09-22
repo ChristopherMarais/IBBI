@@ -14,16 +14,47 @@ from .object_detection import object_detection_performance
 
 
 class Evaluator:
-    """
-    A unified evaluator for assessing IBBI models on various tasks.
+    """A unified evaluator for assessing IBBI models on various tasks.
+
+    This class provides a streamlined interface for evaluating the performance of
+    models on tasks such as classification, object detection, and embedding quality.
+    It handles the boilerplate code for iterating through datasets, making predictions,
+    and calculating a comprehensive suite of metrics.
+
+    Args:
+        model (ModelType): An instantiated model from the `ibbi` package that will be evaluated.
     """
 
     def __init__(self, model: ModelType):
+        """Initializes the Evaluator with a specific model.
+
+        Args:
+            model (ModelType): The model to be evaluated. This should be an instance of a class
+                               that adheres to the `ModelType` protocol, meaning it has `predict`
+                               and `extract_features` methods.
+        """
         self.model = model
 
     def classification(self, dataset, predict_kwargs: Optional[dict[str, Any]] = None, **kwargs):
-        """
-        Runs a full classification performance analysis.
+        """Runs a full classification performance analysis.
+
+        This method evaluates the model's ability to correctly classify objects in a dataset.
+        It iterates through the provided dataset, makes predictions using the model, and then
+        compares these predictions against the ground truth labels to compute a suite of
+        classification metrics.
+
+        Args:
+            dataset: A dataset object that is iterable and contains items with 'image' and 'objects' keys.
+                     The 'objects' key should be a dictionary containing a 'category' key, which is a list of labels.
+            predict_kwargs (Optional[dict[str, Any]], optional): A dictionary of keyword arguments to be passed
+                                                               to the model's `predict` method. Defaults to None.
+            **kwargs: Additional keyword arguments to be passed to the `classification_performance` function.
+                      See `ibbi.evaluate.classification.classification_performance` for more details.
+
+        Returns:
+            dict: A dictionary containing a comprehensive set of classification metrics, including accuracy,
+                  precision, recall, F1-score, and a confusion matrix. Returns an empty dictionary if the
+                  model is not suitable for classification or if the dataset is not properly formatted.
         """
         if predict_kwargs is None:
             predict_kwargs = {}
@@ -55,9 +86,7 @@ class Evaluator:
                     items_for_prediction.append(item)
 
         if not true_labels:
-            print(
-                "Warning: No valid labels found in the dataset that match the model's classes. Skipping classification."
-            )
+            print("Warning: No valid labels found in the dataset that match the model's classes. Skipping classification.")
             return {}
 
         predicted_labels = []
@@ -93,15 +122,29 @@ class Evaluator:
 
         # This removes the duplicate 'target_names' argument from kwargs if it exists
         kwargs.pop("target_names", None)
-        return classification_performance(
-            np.array(true_labels), np.array(predicted_labels), target_names=model_classes, **kwargs
-        )
+        return classification_performance(np.array(true_labels), np.array(predicted_labels), target_names=model_classes, **kwargs)
 
-    def object_detection(
-        self, dataset, iou_thresholds: Union[float, list[float]] = 0.5, predict_kwargs: Optional[dict[str, Any]] = None
-    ):
-        """
-        Runs a mean Average Precision (mAP) object detection analysis.
+    def object_detection(self, dataset, iou_thresholds: Union[float, list[float]] = 0.5, predict_kwargs: Optional[dict[str, Any]] = None):
+        """Runs a mean Average Precision (mAP) object detection analysis.
+
+        This method assesses the model's ability to accurately localize objects within an image.
+        It processes a dataset to extract both ground truth and predicted bounding boxes, then
+        computes the mean Average Precision (mAP) at specified Intersection over Union (IoU)
+        thresholds.
+
+        Args:
+            dataset: A dataset object that is iterable and contains items with 'image' and 'objects' keys.
+                     The 'objects' key should be a dictionary with 'bbox' and 'category' keys.
+            iou_thresholds (Union[float, list[float]], optional): The IoU threshold(s) at which to compute mAP.
+                                                                    Can be a single float or a list of floats.
+                                                                    Defaults to 0.5.
+            predict_kwargs (Optional[dict[str, Any]], optional): A dictionary of keyword arguments to be passed
+                                                               to the model's `predict` method. Defaults to None.
+
+        Returns:
+            dict: A dictionary containing object detection performance metrics, including mAP scores.
+                  Returns an empty dictionary if the model is not suitable for object detection or if
+                  the dataset is not properly formatted.
         """
         if predict_kwargs is None:
             predict_kwargs = {}
@@ -169,15 +212,11 @@ class Evaluator:
 
         if "per_class_AP_at_last_iou" in performance_results:
             class_aps = performance_results["per_class_AP_at_last_iou"]
-            named_class_aps = {
-                idx_to_name.get(class_id, f"unknown_class_{class_id}"): ap for class_id, ap in class_aps.items()
-            }
+            named_class_aps = {idx_to_name.get(class_id, f"unknown_class_{class_id}"): ap for class_id, ap in class_aps.items()}
             performance_results["per_class_AP_at_last_iou"] = named_class_aps
 
         if "sample_results" in performance_results:
-            performance_results["sample_results"]["label"] = performance_results["sample_results"]["label"].map(
-                idx_to_name
-            )
+            performance_results["sample_results"]["label"] = performance_results["sample_results"]["label"].map(idx_to_name)
 
         return performance_results
 
@@ -188,8 +227,26 @@ class Evaluator:
         extract_kwargs: Optional[dict[str, Any]] = None,
         **kwargs,
     ):
-        """
-        Evaluates the quality of the model's feature embeddings.
+        """Evaluates the quality of the model's feature embeddings.
+
+        This method extracts feature embeddings from the provided dataset using the model's
+        `extract_features` method. It then uses the `EmbeddingEvaluator` to compute a variety
+        of metrics that assess the quality of these embeddings, such as clustering performance
+        and correlation with ground truth labels.
+
+        Args:
+            dataset: An iterable dataset where each item contains an 'image' key.
+            use_umap (bool, optional): Whether to use UMAP for dimensionality reduction before clustering.
+                                     Defaults to True.
+            extract_kwargs (Optional[dict[str, Any]], optional): A dictionary of keyword arguments to be passed
+                                                                to the model's `extract_features` method. Defaults to None.
+            **kwargs: Additional keyword arguments to be passed to the `EmbeddingEvaluator`.
+                      See `ibbi.evaluate.embeddings.EmbeddingEvaluator` for more details.
+
+        Returns:
+            dict: A dictionary containing the results of the embedding evaluation, including
+                  internal and external cluster validation metrics, and optionally a Mantel test
+                  correlation. Returns an empty dictionary if no valid embeddings can be extracted.
         """
         if extract_kwargs is None:
             extract_kwargs = {}
@@ -208,11 +265,7 @@ class Evaluator:
         results = {}
         results["internal_cluster_validation"] = evaluator.evaluate_cluster_structure()
 
-        if (
-            "objects" in dataset.features
-            and hasattr(dataset.features["objects"], "feature")
-            and "category" in dataset.features["objects"].feature
-        ):
+        if "objects" in dataset.features and hasattr(dataset.features["objects"], "feature") and "category" in dataset.features["objects"].feature:
             true_labels = []
             valid_indices = []
             unique_labels_lst = list(set(cat for item in dataset for cat in item["objects"]["category"]))
@@ -237,9 +290,7 @@ class Evaluator:
                         valid_embeddings = embeddings[valid_indices]
                         evaluator_for_mantel = EmbeddingEvaluator(valid_embeddings, use_umap=False)
 
-                        mantel_corr, p_val, n, per_class_df = evaluator_for_mantel.compare_to_distance_matrix(
-                            true_labels, label_map=idx_to_name
-                        )
+                        mantel_corr, p_val, n, per_class_df = evaluator_for_mantel.compare_to_distance_matrix(true_labels, label_map=idx_to_name)
                         results["mantel_correlation"] = {"r": mantel_corr, "p_value": p_val, "n_items": n}
                         results["per_class_centroids"] = per_class_df
                     else:

@@ -18,8 +18,17 @@ from ..models.zero_shot import GroundingDINOModel
 
 
 def _prepare_image_for_shap(image_array: np.ndarray) -> np.ndarray:
-    """
-    Normalizes image array to have pixel values between 0 and 1.
+    """Normalizes an image array to have pixel values between 0 and 1.
+
+    This is a preprocessing step for SHAP, which often expects image data to be in a
+    normalized float format.
+
+    Args:
+        image_array (np.ndarray): The input image as a numpy array with pixel values
+                                  in the range [0, 255].
+
+    Returns:
+        np.ndarray: The normalized image array with pixel values in the range [0, 1].
     """
     if image_array.max() > 1.0:
         image_array = image_array.astype(np.float32) / 255.0
@@ -27,9 +36,20 @@ def _prepare_image_for_shap(image_array: np.ndarray) -> np.ndarray:
 
 
 def _prediction_wrapper(model: ModelType, text_prompt: Optional[str] = None) -> Callable:
-    """
-    Creates a prediction function compatible with SHAP explainers that
-    pass a batch of images as a 4D array.
+    """Creates a prediction function compatible with SHAP explainers.
+
+    This function returns a callable that SHAP's `PartitionExplainer` can use to get
+    model predictions. It handles the necessary preprocessing for different `ibbi`
+    model types and ensures the output is a numpy array of prediction scores.
+
+    Args:
+        model (ModelType): The instantiated `ibbi` model to be explained.
+        text_prompt (Optional[str], optional): A text prompt required for zero-shot models
+                                               like GroundingDINO. Defaults to None.
+
+    Returns:
+        Callable: A function that takes a batch of images as a 4D numpy array and returns
+                  a 2D numpy array of prediction scores.
     """
 
     def predict(image_batch: np.ndarray) -> np.ndarray:
@@ -78,9 +98,24 @@ def explain_with_shap(
     text_prompt: Optional[str] = None,
     **kwargs,  # Absorb unused kwargs
 ) -> shap.Explanation:
-    """
-    Generates SHAP explanations for a given model using the PartitionExplainer.
-    This function is computationally more efficient than KernelExplainer for images.
+    """Generates SHAP explanations for a given model using the PartitionExplainer.
+
+    This function provides a more computationally efficient way to compute SHAP values for images
+    compared to the KernelExplainer. It uses a background dataset to simulate the "absence" of
+    image features and attributes the change in prediction to these features.
+
+    Args:
+        model (ModelType): The instantiated `ibbi` model to explain.
+        explain_dataset (list): A list of dictionaries, each containing an 'image' key with a PIL Image to be explained.
+        background_dataset (list): A list of dictionaries for the background dataset, used by SHAP.
+        num_explain_samples (int): The number of samples to explain from the `explain_dataset`.
+        max_evals (int, optional): The maximum number of model evaluations to use for the explanation. Defaults to 1000.
+        image_size (tuple, optional): The size to which images will be resized. Defaults to (224, 224).
+        text_prompt (Optional[str], optional): A text prompt required for zero-shot models. Defaults to None.
+        **kwargs: Absorb unused kwargs.
+
+    Returns:
+        shap.Explanation: A SHAP Explanation object containing the SHAP values.
     """
     prediction_fn = _prediction_wrapper(model, text_prompt=text_prompt)
 
@@ -121,9 +156,17 @@ def plot_shap_explanation(
     top_k: int = 5,
     text_prompt: Optional[str] = None,
 ) -> None:
-    """
-    Plots SHAP explanations for a SINGLE image. This function is compatible
-    with the output from PartitionExplainer.
+    """Plots SHAP explanations for a SINGLE image.
+
+    This function is designed to visualize the output of `explain_with_shap` for one image.
+    It uses SHAP's built-in image plotting capabilities to show which parts of the image
+    contributed to the model's predictions for the top-k classes.
+
+    Args:
+        shap_explanation_for_single_image (shap.Explanation): A SHAP Explanation object for a single image.
+        model (ModelType): The `ibbi` model that was explained.
+        top_k (int, optional): The number of top class explanations to plot. Defaults to 5.
+        text_prompt (Optional[str], optional): The text prompt used for explaining a zero-shot model. Defaults to None.
     """
     print("\n--- Generating Explanations for Image ---")
 

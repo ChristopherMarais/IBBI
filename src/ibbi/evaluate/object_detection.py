@@ -8,7 +8,18 @@ import pandas as pd
 
 
 def _calculate_iou(boxA, boxB):
-    """Calculates Intersection over Union for two bounding boxes [x1, y1, x2, y2]."""
+    """Calculates Intersection over Union for two bounding boxes.
+
+    This function takes two bounding boxes in the format [x1, y1, x2, y2] and computes
+    the Intersection over Union (IoU) score, which is a measure of the extent of their overlap.
+
+    Args:
+        boxA (list or np.ndarray): The first bounding box, specified as [x1, y1, x2, y2].
+        boxB (list or np.ndarray): The second bounding box, specified as [x1, y1, x2, y2].
+
+    Returns:
+        float: The IoU score, a value between 0 and 1.
+    """
     xA = max(boxA[0], boxB[0])
     yA = max(boxA[1], boxB[1])
     xB = min(boxA[2], boxB[2])
@@ -34,8 +45,32 @@ def object_detection_performance(
     iou_thresholds: Union[float, list[float], np.ndarray] | None = None,
     confidence_threshold: float = 0.5,
 ) -> dict[str, Any]:
-    """
-    Calculates a comprehensive suite of object detection metrics.
+    """Calculates a comprehensive suite of object detection metrics.
+
+    This function evaluates the performance of an object detection model by computing the
+    mean Average Precision (mAP) over a range of Intersection over Union (IoU) thresholds.
+    It provides a detailed breakdown of performance, including per-class AP scores.
+
+    Args:
+        gt_boxes (np.ndarray): A numpy array of ground truth bounding boxes, with each box in [x1, y1, x2, y2] format.
+        gt_labels (list[int]): A list of integer labels for each ground truth box.
+        gt_image_ids (list[Any]): A list of image identifiers for each ground truth box.
+        pred_boxes (np.ndarray): A numpy array of predicted bounding boxes.
+        pred_labels (list[int]): A list of predicted integer labels for each box.
+        pred_scores (list[float]): A list of confidence scores for each predicted box.
+        pred_image_ids (list[Any]): A list of image identifiers for each predicted box.
+        iou_thresholds (Union[float, list[float], np.ndarray], optional): The IoU threshold(s) for matching predictions to
+                                                                         ground truth. Can be a single float, a list of floats,
+                                                                         or a numpy array. Defaults to np.arange(0.5, 1.0, 0.05).
+        confidence_threshold (float, optional): The confidence score threshold below which predictions are ignored.
+                                                Defaults to 0.5.
+
+    Returns:
+        dict[str, Any]: A dictionary containing:
+                        - "mAP": The mean Average Precision averaged over all IoU thresholds.
+                        - "per_class_AP_at_last_iou": A dictionary mapping class IDs to their AP score at the last IoU threshold.
+                        - "per_threshold_scores": A dictionary mapping each IoU threshold to its corresponding mAP score.
+                        - "sample_results": A pandas DataFrame with detailed information on each ground truth and predicted box.
     """
     if iou_thresholds is None:
         iou_thresholds = np.arange(0.5, 1.0, 0.05)

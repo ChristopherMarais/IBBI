@@ -109,6 +109,8 @@ feature_extractor = ibbi.create_model("feature_extractor", pretrained=True)
 
 The models can perform inference on a variety of image sources, including a local file path, or a `PIL.Image` object that is already loaded in your Python script. This flexibility makes it easy to integrate `ibbi` into diverse data processing workflows.
 
+NOTE: We recommend to create different instances of the model for inference and feature extraction to avoid any potential conflicts.
+
 ### Example 1: Bark Beetle Detection (Single Class)
 
 **Use Case:** These models are optimized to answer a simple but crucial question: "Is there a beetle in this image, and where?" They identify the location (bounding boxes) of any beetle without identifying the species. This is highly effective for initial screening of field-trap images or other raw collection data to quickly quantify the number of specimens.

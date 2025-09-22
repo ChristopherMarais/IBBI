@@ -1,5 +1,16 @@
 # src/ibbi/models/__init__.py
 
+"""Initializes the models subpackage for the ibbi library.
+
+This file serves as the public API for the `ibbi.models` module. It imports all
+model-related classes and factory functions from their respective modules
+(e.g., `single_class`, `multi_class`, `zero_shot`, `feature_extractors`),
+making them directly accessible under the `ibbi.models` namespace.
+
+It also defines a generic `ModelType` for type hinting purposes and explicitly
+lists all public symbols in `__all__` to ensure a clean and well-defined API.
+"""
+
 from typing import TypeVar
 
 # --- Import all model classes and factory functions to populate the registry ---
@@ -50,6 +61,11 @@ ModelType = TypeVar(
     UntrainedFeatureExtractor,
     HuggingFaceFeatureExtractor,
 )
+"""A generic TypeVar for representing any of the model wrapper classes in the ibbi package.
+
+This is used for type hinting in functions and methods that can accept or return any
+of the available model types, providing flexibility while maintaining static type safety.
+"""
 
 # --- Explicitly define the public API of this module ---
 __all__ = [
