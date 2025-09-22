@@ -15,7 +15,7 @@ instantiate these models with pretrained weights.
 """
 
 from io import BytesIO
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import requests
@@ -86,7 +86,7 @@ class GroundingDINOModel:
 
         Returns:
             dict: A dictionary containing the detection results with keys for 'scores',
-                  'text_labels', and 'boxes'.
+                  'labels', and 'boxes'.
         """
         print(f"Running GroundingDINO detection for prompt: '{text_prompt}'...")
 
@@ -115,16 +115,18 @@ class GroundingDINOModel:
             target_sizes=[image_pil.size[::-1]],
         )
 
+        result_dict = results[0]
+        result_dict["labels"] = result_dict.pop("text_labels")
+
         if verbose:
             print("\n--- Detection Results ---")
-            result_dict = results[0]
-            for score, label, box in zip(result_dict["scores"], result_dict["text_labels"], result_dict["boxes"]):
+            for score, label, box in zip(result_dict["scores"], result_dict["labels"], result_dict["boxes"]):
                 print(f"- Label: '{label}', Confidence: {score:.4f}, Box: {[round(c, 2) for c in box.tolist()]}")
             print("-------------------------\n")
 
-        results[0]["boxes"] = [box.tolist() for box in results[0]["boxes"]]
+        result_dict["boxes"] = [box.tolist() for box in result_dict["boxes"]]
 
-        return results[0]
+        return result_dict
 
     def extract_features(self, image, text_prompt: str = "object"):
         """Extracts deep features (embeddings) from the model for an image.
@@ -214,18 +216,23 @@ class YOLOWorldModel:
 
         print(f"YOLOWorld classes set to: {class_list}")
 
-    def predict(self, image, **kwargs):
+    def predict(self, image, text_prompt: Optional[str] = None, **kwargs):
         """Performs zero-shot object detection on an image.
 
         Note: Before calling `predict`, you should set the desired classes using `set_classes`.
 
         Args:
             image (Union[str, np.ndarray, Image.Image]): The input image.
+            text_prompt (str, optional): The text prompt describing the object(s) to detect.
+                                       If provided, this will set the detection classes for the model.
             **kwargs: Additional keyword arguments for the `ultralytics.YOLOWorld.predict` method.
 
         Returns:
             dict: A dictionary of detection results with keys for 'scores', 'labels', and 'boxes'.
         """
+        if text_prompt:
+            self.set_classes(text_prompt)
+
         results = self.model.predict(image, **kwargs)
 
         result_dict = {"scores": [], "labels": [], "boxes": []}
