@@ -1,7 +1,10 @@
 # src/ibbi/utils/info.py
 
 """
-Utility functions for displaying package information.
+This module provides utility functions for displaying package information, such as
+a list of available models and their performance metrics. These functions are
+designed to help users explore the capabilities of the `ibbi` package and make
+informed decisions about which models to use for their specific tasks.
 """
 
 from importlib import resources
@@ -10,18 +13,21 @@ import pandas as pd
 
 
 def list_models(as_df: bool = False):
-    """
-    Displays available models and their key information.
+    """Displays or returns a summary of available models and their key information.
 
-    Reads the model summary CSV included with the package and prints it.
-    Can also return the data as a pandas DataFrame.
+    This function reads the model summary CSV file included with the package, which
+    contains a comprehensive list of all available models, their tasks, and key
+    performance metrics. It can either print this information to the console in a
+    human-readable format or return it as a pandas DataFrame for programmatic access.
 
     Args:
-        as_df (bool): If True, returns the model information as a pandas DataFrame.
-                      If False (default), prints the information to the console.
+        as_df (bool, optional): If True, the function returns the model information as a
+                                pandas DataFrame. If False (the default), it prints the
+                                information directly to the console.
 
     Returns:
-        pd.DataFrame or None: A DataFrame if as_df is True, otherwise None.
+        pd.DataFrame or None: If `as_df` is True, a pandas DataFrame containing the model
+                              summary is returned. Otherwise, the function returns None.
     """
     try:
         # Find the path to the data file within the package

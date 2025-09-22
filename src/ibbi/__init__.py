@@ -2,91 +2,97 @@
 
 """
 Main initialization file for the ibbi package.
+
+This file serves as the primary entry point for the `ibbi` library. It exposes the most
+important high-level functions and classes, making them directly accessible to the user
+under the `ibbi` namespace. This includes the core model creation factory (`create_model`),
+the main workflow classes (`Evaluator`, `Explainer`), and key utility functions for
+accessing datasets and managing the cache.
+
+The goal of this top-level `__init__.py` is to provide a clean and intuitive API,
+simplifying the user experience by abstracting away the underlying module structure.
 """
 
+import importlib.metadata
 from typing import Any
 
-from .evaluate.features import EmbeddingEvaluator
-from .evaluate.performance import classification_performance, object_detection_performance
+# --- Get the package version dynamically ---
+try:
+    __version__ = importlib.metadata.version("ibbi")
+except importlib.metadata.PackageNotFoundError:
+    # Fallback version for when the package is not installed
+    __version__ = "Package not installed"
 
-# Import model modules to ensure registry is populated
-# --- Import ModelType from its new location ---
-from .models import (
-    ModelType,
-    multi_class_detection,  # noqa: F401
-    single_class_detection,  # noqa: F401
-    untrained,  # noqa: F401
-    zero_shot_detection,  # noqa: F401
-)
-
-# Import the populated registry
+# --- Core Functionality ---
+# --- High-level classes for streamlined workflow ---
+from .evaluate import Evaluator
+from .explain import Explainer, plot_lime_explanation, plot_shap_explanation
+from .models import ModelType
 from .models._registry import model_registry
 from .utils.cache import clean_cache, get_cache_dir
 from .utils.data import get_dataset, get_shap_background_dataset
-
-# --- Top-level function imports ---
 from .utils.info import list_models
-from .xai.lime import explain_with_lime, plot_lime_explanation
-from .xai.shap import explain_with_shap, plot_shap_explanation
+
+# --- Model Aliases for User Convenience ---
+MODEL_ALIASES = {
+    "beetle_detector": "yolov10x_bb_detect_model",
+    "species_classifier": "yolov12x_bb_multi_class_detect_model",
+    "feature_extractor": "dinov3_vitl16_lvd1689m_features_model",
+    "zero_shot_detector": "grounding_dino_detect_model",
+}
 
 
 def create_model(model_name: str, pretrained: bool = False, **kwargs: Any) -> ModelType:
-    """
-    Creates a model from a name.
+    """Creates a model from a name or a task-based alias.
 
-    This factory function is the main entry point for users of the package.
-    It looks up the requested model in the registry, downloads pretrained
-    weights from the Hugging Face Hub if requested, and returns an
-    instantiated model object.
+    This function is the main entry point for instantiating models within the `ibbi`
+    package. It uses a model registry to look up and create a model instance based on
+    the provided `model_name`. Users can either specify the exact name of a model
+    or use a convenient, task-based alias (e.g., "species_classifier").
+
+    When `pretrained=True`, the function will download the model's weights from the
+    Hugging Face Hub and cache them locally for future use.
 
     Args:
-        model_name (str): Name of the model to create.
-        pretrained (bool): Whether to load pretrained weights from the Hugging Face Hub.
-                            Defaults to False.
-        **kwargs (Any): Extra arguments to pass to the model-creating function.
+        model_name (str): The name or alias of the model to create. A list of available
+                          model names and aliases can be obtained using `ibbi.list_models()`.
+        pretrained (bool, optional): If True, loads pretrained weights for the model.
+                                     Defaults to False.
+        **kwargs (Any): Additional keyword arguments that will be passed to the underlying
+                        model's factory function. This allows for advanced customization.
 
     Returns:
-        ModelType: An instance of the requested model (e.g., YOLOSingleClassBeetleDetector or
-                   YOLOBeetleMultiClassDetector).
+        ModelType: An instantiated model object ready for prediction or feature extraction.
 
     Raises:
-        KeyError: If the requested `model_name` is not found in the model registry.
-
-    Example:
-        ```python
-        import ibbi
-
-        # Create a pretrained single-class detection model
-        detector = ibbi.create_model("yolov10x_bb_detect_model", pretrained=True)
-
-        # Create a pretrained multi-class detection model
-        multi_class_detector = ibbi.create_model("yolov10x_bb_multi_class_detect_model", pretrained=True)
-        ```
+        KeyError: If the provided `model_name` or its resolved alias is not found in the
+                  model registry.
     """
+    # Resolve alias if used
+    if model_name in MODEL_ALIASES:
+        model_name = MODEL_ALIASES[model_name]
+
     if model_name not in model_registry:
         available = ", ".join(model_registry.keys())
-        raise KeyError(f"Model '{model_name}' not found. Available models: [{available}]")
+        aliases = ", ".join(MODEL_ALIASES.keys())
+        raise KeyError(f"Model '{model_name}' not found. Available models: [{available}]. Available aliases: [{aliases}].")
 
-    # Look up the factory function in the registry and call it
     model_factory = model_registry[model_name]
     model = model_factory(pretrained=pretrained, **kwargs)
-
     return model
 
 
 __all__ = [
-    "EmbeddingEvaluator",
+    "Evaluator",
+    "Explainer",
     "ModelType",
-    "classification_performance",
+    "__version__",
     "clean_cache",
     "create_model",
-    "explain_with_lime",
-    "explain_with_shap",
     "get_cache_dir",
     "get_dataset",
     "get_shap_background_dataset",
     "list_models",
-    "object_detection_performance",
     "plot_lime_explanation",
     "plot_shap_explanation",
 ]
