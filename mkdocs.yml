@@ -26,6 +26,8 @@ theme:
     - navigation.tabs
     - navigation.sections
     - navigation.top
+    - navigation.instant
+    - toc.integrate
     - search.suggest
     - search.highlight
     - content.code.copy
@@ -42,7 +44,10 @@ plugins:
 
 nav:
   - Home: index.md
-  - Usage Guide: usage.md
-  - API Reference: api.md
-  - Contributing: CONTRIBUTING.md
-  - License: LICENSE
+  - 'User Documentation':
+    - 'Usage Guide': usage.md
+  - 'API':
+    - 'Reference': api.md
+  - 'Development':
+    - 'Contributing': CONTRIBUTING.md
+    - 'License': LICENSE.md
