@@ -34,13 +34,13 @@ def classification_performance(
         true_labels (np.ndarray): An array of ground truth labels for each sample.
         predicted_labels (np.ndarray): An array of predicted labels for each sample.
         target_names (Optional[list[str]], optional): A list of display names for the target classes.
-                                                     If not provided, labels will be used as names. Defaults to None.
+                                                    If not provided, labels will be used as names. Defaults to None.
         average (str, optional): The averaging method to use for precision, recall, and F1-score.
-                                 Common options are 'micro', 'macro', and 'weighted'. Defaults to "macro".
+                                Common options are 'micro', 'macro', and 'weighted'. Defaults to "macro".
         sample_weight (Optional[np.ndarray], optional): An array of weights to apply to each sample.
                                                         Defaults to None.
         zero_division (Union[str, int], optional): Sets the value to return when there is a zero division.
-                                                   Can be "warn", 0, or 1. Defaults to "warn".
+                                                Can be "warn", 0, or 1. Defaults to "warn".
 
     Returns:
         dict[str, Any]: A dictionary containing the following performance metrics:
@@ -69,7 +69,7 @@ def classification_performance(
     precision, recall, f1, _ = precision_recall_fscore_support(
         true_labels,
         predicted_labels,
-        average=average,
+        average=average,  # type: ignore
         zero_division=zero_division,  # type: ignore
         labels=labels_lst,
         sample_weight=sample_weight,
