@@ -37,7 +37,7 @@ class GroundingDINOModel:
 
     Args:
         model_id (str, optional): The model identifier from the Hugging Face Hub.
-                                  Defaults to "IDEA-Research/grounding-dino-base".
+                                Defaults to "IDEA-Research/grounding-dino-base".
     """
 
     def __init__(self, model_id: str = "IDEA-Research/grounding-dino-base"):
@@ -50,45 +50,65 @@ class GroundingDINOModel:
         self.model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model.to(self.device)
+        self.classes: list[str] = []
         print(f"GroundingDINO model loaded on device: {self.device}")
 
-    def get_classes(self):
-        """This method is not applicable to zero-shot models.
+    def get_classes(self) -> list[str]:
+        """Returns the classes the model is currently set to detect.
 
-        Raises:
-            NotImplementedError: As a zero-shot model, classes are defined dynamically
-                                 at inference time via the 'text_prompt' argument.
+        For zero-shot models, this is determined by the last `text_prompt` used.
+
+        Returns:
+            list[str]: A list of the class names currently set for detection.
         """
-        raise NotImplementedError(
-            "The GroundingDINOModel is a zero-shot detection model and does not have a fixed set of classes. "
-            "Classes are defined dynamically at inference time via the 'text_prompt' argument in the 'predict' method."
-        )
+        return self.classes
+
+    def set_classes(self, classes: Union[list[str], str]):
+        """Sets the classes for the model to detect.
+
+        Args:
+            classes (Union[list[str], str]): A list of class names or a single string
+                                            with class names separated by " . ".
+        """
+        if isinstance(classes, str):
+            self.classes = [c.strip() for c in classes.split(" . ")]
+        else:
+            self.classes = classes
+        # print(f"GroundingDINO classes set to: {self.classes}")
 
     def predict(
         self,
         image,
-        text_prompt: str,
-        box_threshold: float = 0.25,
-        text_threshold: float = 0.25,
+        text_prompt: Optional[str] = None,
+        box_threshold: float = 0.05,
+        text_threshold: float = 0.05,
         verbose: bool = False,
     ):
         """Performs zero-shot object detection on an image given a text prompt.
 
         Args:
             image (Union[str, np.ndarray, Image.Image]): The input image. Can be a file path, URL,
-                                                         numpy array, or PIL Image object.
-            text_prompt (str): The text prompt describing the object(s) to detect.
+                                                        numpy array, or PIL Image object.
+            text_prompt (str, optional): The text prompt describing the object(s) to detect.
+                                        If provided, this will set the detection classes for the model.
             box_threshold (float, optional): The confidence threshold for filtering bounding boxes.
-                                             Defaults to 0.25.
+                                            Defaults to 0.05.
             text_threshold (float, optional): The confidence threshold for filtering text labels.
-                                              Defaults to 0.25.
+                                            Defaults to 0.05.
             verbose (bool, optional): If True, prints detailed detection results. Defaults to False.
 
         Returns:
             dict: A dictionary containing the detection results with keys for 'scores',
-                  'labels', and 'boxes'.
+                'labels', and 'boxes'.
         """
-        print(f"Running GroundingDINO detection for prompt: '{text_prompt}'...")
+        if text_prompt:
+            self.set_classes(text_prompt)
+
+        if not self.classes:
+            raise ValueError("No classes set for detection. Please provide a 'text_prompt' or call 'set_classes' first.")
+
+        prompt = " . ".join(self.classes)
+        # print(f"Running GroundingDINO detection for prompt: '{prompt}'...")
 
         if isinstance(image, str):
             if image.startswith("http"):
@@ -103,7 +123,7 @@ class GroundingDINOModel:
         else:
             raise ValueError("Unsupported image type. Use a file path, URL, numpy array, or PIL image.")
 
-        inputs = self.processor(images=image_pil, text=text_prompt, return_tensors="pt").to(self.device)
+        inputs = self.processor(images=image_pil, text=prompt, return_tensors="pt").to(self.device)
         with torch.no_grad():
             outputs = self.model(**inputs)
 
@@ -134,13 +154,13 @@ class GroundingDINOModel:
         Args:
             image (Union[str, np.ndarray, Image.Image]): The input image.
             text_prompt (str, optional): A text prompt to guide feature extraction.
-                                       Defaults to "object".
+                                    Defaults to "object".
 
         Returns:
             Optional[torch.Tensor]: A tensor containing the extracted feature embeddings,
                                     or None if features could not be extracted.
         """
-        print(f"Extracting features from GroundingDINO using prompt: '{text_prompt}'...")
+        # print(f"Extracting features from GroundingDINO using prompt: '{text_prompt}'...")
 
         if isinstance(image, str):
             if image.startswith("http"):
@@ -189,29 +209,30 @@ class YOLOWorldModel:
         self.model = YOLOWorld(model_path)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model.to(self.device)
+        self.model.eval()
         print(f"YOLO-World model loaded on device: {self.device}")
 
-    def get_classes(self):
+    def get_classes(self) -> list[str]:
         """Returns the classes the model is currently set to detect.
 
         Returns:
             list[str]: A list of the class names currently set for detection.
         """
-        return self.model.names
+        return list(self.model.names.values())
 
     def set_classes(self, classes: Union[list[str], str]):
         """Sets the classes for the model to detect.
 
         Args:
             classes (Union[list[str], str]): A list of class names or a single string
-                                             with class names separated by " . ".
+                                            with class names separated by " . ".
         """
         if isinstance(classes, str):
-            class_list = [c.strip() for c in classes.split(" . ")]
+            class_list = [c.strip() for c in classes.split(". ")]
         else:
             class_list = classes
 
-        with torch.enable_grad():
+        with torch.no_grad():
             self.model.set_classes(class_list)
 
         print(f"YOLOWorld classes set to: {class_list}")
@@ -224,16 +245,25 @@ class YOLOWorldModel:
         Args:
             image (Union[str, np.ndarray, Image.Image]): The input image.
             text_prompt (str, optional): The text prompt describing the object(s) to detect.
-                                       If provided, this will set the detection classes for the model.
+                                    If provided, this will set the detection classes for the model.
             **kwargs: Additional keyword arguments for the `ultralytics.YOLOWorld.predict` method.
 
         Returns:
             dict: A dictionary of detection results with keys for 'scores', 'labels', and 'boxes'.
         """
         if text_prompt:
-            self.set_classes(text_prompt)
+            # Parse the new prompt into a list of classes
+            new_classes = [c.strip() for c in text_prompt.split(". ")]
 
-        results = self.model.predict(image, **kwargs)
+            # Get the currently set classes
+            current_classes = self.get_classes()
+
+            # Only update the model's classes if the new prompt is different
+            if new_classes != current_classes:
+                self.set_classes(new_classes)
+
+        with torch.no_grad():
+            results = self.model.predict(image, **kwargs)
 
         result_dict = {"scores": [], "labels": [], "boxes": []}
 
@@ -251,11 +281,25 @@ class YOLOWorldModel:
         Args:
             image (Union[str, np.ndarray, Image.Image]): The input image.
             **kwargs: Additional keyword arguments for the `ultralytics.YOLOWorld.embed` method.
+                      Also accepts 'text_prompt' to set classes before embedding.
 
         Returns:
             Optional[torch.Tensor]: A tensor of feature embeddings, or None.
         """
-        features = self.model.embed(image, **kwargs)
+        # Check for and handle the 'text_prompt' argument from kwargs
+        if "text_prompt" in kwargs:
+            text_prompt = kwargs.pop("text_prompt")  # Remove it so it's not passed to `embed`
+            new_classes = [c.strip() for c in text_prompt.split(". ")]
+            current_classes = self.get_classes()
+
+            # Only update if the classes have changed
+            if new_classes != current_classes:
+                self.set_classes(new_classes)
+
+        with torch.no_grad():
+            # Call embed with the remaining (valid) kwargs
+            features = self.model.embed(image, **kwargs)
+
         return features[0] if features else None
 
 
@@ -265,9 +309,9 @@ def grounding_dino_detect_model(pretrained: bool = True, **kwargs):
 
     Args:
         pretrained (bool, optional): This argument is ignored as the model is always loaded
-                                     with pretrained weights. Defaults to True.
+                                    with pretrained weights. Defaults to True.
         **kwargs: Additional keyword arguments, such as `model_id` to specify a different
-                  GroundingDINO model from the Hugging Face Hub.
+                GroundingDINO model from the Hugging Face Hub.
 
     Returns:
         GroundingDINOModel: An instance of the GroundingDINO model wrapper.
@@ -284,7 +328,7 @@ def yoloworldv2_bb_detect_model(pretrained: bool = True, **kwargs):
 
     Args:
         pretrained (bool, optional): If True, loads the default 'yolov8x-worldv2.pt' weights.
-                                     This argument is effectively always True for this model.
+                                    This argument is effectively always True for this model.
         **kwargs: Additional keyword arguments (not used).
 
     Returns:

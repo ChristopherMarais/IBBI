@@ -53,7 +53,7 @@ def get_dataset(
 
     if not dataset_path.exists():
         print(f"Dataset not found locally. Downloading from '{repo_id}' to '{dataset_path}'...")
-        snapshot_download(repo_id=repo_id, repo_type="dataset", local_dir=str(dataset_path), local_dir_use_symlinks=False)
+        snapshot_download(repo_id=repo_id, repo_type="dataset", local_dir=str(dataset_path))
         print("Download complete.")
     else:
         print(f"Found cached dataset at '{dataset_path}'. Loading from disk.")

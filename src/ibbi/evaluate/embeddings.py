@@ -246,16 +246,16 @@ class EmbeddingEvaluator:
         Args:
             true_labels (np.ndarray): An array of ground truth labels for each sample.
             label_map (Optional[dict[int, str]], optional): A dictionary to map integer labels to string names.
-                                                          Defaults to None.
+                                                        Defaults to None.
             embedding_metric (str, optional): The distance metric to use for the embedding space.
                                             Defaults to "cosine".
             ext_dist_matrix_path (str, optional): The path to the external distance matrix file.
-                                                  Defaults to "ibbi_species_distance_matrix.csv".
+                                                Defaults to "ibbi_species_distance_matrix.csv".
 
         Returns:
             tuple[float, float, int, pd.DataFrame]: A tuple containing the Mantel correlation coefficient (r),
-                                                     the p-value, the number of items compared, and a DataFrame
-                                                     of per-class centroids.
+                                                    the p-value, the number of items compared, and a DataFrame
+                                                    of per-class centroids.
         """
         if not _skbio_available:
             raise ImportError("Mantel test requires 'scikit-bio' to be installed.")
@@ -264,6 +264,9 @@ class EmbeddingEvaluator:
         labels_df = pd.DataFrame({"label": true_labels})
         embeddings_df = pd.DataFrame(self.embeddings)
         df = pd.concat([labels_df, embeddings_df], axis=1)
+
+        # Add this line to drop rows with NaN values
+        df.dropna(inplace=True)
 
         grouped_centroids = df.groupby("label").mean()
         centroids: np.ndarray = grouped_centroids.to_numpy()
@@ -297,13 +300,17 @@ class EmbeddingEvaluator:
         embedding_dist_aligned = embedding_dist_matrix.loc[common_labels, common_labels]
         ext_dist_aligned = ext_matrix_df.loc[common_labels, common_labels]
 
-        mantel_result = mantel(embedding_dist_aligned, ext_dist_aligned)
+        # Convert to numpy arrays before passing to mantel
+        mantel_result = mantel(embedding_dist_aligned.to_numpy(), ext_dist_aligned.to_numpy())
         typed_mantel_result = cast(tuple[float, float, int], mantel_result)
 
         r_val = typed_mantel_result[0]
         p_val = typed_mantel_result[1]
         n_items = typed_mantel_result[2]
 
-        per_class_results_df = pd.DataFrame({"label": centroid_index, "centroid": list(centroids)})
+        # Improved way to create the DataFrame
+        per_class_results_df = pd.DataFrame(centroids, index=centroid_index)
+        per_class_results_df.index.name = "label"
+        per_class_results_df = per_class_results_df.reset_index()
 
         return float(r_val), float(p_val), int(n_items), per_class_results_df
