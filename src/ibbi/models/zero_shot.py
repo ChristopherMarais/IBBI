@@ -80,8 +80,8 @@ class GroundingDINOModel:
         self,
         image,
         text_prompt: Optional[str] = None,
-        box_threshold: float = 0.25,
-        text_threshold: float = 0.25,
+        box_threshold: float = 0.05,
+        text_threshold: float = 0.05,
         verbose: bool = False,
     ):
         """Performs zero-shot object detection on an image given a text prompt.
@@ -92,9 +92,9 @@ class GroundingDINOModel:
             text_prompt (str, optional): The text prompt describing the object(s) to detect.
                                         If provided, this will set the detection classes for the model.
             box_threshold (float, optional): The confidence threshold for filtering bounding boxes.
-                                            Defaults to 0.25.
+                                            Defaults to 0.05.
             text_threshold (float, optional): The confidence threshold for filtering text labels.
-                                            Defaults to 0.25.
+                                            Defaults to 0.05.
             verbose (bool, optional): If True, prints detailed detection results. Defaults to False.
 
         Returns:
@@ -209,6 +209,7 @@ class YOLOWorldModel:
         self.model = YOLOWorld(model_path)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model.to(self.device)
+        self.model.eval()
         print(f"YOLO-World model loaded on device: {self.device}")
 
     def get_classes(self) -> list[str]:
@@ -227,11 +228,11 @@ class YOLOWorldModel:
                                             with class names separated by " . ".
         """
         if isinstance(classes, str):
-            class_list = [c.strip() for c in classes.split(" . ")]
+            class_list = [c.strip() for c in classes.split(". ")]
         else:
             class_list = classes
 
-        with torch.enable_grad():
+        with torch.no_grad():
             self.model.set_classes(class_list)
 
         print(f"YOLOWorld classes set to: {class_list}")
@@ -251,9 +252,18 @@ class YOLOWorldModel:
             dict: A dictionary of detection results with keys for 'scores', 'labels', and 'boxes'.
         """
         if text_prompt:
-            self.set_classes(text_prompt)
+            # Parse the new prompt into a list of classes
+            new_classes = [c.strip() for c in text_prompt.split(". ")]
 
-        results = self.model.predict(image, **kwargs)
+            # Get the currently set classes
+            current_classes = self.get_classes()
+
+            # Only update the model's classes if the new prompt is different
+            if new_classes != current_classes:
+                self.set_classes(new_classes)
+
+        with torch.no_grad():
+            results = self.model.predict(image, **kwargs)
 
         result_dict = {"scores": [], "labels": [], "boxes": []}
 
@@ -271,11 +281,25 @@ class YOLOWorldModel:
         Args:
             image (Union[str, np.ndarray, Image.Image]): The input image.
             **kwargs: Additional keyword arguments for the `ultralytics.YOLOWorld.embed` method.
+                      Also accepts 'text_prompt' to set classes before embedding.
 
         Returns:
             Optional[torch.Tensor]: A tensor of feature embeddings, or None.
         """
-        features = self.model.embed(image, **kwargs)
+        # Check for and handle the 'text_prompt' argument from kwargs
+        if "text_prompt" in kwargs:
+            text_prompt = kwargs.pop("text_prompt")  # Remove it so it's not passed to `embed`
+            new_classes = [c.strip() for c in text_prompt.split(". ")]
+            current_classes = self.get_classes()
+
+            # Only update if the classes have changed
+            if new_classes != current_classes:
+                self.set_classes(new_classes)
+
+        with torch.no_grad():
+            # Call embed with the remaining (valid) kwargs
+            features = self.model.embed(image, **kwargs)
+
         return features[0] if features else None
 
 
