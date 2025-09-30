@@ -120,3 +120,28 @@ def get_shap_background_dataset(image_size: tuple[int, int] = (224, 224)) -> lis
 
     print("SHAP background dataset loaded and resized successfully.")
     return background_images
+
+
+def get_ood_dataset(
+    repo_id: str = "IBBI-bio/ibbi_ood_data",
+    local_dir: str = "ibbi_ood_data",
+    split: str = "train",
+    **kwargs,
+) -> Dataset:
+    """Downloads and loads the out-of-distribution (OOD) dataset from the Hugging Face Hub.
+
+    This function handles the download and caching of the OOD dataset. On subsequent
+    calls, it will load the data directly from the local cache.
+
+    Args:
+        repo_id (str, optional): The repository ID of the OOD dataset on the Hugging Face Hub.
+                                 Defaults to "IBBI-bio/ibbi_ood_data".
+        local_dir (str, optional): The name of the local directory where the dataset will be stored.
+                                   Defaults to "ibbi_ood_data".
+        split (str, optional): The name of the dataset split to load. Defaults to "train".
+        **kwargs: Additional keyword arguments for the `datasets.load_dataset` function.
+
+    Returns:
+        Dataset: The loaded OOD dataset as a `datasets.Dataset` object.
+    """
+    return get_dataset(repo_id=repo_id, local_dir=local_dir, split=split, **kwargs)

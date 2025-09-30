@@ -30,7 +30,7 @@ from .explain import Explainer, plot_lime_explanation, plot_shap_explanation
 from .models import ModelType
 from .models._registry import model_registry
 from .utils.cache import clean_cache, get_cache_dir
-from .utils.data import get_dataset, get_shap_background_dataset
+from .utils.data import get_dataset, get_ood_dataset, get_shap_background_dataset
 from .utils.info import list_models
 
 # --- Model Aliases for User Convenience ---
@@ -91,6 +91,7 @@ __all__ = [
     "create_model",
     "get_cache_dir",
     "get_dataset",
+    "get_ood_dataset",
     "get_shap_background_dataset",
     "list_models",
     "plot_lime_explanation",

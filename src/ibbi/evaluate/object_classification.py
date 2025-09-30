@@ -10,7 +10,7 @@ ground truth objects before comparing their class labels.
 """
 
 from collections import defaultdict
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -296,4 +296,114 @@ def object_classification_performance(
         "per_threshold_scores": per_threshold_scores,
         "per_iou_classification_metrics": per_iou_classification_metrics,
         "sample_results": pd.DataFrame(sample_results),
+    }
+
+
+def out_of_distribution_detection(
+    id_results: list[dict],
+    ood_results: list[dict],
+    id_dataset: list[dict],
+    ood_dataset: list[dict],
+    class_names: list[str],
+    thresholds: Optional[np.ndarray] = None,
+) -> dict[str, Any]:
+    """Performs a comprehensive out-of-distribution (OOD) analysis.
+
+    This function compares the model's behavior on in-distribution (ID) versus
+    out-of-distribution (OOD) data. It provides detailed statistics on confidence
+    scores, allowing for the determination of an optimal threshold for separating
+    known from unknown classes.
+
+    Args:
+        id_results (list[dict]): A list of prediction results from the model on the ID dataset.
+        ood_results (list[dict]): A list of prediction results from the model on the OOD dataset.
+        id_dataset (list[dict]): The in-distribution dataset.
+        ood_dataset (list[dict]): The out-of-distribution dataset.
+        class_names (list[str]): A list of the model's class names.
+        thresholds (np.ndarray, optional): An array of confidence thresholds to evaluate.
+                                           Defaults to np.arange(0.05, 1.0, 0.05).
+
+    Returns:
+        dict[str, Any]: A dictionary containing a comprehensive OOD analysis, including:
+                        - "confidence_score_analysis": A DataFrame with comparative statistics
+                          (mean, std, percentiles) for ID and OOD confidence scores.
+                        - "per_threshold_metrics": A DataFrame showing TPR, FNR, FPR, and TNR
+                          for both ID and OOD data at various thresholds.
+                        - "ood_sample_analysis": A DataFrame with a column for the true label
+                          and a column for each predicted species' confidence score.
+    """
+    # set default thresholds if none provided
+    if thresholds is None:
+        thresholds = np.arange(0.05, 1.0, 0.05)
+
+    # --- 1. Confidence Score Analysis ---
+    id_max_confidences = [max(res["scores"]) if res and res.get("scores") else 0 for res in id_results]
+    ood_max_confidences = [max(res["scores"]) if res and res.get("scores") else 0 for res in ood_results]
+
+    confidence_stats = {
+        "Metric": ["Mean", "Std Dev", "Median", "95th Percentile", "99th Percentile"],
+        "In-Distribution": [
+            np.mean(id_max_confidences),
+            np.std(id_max_confidences),
+            np.median(id_max_confidences),
+            np.percentile(id_max_confidences, 95),
+            np.percentile(id_max_confidences, 99),
+        ],
+        "Out-of-Distribution": [
+            np.mean(ood_max_confidences),
+            np.std(ood_max_confidences),
+            np.median(ood_max_confidences),
+            np.percentile(ood_max_confidences, 95),
+            np.percentile(ood_max_confidences, 99),
+        ],
+    }
+    confidence_df = pd.DataFrame(confidence_stats)
+
+    # --- 2. Per-Threshold Metrics (TPR, FNR, FPR, TNR) ---
+    threshold_metrics = []
+    for t in thresholds:
+        id_tp = np.sum([1 for conf in id_max_confidences if conf >= t])
+        id_fn = len(id_max_confidences) - id_tp
+        ood_fp = np.sum([1 for conf in ood_max_confidences if conf >= t])
+        ood_tn = len(ood_max_confidences) - ood_fp
+
+        tpr_id = id_tp / len(id_max_confidences) if id_max_confidences else 0
+        fnr_id = id_fn / len(id_max_confidences) if id_max_confidences else 0
+        fpr_ood = ood_fp / len(ood_max_confidences) if ood_max_confidences else 0
+        tnr_ood = ood_tn / len(ood_max_confidences) if ood_max_confidences else 0
+
+        threshold_metrics.append(
+            {
+                "Threshold": t,
+                "TPR_ID": tpr_id,
+                "FNR_ID": fnr_id,
+                "FPR_OOD": fpr_ood,
+                "TNR_OOD": tnr_ood,
+            }
+        )
+    threshold_df = pd.DataFrame(threshold_metrics)
+
+    # --- 3. OOD Sample-Level Analysis with Full Class Confidences ---
+    ood_sample_details = []
+    for i, res in enumerate(ood_results):
+        row = {"true_label": ood_dataset[i].get("species", "Unknown")}
+
+        if res and res.get("full_results"):
+            # Assuming one detection per image for OOD, take the first one
+            full_result = res["full_results"][0]
+            for class_name, prob in zip(class_names, full_result["class_probabilities"]):
+                row[class_name] = prob
+        else:
+            # If no detection, fill with zeros
+            for class_name in class_names:
+                row[class_name] = 0.0
+
+        ood_sample_details.append(row)
+
+    ood_sample_df = pd.DataFrame(ood_sample_details)
+
+    return {
+        "confidence_score_analysis": confidence_df,
+        "per_threshold_metrics": threshold_df,
+        "ood_sample_analysis": ood_sample_df,
     }
