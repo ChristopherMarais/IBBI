@@ -2,6 +2,7 @@ site/
 __pycache__/
 */**/__pycache__/
 *ibbi_test_data/
+*ibbi_ood_data/
 
 *.ipynb_checkpoints
 *.pt

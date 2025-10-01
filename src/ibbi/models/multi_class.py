@@ -13,7 +13,9 @@ Additionally, it provides several factory functions, decorated with `@register_m
 to easily instantiate specific, pretrained multi-class detection models.
 """
 
+import numpy as np
 import torch
+import torch.nn.functional as F
 from ultralytics import RTDETR, YOLO
 
 from ..utils.hub import download_from_hf_hub
@@ -43,28 +45,86 @@ class YOLOBeetleMultiClassDetector:
         self.classes = list(self.model.names.values())
         print(f"YOLO Multi-Class Detector Model loaded on device: {self.device}")
 
-    def predict(self, image, **kwargs):
+        # Pre-calculate genus map
+        self.genus_map = {}
+        for i, class_name in enumerate(self.classes):
+            genus = class_name.split("_")[0]
+            if genus not in self.genus_map:
+                self.genus_map[genus] = []
+            self.genus_map[genus].append(i)
+
+    def predict(self, image, include_full_probabilities: bool = True, classify_genus: bool = False, **kwargs):
         """Performs multi-class object detection on an image.
 
         Args:
             image (Union[str, np.ndarray, Image.Image]): The input image. Can be a file path,
                                                          a numpy array, or a PIL Image object.
+            include_full_probabilities (bool, optional): If True, includes a 'full_results' key in the
+                                                         output with detailed probabilities for each class.
+                                                         Defaults to True.
+            classify_genus (bool, optional): If True, classifies detections at the genus level by
+                                             taking the max species probabilities per genus. The primary 'labels' and
+                                             'scores' will reflect the top genus. Defaults to False.
             **kwargs: Additional keyword arguments to be passed to the underlying
                       `ultralytics.YOLO.predict` method.
 
         Returns:
-            dict: A dictionary containing the detection results with keys for 'scores',
-                  'labels', and 'boxes'.
+            dict: A dictionary containing the detection results.
         """
         results = self.model.predict(image, **kwargs)
 
         result_dict = {"scores": [], "labels": [], "boxes": []}
+        if include_full_probabilities:
+            result_dict["full_results"] = []
+            result_dict["class_names"] = self.classes
 
         if results and hasattr(results[0], "boxes") and results[0].boxes is not None:
-            for box in results[0].boxes:
-                result_dict["scores"].append(box.conf.item())
-                result_dict["labels"].append(self.model.names[int(box.cls)])
-                result_dict["boxes"].append(box.xyxy[0].tolist())
+            for i, box in enumerate(results[0].boxes):  # type: ignore
+                confidence = box.conf.item()
+                class_id = int(box.cls)
+                species_label = self.model.names[class_id]
+                bbox = box.xyxy[0].tolist()
+
+                probabilities = None
+                if hasattr(results[0], "probs") and results[0].probs is not None and results[0].probs.shape[0] > i:
+                    probabilities = F.softmax(results[0].probs[i], dim=-1).cpu().numpy()  # type: ignore
+                elif hasattr(box, "probs") and box.probs is not None:
+                    probabilities = box.probs.cpu().numpy()
+                else:
+                    # Fallback: create a proxy distribution
+                    probabilities = np.zeros(len(self.classes))
+                    probabilities[class_id] = confidence
+                    remaining_prob = 1.0 - confidence
+                    other_classes_count = len(self.classes) - 1
+                    if other_classes_count > 0:
+                        distributed_prob = remaining_prob / other_classes_count
+                        probabilities = np.full(len(self.classes), distributed_prob)
+                        probabilities[class_id] = confidence
+
+                if classify_genus:
+                    if probabilities is not None:
+                        genus_probabilities = {genus: np.max([probabilities[i] for i in indices]) for genus, indices in self.genus_map.items()}
+                        top_genus = max(genus_probabilities, key=lambda k: genus_probabilities[k])
+                        top_genus_score = genus_probabilities[top_genus]
+
+                        result_dict["scores"].append(top_genus_score)
+                        result_dict["labels"].append(top_genus)
+                        result_dict["boxes"].append(bbox)
+                else:
+                    result_dict["scores"].append(confidence)
+                    result_dict["labels"].append(species_label)
+                    result_dict["boxes"].append(bbox)
+
+                if include_full_probabilities:
+                    result_dict["full_results"].append(
+                        {
+                            "predicted_class": species_label,
+                            "predicted_class_id": class_id,
+                            "confidence": confidence,
+                            "class_probabilities": probabilities.tolist() if probabilities is not None else [],
+                            "bbox": bbox,
+                        }
+                    )
 
         return result_dict
 
@@ -115,26 +175,83 @@ class RTDETRBeetleMultiClassDetector:
         self.classes = list(self.model.names.values())
         print(f"RT-DETR Multi-Class Detector Model loaded on device: {self.device}")
 
-    def predict(self, image, **kwargs):
+        # Pre-calculate genus map
+        self.genus_map = {}
+        for i, class_name in enumerate(self.classes):
+            genus = class_name.split("_")[0]
+            if genus not in self.genus_map:
+                self.genus_map[genus] = []
+            self.genus_map[genus].append(i)
+
+    def predict(self, image, include_full_probabilities: bool = True, classify_genus: bool = False, **kwargs):
         """Performs multi-class object detection on an image.
 
         Args:
             image (Union[str, np.ndarray, Image.Image]): The input image.
+            include_full_probabilities (bool, optional): If True, includes a 'full_results' key with detailed probabilities.
+                                                         Defaults to True.
+            classify_genus (bool, optional): If True, classifies detections at the genus level by
+                                             taking the max species probabilities per genus. The primary 'labels' and
+                                             'scores' will reflect the top genus. Defaults to False.
             **kwargs: Additional keyword arguments for the `ultralytics.RTDETR.predict` method.
 
         Returns:
-            dict: A dictionary containing detection results with keys for 'scores',
-                  'labels', and 'boxes'.
+            dict: A dictionary containing detection results.
         """
         results = self.model.predict(image, **kwargs)
 
         result_dict = {"scores": [], "labels": [], "boxes": []}
+        if include_full_probabilities:
+            result_dict["full_results"] = []
+            result_dict["class_names"] = self.classes
 
         if results and hasattr(results[0], "boxes") and results[0].boxes is not None:
-            for box in results[0].boxes:
-                result_dict["scores"].append(box.conf.item())
-                result_dict["labels"].append(self.model.names[int(box.cls)])
-                result_dict["boxes"].append(box.xyxy[0].tolist())
+            for i, box in enumerate(results[0].boxes):  # type: ignore
+                confidence = box.conf.item()
+                class_id = int(box.cls)
+                species_label = self.model.names[class_id]
+                bbox = box.xyxy[0].tolist()
+
+                probabilities = None
+                if hasattr(results[0], "probs") and results[0].probs is not None and results[0].probs.shape[0] > i:
+                    probabilities = F.softmax(results[0].probs[i], dim=-1).cpu().numpy()  # type: ignore
+                elif hasattr(box, "probs") and box.probs is not None:
+                    probabilities = box.probs.cpu().numpy()
+                else:
+                    # Fallback: create a proxy distribution
+                    probabilities = np.zeros(len(self.classes))
+                    probabilities[class_id] = confidence
+                    remaining_prob = 1.0 - confidence
+                    other_classes_count = len(self.classes) - 1
+                    if other_classes_count > 0:
+                        distributed_prob = remaining_prob / other_classes_count
+                        probabilities = np.full(len(self.classes), distributed_prob)
+                        probabilities[class_id] = confidence
+
+                if classify_genus:
+                    if probabilities is not None:
+                        genus_probabilities = {genus: np.max([probabilities[i] for i in indices]) for genus, indices in self.genus_map.items()}
+                        top_genus = max(genus_probabilities, key=lambda k: genus_probabilities[k])
+                        top_genus_score = genus_probabilities[top_genus]
+
+                        result_dict["scores"].append(top_genus_score)
+                        result_dict["labels"].append(top_genus)
+                        result_dict["boxes"].append(bbox)
+                else:
+                    result_dict["scores"].append(confidence)
+                    result_dict["labels"].append(species_label)
+                    result_dict["boxes"].append(bbox)
+
+                if include_full_probabilities:
+                    result_dict["full_results"].append(
+                        {
+                            "predicted_class": species_label,
+                            "predicted_class_id": class_id,
+                            "confidence": confidence,
+                            "class_probabilities": probabilities.tolist() if probabilities is not None else [],
+                            "bbox": bbox,
+                        }
+                    )
 
         return result_dict
 

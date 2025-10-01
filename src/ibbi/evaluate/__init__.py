@@ -18,7 +18,7 @@ from ..models import ModelType
 from ..models.feature_extractors import HuggingFaceFeatureExtractor
 from ..models.zero_shot import GroundingDINOModel, YOLOWorldModel
 from .embeddings import EmbeddingEvaluator
-from .object_classification import object_classification_performance
+from .object_classification import object_classification_performance, out_of_distribution_detection
 
 
 class Evaluator:
@@ -270,6 +270,37 @@ class Evaluator:
             results["sample_results"] = evaluator.get_sample_results()
 
         return results
+
+    def out_of_distribution(self, id_dataset, ood_dataset, **kwargs):
+        """Performs a comprehensive out-of-distribution (OOD) analysis.
+
+        This method assesses how well the model avoids making high-confidence
+        predictions on data that it was not trained on, comparing its behavior
+        on in-distribution (ID) versus OOD data.
+
+        Args:
+            id_dataset (iterable): An iterable dataset of in-distribution samples.
+            ood_dataset (iterable): An iterable dataset of OOD samples.
+            **kwargs: Additional keyword arguments to be passed to the model's `predict` method.
+
+        Returns:
+            dict: A dictionary of comprehensive OOD detection metrics.
+        """
+        print("Running out-of-distribution (OOD) evaluation...")
+
+        # Ensure full probabilities are included for the detailed OOD sample analysis
+        kwargs["include_full_probabilities"] = True
+
+        print("Processing in-distribution (ID) dataset...")
+        id_results = [self.model.predict(item["image"], **kwargs) for item in tqdm(id_dataset)]
+
+        print("Processing out-of-distribution (OOD) dataset...")
+        ood_results = [self.model.predict(item["image"], **kwargs) for item in tqdm(ood_dataset)]
+
+        # Get the class names from the model to pass to the analysis function
+        class_names = self.model.get_classes()
+
+        return out_of_distribution_detection(id_results, ood_results, id_dataset, ood_dataset, class_names=class_names)
 
 
 __all__ = ["Evaluator"]

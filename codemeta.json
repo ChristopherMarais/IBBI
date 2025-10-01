@@ -1,0 +1,21 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "name": "ibbi",
+  "version": "0.0.0",
+  "description": "A package for bark and ambrosia beetle identification.",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "G. Christopher Marais"
+    }
+  ],
+  "license": "https://spdx.org/licenses/MIT",
+  "documentation": "https://gcmarais.com/IBBI/",
+  "codeRepository": "https://github.com/ChristopherMarais/IBBI",
+  "programmingLanguage": {
+    "@type": "ComputerLanguage",
+    "name": "Python",
+    "version": ">=3.11,<4.0"
+  }
+}

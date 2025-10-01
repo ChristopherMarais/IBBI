@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional, cast
 
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import pdist, squareform
+import torch
 from sklearn.cluster import HDBSCAN
 from sklearn.metrics import (
     adjusted_rand_score,
@@ -13,7 +13,6 @@ from sklearn.metrics import (
     davies_bouldin_score,
     normalized_mutual_info_score,
     silhouette_score,
-    v_measure_score,
 )
 from sklearn.preprocessing import LabelEncoder
 
@@ -186,18 +185,18 @@ class EmbeddingEvaluator:
             true_labels (np.ndarray): An array of ground truth labels for each sample.
 
         Returns:
-            pd.DataFrame: A DataFrame containing external validation metrics like ARI, NMI, V-Measure, and Cluster Purity.
+            pd.DataFrame: A DataFrame containing external validation metrics like ARI, NMI, and Cluster Purity.
         """
         # Filter out noise from predictions for a fair comparison
         mask = self.predicted_labels != -1
         if not np.any(mask):
-            return pd.DataFrame([{"ARI": 0, "NMI": 0, "V-Measure": 0, "Cluster_Purity": 0}])
+            return pd.DataFrame([{"ARI": 0, "NMI": 0, "Cluster_Purity": 0}])
 
         filtered_true = true_labels[mask]
         filtered_pred = self.predicted_labels[mask]
 
         if len(np.unique(filtered_true)) < 2 or len(np.unique(filtered_pred)) < 2:
-            return pd.DataFrame([{"ARI": 0, "NMI": 0, "V-Measure": 0, "Cluster_Purity": 0}])
+            return pd.DataFrame([{"ARI": 0, "NMI": 0, "Cluster_Purity": 0}])
 
         le_true = LabelEncoder().fit(filtered_true)
         true_labels_encoded = le_true.transform(filtered_true)
@@ -205,10 +204,9 @@ class EmbeddingEvaluator:
 
         ari = adjusted_rand_score(true_labels_encoded, predicted_labels_encoded)
         nmi = normalized_mutual_info_score(true_labels_encoded, predicted_labels_encoded)
-        v_measure = v_measure_score(true_labels_encoded, predicted_labels_encoded)
         purity = _cluster_purity(true_labels_encoded, predicted_labels_encoded)
 
-        metrics = {"ARI": ari, "NMI": nmi, "V-Measure": v_measure, "Cluster_Purity": purity}
+        metrics = {"ARI": ari, "NMI": nmi, "Cluster_Purity": purity}
 
         return pd.DataFrame([metrics])
 
@@ -242,12 +240,14 @@ class EmbeddingEvaluator:
     ) -> tuple[float, float, int, pd.DataFrame]:
         """Calculates Mantel correlation between embedding distances and an external distance matrix.
         The default is to use a distance matrix based on phylogenetic and taxonomic distance between species.
+        This version computes the average pairwise distances between all embeddings for each pair of species
+        and leverages a GPU if available.
 
         Args:
             true_labels (np.ndarray): An array of ground truth labels for each sample.
             label_map (Optional[dict[int, str]], optional): A dictionary to map integer labels to string names.
                                                         Defaults to None.
-            embedding_metric (str, optional): The distance metric to use for the embedding space.
+            embedding_metric (str, optional): The distance metric to use for the embedding space ('cosine' or 'euclidean').
                                             Defaults to "cosine".
             ext_dist_matrix_path (str, optional): The path to the external distance matrix file.
                                                 Defaults to "ibbi_species_distance_matrix.csv".
@@ -255,30 +255,56 @@ class EmbeddingEvaluator:
         Returns:
             tuple[float, float, int, pd.DataFrame]: A tuple containing the Mantel correlation coefficient (r),
                                                     the p-value, the number of items compared, and a DataFrame
-                                                    of per-class centroids.
+                                                    of the mean embedding vector for each class (for inspection).
         """
         if not _skbio_available:
             raise ImportError("Mantel test requires 'scikit-bio' to be installed.")
 
-        # --- 1. Create embedding distance matrix from original embeddings ---
-        labels_df = pd.DataFrame({"label": true_labels})
-        embeddings_df = pd.DataFrame(self.embeddings)
-        df = pd.concat([labels_df, embeddings_df], axis=1)
+        # --- 1. Create full pairwise distance matrix from original embeddings using PyTorch ---
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"Using device: {device} for distance matrix calculation.")
 
-        # Add this line to drop rows with NaN values
-        df.dropna(inplace=True)
+        embeddings_tensor = torch.tensor(self.embeddings, dtype=torch.float32).to(device)
+        labels_tensor = torch.tensor(true_labels, dtype=torch.int64).to(device)
 
-        grouped_centroids = df.groupby("label").mean()
-        centroids: np.ndarray = grouped_centroids.to_numpy()
-        centroid_index: pd.Index = grouped_centroids.index
+        # Calculate pairwise distances on the GPU
+        if embedding_metric == "cosine":
+            dist_matrix = 1 - torch.nn.functional.cosine_similarity(embeddings_tensor[:, None, :], embeddings_tensor[None, :, :], dim=-1)
+        elif embedding_metric == "euclidean":
+            dist_matrix = torch.cdist(embeddings_tensor, embeddings_tensor, p=2)
+        else:
+            raise ValueError("Unsupported embedding_metric. Choose 'cosine' or 'euclidean'.")
+
+        # --- 2. Aggregate pairwise distances to get average inter-species distances ---
+        unique_labels = torch.unique(labels_tensor)
+        unique_labels = unique_labels[unique_labels != -1]  # Exclude noise if present
+        num_labels = len(unique_labels)
+        avg_dist_matrix = torch.zeros((num_labels, num_labels), device=device)
+
+        for i, label1 in enumerate(unique_labels):
+            for j, label2 in enumerate(unique_labels):
+                if i <= j:
+                    mask1 = labels_tensor == label1
+                    mask2 = labels_tensor == label2
+
+                    relevant_dists = dist_matrix[mask1][:, mask2]
+
+                    if relevant_dists.numel() > 0:
+                        avg_dist_matrix[i, j] = relevant_dists.mean()
+                        avg_dist_matrix[j, i] = avg_dist_matrix[i, j]
+
+        # Convert to pandas DataFrame for alignment
+        sorted_labels, _ = torch.sort(unique_labels)
+        sorted_labels_np = sorted_labels.cpu().numpy()
         if label_map:
-            # Map integer labels to species names
-            centroid_index = centroid_index.map(label_map)
+            class_names = [label_map.get(lbl, f"unknown_{lbl}") for lbl in sorted_labels_np]
+        else:
+            class_names = [str(lbl) for lbl in sorted_labels_np]
 
         embedding_dist_matrix = pd.DataFrame(
-            squareform(pdist(centroids, metric=embedding_metric)),  # type: ignore
-            index=centroid_index,
-            columns=centroid_index,
+            avg_dist_matrix.cpu().numpy(),
+            index=pd.Index(class_names),
+            columns=pd.Index(class_names),
         )
 
         try:
@@ -300,17 +326,30 @@ class EmbeddingEvaluator:
         embedding_dist_aligned = embedding_dist_matrix.loc[common_labels, common_labels]
         ext_dist_aligned = ext_matrix_df.loc[common_labels, common_labels]
 
-        # Convert to numpy arrays before passing to mantel
-        mantel_result = mantel(embedding_dist_aligned.to_numpy(), ext_dist_aligned.to_numpy())
+        # Ensure the matrices are hollow and have the correct data type
+        embedding_dist_aligned_np = embedding_dist_aligned.to_numpy().astype(np.float32)
+        ext_dist_aligned_np = ext_dist_aligned.to_numpy().astype(np.float32)
+        np.fill_diagonal(embedding_dist_aligned_np, 0)
+        np.fill_diagonal(ext_dist_aligned_np, 0)
+
+        mantel_result = mantel(embedding_dist_aligned_np, ext_dist_aligned_np)
         typed_mantel_result = cast(tuple[float, float, int], mantel_result)
 
-        r_val = typed_mantel_result[0]
-        p_val = typed_mantel_result[1]
-        n_items = typed_mantel_result[2]
+        r_val, p_val, n_items = typed_mantel_result
 
-        # Improved way to create the DataFrame
-        per_class_results_df = pd.DataFrame(centroids, index=centroid_index)
-        per_class_results_df.index.name = "label"
-        per_class_results_df = per_class_results_df.reset_index()
+        # --- For supplementary output, calculate the mean embedding for each class ---
+        labels_df = pd.DataFrame({"label": true_labels})
+        embeddings_df = pd.DataFrame(self.embeddings)
+        df = pd.concat([labels_df, embeddings_df], axis=1).dropna()
 
-        return float(r_val), float(p_val), int(n_items), per_class_results_df
+        grouped_embeddings = df.groupby("label").mean()
+        mean_embeddings: np.ndarray = grouped_embeddings.to_numpy()
+        class_labels_index: pd.Index = grouped_embeddings.index
+        if label_map:
+            class_labels_index = class_labels_index.map(label_map)
+
+        per_class_mean_embeddings_df = pd.DataFrame(mean_embeddings, index=class_labels_index)
+        per_class_mean_embeddings_df.index.name = "label"
+        per_class_mean_embeddings_df = per_class_mean_embeddings_df.reset_index()
+
+        return float(r_val), float(p_val), int(n_items), per_class_mean_embeddings_df
