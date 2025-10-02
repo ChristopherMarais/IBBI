@@ -168,6 +168,7 @@ class Evaluator:
         evaluation_level: str = "image",
         use_umap: bool = True,
         extract_kwargs: Optional[dict[str, Any]] = None,
+        batch_size: int = 32,
         **kwargs,
     ):
         """Evaluates the quality of the model's feature embeddings.
@@ -188,6 +189,8 @@ class Evaluator:
                                        before clustering. Defaults to True.
             extract_kwargs (Optional[dict[str, Any]], optional): Keyword arguments to be passed
                 to the model's `extract_features` method. Defaults to None.
+            batch_size (int, optional): The batch size for GPU distance matrix calculation.
+                                        Defaults to 32.
             **kwargs: Additional keyword arguments to be passed to the `EmbeddingEvaluator`.
                       See `ibbi.evaluate.embeddings.EmbeddingEvaluator` for more details.
 
@@ -258,7 +261,9 @@ class Evaluator:
                 if len(np.unique(true_labels)) >= 3:
                     valid_embeddings = embeddings[valid_indices]
                     evaluator_for_mantel = EmbeddingEvaluator(valid_embeddings, use_umap=False)
-                    mantel_corr, p_val, n, per_class_df = evaluator_for_mantel.compare_to_distance_matrix(true_labels, label_map=idx_to_name)
+                    mantel_corr, p_val, n, per_class_df = evaluator_for_mantel.compare_to_distance_matrix(
+                        true_labels, label_map=idx_to_name, batch_size=batch_size
+                    )
                     results["mantel_correlation"] = {"r": mantel_corr, "p_value": p_val, "n_items": n}
                     results["per_class_centroids"] = per_class_df
                 else:
