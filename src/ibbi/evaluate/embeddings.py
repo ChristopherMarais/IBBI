@@ -270,7 +270,6 @@ class EmbeddingEvaluator:
         embeddings_tensor = torch.tensor(self.embeddings, dtype=torch.float32).to(device)
         labels_tensor = torch.tensor(true_labels, dtype=torch.int64).to(device)
 
-        # --- MODIFICATION START: Calculate pairwise distances in batches ---
         num_embeddings = len(embeddings_tensor)
         dist_matrix = torch.zeros((num_embeddings, num_embeddings), device=device)
 
@@ -289,7 +288,6 @@ class EmbeddingEvaluator:
                     dist_matrix[i:i_end, j:j_end] = torch.cdist(batch_i, batch_j, p=2)
                 else:
                     raise ValueError("Unsupported embedding_metric. Choose 'cosine' or 'euclidean'.")
-        # --- MODIFICATION END ---
 
         # --- 2. Aggregate pairwise distances to get average inter-species distances ---
         unique_labels = torch.unique(labels_tensor)
