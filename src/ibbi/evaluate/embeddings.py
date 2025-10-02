@@ -237,6 +237,7 @@ class EmbeddingEvaluator:
         label_map: Optional[dict[int, str]] = None,
         embedding_metric: str = "cosine",
         ext_dist_matrix_path: str = "ibbi_species_distance_matrix.csv",
+        batch_size: int = 32,  # Added batch_size parameter
     ) -> tuple[float, float, int, pd.DataFrame]:
         """Calculates Mantel correlation between embedding distances and an external distance matrix.
         The default is to use a distance matrix based on phylogenetic and taxonomic distance between species.
@@ -251,6 +252,8 @@ class EmbeddingEvaluator:
                                             Defaults to "cosine".
             ext_dist_matrix_path (str, optional): The path to the external distance matrix file.
                                                 Defaults to "ibbi_species_distance_matrix.csv".
+            batch_size (int, optional): The batch size for GPU distance matrix calculation.
+                                        Defaults to 32.
 
         Returns:
             tuple[float, float, int, pd.DataFrame]: A tuple containing the Mantel correlation coefficient (r),
@@ -267,13 +270,26 @@ class EmbeddingEvaluator:
         embeddings_tensor = torch.tensor(self.embeddings, dtype=torch.float32).to(device)
         labels_tensor = torch.tensor(true_labels, dtype=torch.int64).to(device)
 
-        # Calculate pairwise distances on the GPU
-        if embedding_metric == "cosine":
-            dist_matrix = 1 - torch.nn.functional.cosine_similarity(embeddings_tensor[:, None, :], embeddings_tensor[None, :, :], dim=-1)
-        elif embedding_metric == "euclidean":
-            dist_matrix = torch.cdist(embeddings_tensor, embeddings_tensor, p=2)
-        else:
-            raise ValueError("Unsupported embedding_metric. Choose 'cosine' or 'euclidean'.")
+        # --- MODIFICATION START: Calculate pairwise distances in batches ---
+        num_embeddings = len(embeddings_tensor)
+        dist_matrix = torch.zeros((num_embeddings, num_embeddings), device=device)
+
+        for i in range(0, num_embeddings, batch_size):
+            i_end = min(i + batch_size, num_embeddings)
+            batch_i = embeddings_tensor[i:i_end]
+
+            for j in range(0, num_embeddings, batch_size):
+                j_end = min(j + batch_size, num_embeddings)
+                batch_j = embeddings_tensor[j:j_end]
+
+                if embedding_metric == "cosine":
+                    sim = torch.nn.functional.cosine_similarity(batch_i[:, None, :], batch_j[None, :, :], dim=-1)
+                    dist_matrix[i:i_end, j:j_end] = 1 - sim
+                elif embedding_metric == "euclidean":
+                    dist_matrix[i:i_end, j:j_end] = torch.cdist(batch_i, batch_j, p=2)
+                else:
+                    raise ValueError("Unsupported embedding_metric. Choose 'cosine' or 'euclidean'.")
+        # --- MODIFICATION END ---
 
         # --- 2. Aggregate pairwise distances to get average inter-species distances ---
         unique_labels = torch.unique(labels_tensor)
