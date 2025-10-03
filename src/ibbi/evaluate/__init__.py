@@ -1,4 +1,3 @@
-# src/ibbi/evaluate/__init__.py
 """
 Provides the high-level Evaluator class for comprehensive model assessment.
 
@@ -15,10 +14,10 @@ import numpy as np
 from tqdm import tqdm
 
 from ..models import ModelType
-from ..models.feature_extractors import HuggingFaceFeatureExtractor
+from ..models.feature_extractors import HuggingFaceFeatureExtractor, UntrainedFeatureExtractor
 from ..models.zero_shot import GroundingDINOModel, YOLOWorldModel
 from .embeddings import EmbeddingEvaluator
-from .object_classification import object_classification_performance, out_of_distribution_detection
+from .object_classification import object_classification_performance
 
 
 class Evaluator:
@@ -78,23 +77,20 @@ class Evaluator:
 
         Returns:
             dict: A dictionary containing a comprehensive set of object detection and
-                  classification metrics, including per-IoU threshold classification performance.
-                  Returns an empty dictionary if the model is not suitable for the task or if
-                  the dataset is improperly formatted.
+                  classification metrics, including per-iou threshold classification performance,
+                  and a detailed object-level performance table.
         """
         if predict_kwargs is None:
             predict_kwargs = {}
 
         print("Running object classification evaluation...")
 
-        if isinstance(self.model, HuggingFaceFeatureExtractor):
+        if isinstance(self.model, (HuggingFaceFeatureExtractor, UntrainedFeatureExtractor)):
             print("Warning: Object classification evaluation is not supported for pure feature extractors.")
             return {}
 
         if isinstance(self.model, (GroundingDINOModel, YOLOWorldModel)):
-            if "text_prompt" in predict_kwargs:
-                self.model.set_classes(predict_kwargs["text_prompt"])
-            elif not self.model.get_classes():
+            if "text_prompt" not in predict_kwargs and not self.model.get_classes():
                 print("Warning: Zero-shot model has no classes set. Please provide a 'text_prompt' in 'predict_kwargs'.")
                 return {}
 
@@ -107,58 +103,60 @@ class Evaluator:
             model_classes: list[str] = list(raw_model_classes.values())
         else:
             model_classes: list[str] = raw_model_classes
+
+        # For single-class models like YOLO Single-Class Detector, ensure model_classes is populated
+        if not model_classes:
+            # This assumes single-class detectors return a list with one class name (e.g., ['beetle'])
+            model_classes = self.model.get_classes()
+            if not model_classes:
+                print("Warning: Model returned an empty class list. Cannot proceed with classification-dependent metrics.")
+                return {}
+
+        # Create mappings for internal integer labels (scikit-learn requires integers)
         class_name_to_idx = {v: k for k, v in enumerate(model_classes)}
         idx_to_name = dict(enumerate(model_classes))
 
         gt_boxes, gt_labels, gt_image_ids = [], [], []
-        pred_boxes, pred_labels, pred_scores, pred_image_ids = [], [], [], []
+        pred_results_with_probs = []  # Full prediction result per image
 
         print("Extracting ground truth and making predictions...")
+        # CRITICAL: Ensure full probabilities are requested for the new table data
+        predict_kwargs_for_call = {**predict_kwargs, "include_full_probabilities": True}
+
         for i, item in enumerate(tqdm(dataset)):
+            # --- Extract Ground Truth ---
             if "objects" in item and "bbox" in item["objects"] and "category" in item["objects"]:
                 for j in range(len(item["objects"]["category"])):
                     label_name = item["objects"]["category"][j]
-                    if label_name in class_name_to_idx:
-                        bbox = item["objects"]["bbox"][j]
-                        x1, y1, w, h = bbox
-                        x2 = x1 + w
-                        y2 = y1 + h
-                        gt_boxes.append([x1, y1, x2, y2])
-                        gt_labels.append(class_name_to_idx[label_name])
-                        gt_image_ids.append(i)
+                    bbox = item["objects"]["bbox"][j]
+                    x1, y1, w, h = bbox
+                    x2 = x1 + w
+                    y2 = y1 + h
+                    gt_boxes.append([x1, y1, x2, y2])
+                    gt_labels.append(class_name_to_idx.get(label_name, -1))  # Use -1 for unknown classes
+                    gt_image_ids.append(i)
 
-            results = self.model.predict(item["image"], verbose=False, **predict_kwargs)
-            if not results:
-                continue
+            # --- Make Prediction and Collect Full Results ---
+            results = self.model.predict(item["image"], verbose=False, **predict_kwargs_for_call)
+            pred_results_with_probs.append(results)
 
-            if results and results.get("boxes"):
-                for box, label, score in zip(results["boxes"], results["labels"], results["scores"]):
-                    if label in class_name_to_idx:
-                        box_coords = np.array(box)
-                        pred_boxes.append(box_coords.flatten())
-                        pred_labels.append(class_name_to_idx[label])
-                        pred_scores.append(score)
-                        pred_image_ids.append(i)
-
+        # The GT and raw prediction data is prepared. Now run the core evaluation logic.
         performance_results = object_classification_performance(
             np.array(gt_boxes),
             gt_labels,
             gt_image_ids,
-            np.array(pred_boxes),
-            pred_labels,
-            pred_scores,
-            pred_image_ids,
+            pred_results_with_probs,
             iou_thresholds=iou_thresholds,
+            model_classes=model_classes,
+            idx_to_name=idx_to_name,
             **kwargs,
         )
 
+        # Apply naming to the mAP results (which still use integer IDs internally)
         if "per_class_AP_at_last_iou" in performance_results:
             class_aps = performance_results["per_class_AP_at_last_iou"]
-            named_class_aps = {idx_to_name.get(class_id, f"unknown_class_{class_id}"): ap for class_id, ap in class_aps.items()}
+            named_class_aps = {idx_to_name.get(class_id, class_id): ap for class_id, ap in class_aps.items()}
             performance_results["per_class_AP_at_last_iou"] = named_class_aps
-
-        if "sample_results" in performance_results and not performance_results["sample_results"].empty:
-            performance_results["sample_results"]["label"] = performance_results["sample_results"]["label"].map(idx_to_name)
 
         return performance_results
 
@@ -275,37 +273,6 @@ class Evaluator:
             results["sample_results"] = evaluator.get_sample_results()
 
         return results
-
-    def out_of_distribution(self, id_dataset, ood_dataset, **kwargs):
-        """Performs a comprehensive out-of-distribution (OOD) analysis.
-
-        This method assesses how well the model avoids making high-confidence
-        predictions on data that it was not trained on, comparing its behavior
-        on in-distribution (ID) versus OOD data.
-
-        Args:
-            id_dataset (iterable): An iterable dataset of in-distribution samples.
-            ood_dataset (iterable): An iterable dataset of OOD samples.
-            **kwargs: Additional keyword arguments to be passed to the model's `predict` method.
-
-        Returns:
-            dict: A dictionary of comprehensive OOD detection metrics.
-        """
-        print("Running out-of-distribution (OOD) evaluation...")
-
-        # Ensure full probabilities are included for the detailed OOD sample analysis
-        kwargs["include_full_probabilities"] = True
-
-        print("Processing in-distribution (ID) dataset...")
-        id_results = [self.model.predict(item["image"], **kwargs) for item in tqdm(id_dataset)]
-
-        print("Processing out-of-distribution (OOD) dataset...")
-        ood_results = [self.model.predict(item["image"], **kwargs) for item in tqdm(ood_dataset)]
-
-        # Get the class names from the model to pass to the analysis function
-        class_names = self.model.get_classes()
-
-        return out_of_distribution_detection(id_results, ood_results, id_dataset, ood_dataset, class_names=class_names)
 
 
 __all__ = ["Evaluator"]

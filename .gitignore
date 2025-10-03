@@ -3,6 +3,7 @@ __pycache__/
 */**/__pycache__/
 *ibbi_test_data/
 *ibbi_ood_data/
+*evaluation_results/
 
 *.ipynb_checkpoints
 *.pt

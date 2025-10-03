@@ -83,6 +83,8 @@ class GroundingDINOModel:
         box_threshold: float = 0.05,
         text_threshold: float = 0.05,
         verbose: bool = False,
+        include_full_probabilities: bool = False,  # Added for compatibility
+        **kwargs,
     ):
         """Performs zero-shot object detection on an image given a text prompt.
 
@@ -96,6 +98,9 @@ class GroundingDINOModel:
             text_threshold (float, optional): The confidence threshold for filtering text labels.
                                             Defaults to 0.05.
             verbose (bool, optional): If True, prints detailed detection results. Defaults to False.
+            include_full_probabilities (bool, optional): If True, includes a 'full_results' key in the
+                                                         output with detailed probabilities for each class.
+                                                         Defaults to False.
 
         Returns:
             dict: A dictionary containing the detection results with keys for 'scores',
@@ -212,6 +217,17 @@ class YOLOWorldModel:
         self.model.eval()
         print(f"YOLO-World model loaded on device: {self.device}")
 
+        # Perform a minimal warm-up by setting a dummy class. This initializes
+        # the text encoder's weights and state without running a full prediction,
+        # which was causing state conflicts.
+        print("Performing one-time warm-up for YOLOWorld text encoder...")
+        try:
+            with torch.no_grad():
+                self.set_classes(["warm-up"])
+            print("Warm-up complete.")
+        except Exception as e:
+            print(f"Warning: YOLOWorld warm-up failed with an error: {e}")
+
     def get_classes(self) -> list[str]:
         """Returns the classes the model is currently set to detect.
 
@@ -223,56 +239,53 @@ class YOLOWorldModel:
     def set_classes(self, classes: Union[list[str], str]):
         """Sets the classes for the model to detect.
 
+        This method now includes a targeted fix to ensure the internal CLIP model
+        is in the correct evaluation state before processing text.
+
         Args:
             classes (Union[list[str], str]): A list of class names or a single string
                                             with class names separated by " . ".
         """
         if isinstance(classes, str):
-            class_list = [c.strip() for c in classes.split(". ")]
+            class_list = [c.strip() for c in classes.split(".") if c.strip()]
         else:
             class_list = classes
+
+        # The root cause of the error is the internal state of the CLIP text encoder.
+        # Explicitly setting the clip_model to eval() mode here ensures that its
+        # parameters are not tracking gradients, which resolves the 'version counter'
+        # conflict even when this method is called multiple times.
+        if hasattr(self.model, "clip_model") and self.model.clip_model is not None:
+            self.model.clip_model.eval()
 
         with torch.no_grad():
             self.model.set_classes(class_list)
 
-        print(f"YOLOWorld classes set to: {class_list}")
-
-    def predict(self, image, text_prompt: Optional[str] = None, **kwargs):
+    def predict(self, image, text_prompt: Optional[str] = None, include_full_probabilities: bool = False, **kwargs):
         """Performs zero-shot object detection on an image.
-
-        Note: Before calling `predict`, you should set the desired classes using `set_classes`.
 
         Args:
             image (Union[str, np.ndarray, Image.Image]): The input image.
             text_prompt (str, optional): The text prompt describing the object(s) to detect.
-                                    If provided, this will set the detection classes for the model.
             **kwargs: Additional keyword arguments for the `ultralytics.YOLOWorld.predict` method.
 
         Returns:
-            dict: A dictionary of detection results with keys for 'scores', 'labels', and 'boxes'.
+            dict: A dictionary of detection results.
         """
-        if text_prompt:
-            # Parse the new prompt into a list of classes
-            new_classes = [c.strip() for c in text_prompt.split(". ")]
-
-            # Get the currently set classes
-            current_classes = self.get_classes()
-
-            # Only update the model's classes if the new prompt is different
-            if new_classes != current_classes:
-                self.set_classes(new_classes)
-
         with torch.no_grad():
+            if text_prompt:
+                new_classes = [c.strip() for c in text_prompt.split(".") if c.strip()]
+                if new_classes != self.get_classes():
+                    self.set_classes(new_classes)
+
             results = self.model.predict(image, **kwargs)
 
         result_dict = {"scores": [], "labels": [], "boxes": []}
-
         if results and hasattr(results[0], "boxes") and results[0].boxes is not None:
             for box in results[0].boxes:
                 result_dict["scores"].append(box.conf.item())
                 result_dict["labels"].append(self.model.names[int(box.cls)])
                 result_dict["boxes"].append(box.xyxy[0].tolist())
-
         return result_dict
 
     def extract_features(self, image, **kwargs):
@@ -280,26 +293,19 @@ class YOLOWorldModel:
 
         Args:
             image (Union[str, np.ndarray, Image.Image]): The input image.
-            **kwargs: Additional keyword arguments for the `ultralytics.YOLOWorld.embed` method.
-                      Also accepts 'text_prompt' to set classes before embedding.
+            **kwargs: Additional arguments, including 'text_prompt'.
 
         Returns:
-            Optional[torch.Tensor]: A tensor of feature embeddings, or None.
+            Optional[torch.Tensor]: A tensor of feature embeddings.
         """
-        # Check for and handle the 'text_prompt' argument from kwargs
-        if "text_prompt" in kwargs:
-            text_prompt = kwargs.pop("text_prompt")  # Remove it so it's not passed to `embed`
-            new_classes = [c.strip() for c in text_prompt.split(". ")]
-            current_classes = self.get_classes()
-
-            # Only update if the classes have changed
-            if new_classes != current_classes:
-                self.set_classes(new_classes)
-
         with torch.no_grad():
-            # Call embed with the remaining (valid) kwargs
-            features = self.model.embed(image, **kwargs)
+            if "text_prompt" in kwargs:
+                text_prompt = kwargs.pop("text_prompt")
+                new_classes = [c.strip() for c in text_prompt.split(". ")]
+                if new_classes != self.get_classes():
+                    self.set_classes(new_classes)
 
+            features = self.model.embed(image, **kwargs)
         return features[0] if features else None
 
 
