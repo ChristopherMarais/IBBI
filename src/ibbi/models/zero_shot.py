@@ -83,7 +83,7 @@ class GroundingDINOModel:
         box_threshold: float = 0.05,
         text_threshold: float = 0.05,
         verbose: bool = False,
-        include_full_probabilities: bool = False,  # Added for compatibility
+        include_full_probabilities: bool = False,
         **kwargs,
     ):
         """Performs zero-shot object detection on an image given a text prompt.
@@ -113,7 +113,6 @@ class GroundingDINOModel:
             raise ValueError("No classes set for detection. Please provide a 'text_prompt' or call 'set_classes' first.")
 
         prompt = " . ".join(self.classes)
-        # print(f"Running GroundingDINO detection for prompt: '{prompt}'...")
 
         if isinstance(image, str):
             if image.startswith("http"):
@@ -140,16 +139,43 @@ class GroundingDINOModel:
             target_sizes=[image_pil.size[::-1]],
         )
 
-        result_dict = results[0]
-        result_dict["labels"] = result_dict.pop("text_labels")
+        result_dict = {"scores": [], "labels": [], "boxes": []}
+        if include_full_probabilities:
+            result_dict["full_results"] = []
+            result_dict["class_names"] = self.classes
+
+        if results and results[0]["scores"].nelement() > 0:
+            for score, label, box in zip(results[0]["scores"], results[0]["labels"], results[0]["boxes"]):
+                result_dict["scores"].append(score.item())
+                result_dict["labels"].append(label)
+                bbox = box.tolist()
+                result_dict["boxes"].append(bbox)
+
+                if include_full_probabilities:
+                    # Create a simple proxy probability distribution
+                    probabilities = np.zeros(len(self.classes))
+                    # Clean the label and the class list for robust matching
+                    cleaned_label = label.strip()
+                    cleaned_classes = [c.strip() for c in self.classes]
+                    if cleaned_label in cleaned_classes:
+                        class_id = cleaned_classes.index(cleaned_label)
+                        probabilities[class_id] = score.item()
+
+                    result_dict["full_results"].append(
+                        {
+                            "predicted_class": label,
+                            "predicted_class_id": self.classes.index(label) if label in self.classes else -1,
+                            "confidence": score.item(),
+                            "class_probabilities": probabilities.tolist(),
+                            "bbox": bbox,
+                        }
+                    )
 
         if verbose:
             print("\n--- Detection Results ---")
             for score, label, box in zip(result_dict["scores"], result_dict["labels"], result_dict["boxes"]):
-                print(f"- Label: '{label}', Confidence: {score:.4f}, Box: {[round(c, 2) for c in box.tolist()]}")
+                print(f"- Label: '{label}', Confidence: {score:.4f}, Box: {[round(c, 2) for c in box]}")
             print("-------------------------\n")
-
-        result_dict["boxes"] = [box.tolist() for box in result_dict["boxes"]]
 
         return result_dict
 
@@ -281,11 +307,38 @@ class YOLOWorldModel:
             results = self.model.predict(image, **kwargs)
 
         result_dict = {"scores": [], "labels": [], "boxes": []}
+        if include_full_probabilities:
+            result_dict["full_results"] = []
+            result_dict["class_names"] = self.get_classes()
+
         if results and hasattr(results[0], "boxes") and results[0].boxes is not None:
             for box in results[0].boxes:
-                result_dict["scores"].append(box.conf.item())
-                result_dict["labels"].append(self.model.names[int(box.cls)])
-                result_dict["boxes"].append(box.xyxy[0].tolist())
+                confidence = box.conf.item()
+                class_id = int(box.cls)
+                label = self.model.names[class_id]
+                bbox = box.xyxy[0].tolist()
+
+                result_dict["scores"].append(confidence)
+                result_dict["labels"].append(label)
+                result_dict["boxes"].append(bbox)
+
+                if include_full_probabilities:
+                    # Create a proxy probability distribution
+                    probabilities = np.zeros(len(self.get_classes()))
+                    if label in self.get_classes():
+                        class_id_in_list = self.get_classes().index(label)
+                        probabilities[class_id_in_list] = confidence
+
+                    result_dict["full_results"].append(
+                        {
+                            "predicted_class": label,
+                            "predicted_class_id": self.get_classes().index(label) if label in self.get_classes() else -1,
+                            "confidence": confidence,
+                            "class_probabilities": probabilities.tolist(),
+                            "bbox": bbox,
+                        }
+                    )
+
         return result_dict
 
     def extract_features(self, image, **kwargs):

@@ -1,3 +1,5 @@
+# src/ibbi/evaluate/__init__.py
+
 """
 Provides the high-level Evaluator class for comprehensive model assessment.
 
@@ -83,6 +85,11 @@ class Evaluator:
         if predict_kwargs is None:
             predict_kwargs = {}
 
+        # Set classes for GroundingDINO before evaluation
+        if isinstance(self.model, GroundingDINOModel):
+            if "text_prompt" in predict_kwargs:
+                self.model.set_classes(predict_kwargs["text_prompt"])
+
         print("Running object classification evaluation...")
 
         if isinstance(self.model, (HuggingFaceFeatureExtractor, UntrainedFeatureExtractor)):
@@ -94,36 +101,38 @@ class Evaluator:
                 print("Warning: Zero-shot model has no classes set. Please provide a 'text_prompt' in 'predict_kwargs'.")
                 return {}
 
-        if not hasattr(self.model, "get_classes") or not callable(self.model.get_classes):
-            print("Warning: Model does not have a 'get_classes' method for class mapping. Skipping evaluation.")
-            return {}
-
-        raw_model_classes = self.model.get_classes()
-        if isinstance(raw_model_classes, dict):
-            model_classes: list[str] = list(raw_model_classes.values())
-        else:
-            model_classes: list[str] = raw_model_classes
-
-        # For single-class models like YOLO Single-Class Detector, ensure model_classes is populated
-        if not model_classes:
-            # This assumes single-class detectors return a list with one class name (e.g., ['beetle'])
-            model_classes = self.model.get_classes()
-            if not model_classes:
-                print("Warning: Model returned an empty class list. Cannot proceed with classification-dependent metrics.")
-                return {}
-
-        # Create mappings for internal integer labels (scikit-learn requires integers)
-        class_name_to_idx = {v: k for k, v in enumerate(model_classes)}
-        idx_to_name = dict(enumerate(model_classes))
-
         gt_boxes, gt_labels, gt_image_ids, gt_label_names = [], [], [], []
         pred_results_with_probs = []  # Full prediction result per image
+        model_classes: list[str] = []
+        class_name_to_idx: dict[str, int] = {}
+        idx_to_name: dict[int, str] = {}
 
         print("Extracting ground truth and making predictions...")
-        # CRITICAL: Ensure full probabilities are requested for the new table data
         predict_kwargs_for_call = {**predict_kwargs, "include_full_probabilities": True}
 
         for i, item in enumerate(tqdm(dataset)):
+            # Make the first prediction to set classes for YOLOWorld
+            results = self.model.predict(item["image"], verbose=False, **predict_kwargs_for_call)
+            pred_results_with_probs.append(results)
+
+            if model_classes is None:
+                if not hasattr(self.model, "get_classes") or not callable(self.model.get_classes):
+                    print("Warning: Model does not have a 'get_classes' method for class mapping. Skipping evaluation.")
+                    return {}
+
+                raw_model_classes = self.model.get_classes()
+                if isinstance(raw_model_classes, dict):
+                    model_classes: list[str] = list(raw_model_classes.values())
+                else:
+                    model_classes: list[str] = raw_model_classes
+
+                if not model_classes:
+                    print("Warning: Model returned an empty class list. Cannot proceed with classification-dependent metrics.")
+                    return {}
+
+                class_name_to_idx = {v: k for k, v in enumerate(model_classes)}
+                idx_to_name = dict(enumerate(model_classes))
+
             # --- Extract Ground Truth ---
             if "objects" in item and "bbox" in item["objects"] and "category" in item["objects"]:
                 for j in range(len(item["objects"]["category"])):
@@ -134,12 +143,9 @@ class Evaluator:
                     x2 = x1 + w
                     y2 = y1 + h
                     gt_boxes.append([x1, y1, x2, y2])
-                    gt_labels.append(class_name_to_idx.get(label_name, -1))  # Use -1 for unknown classes
-                    gt_image_ids.append(i)
+                    gt_labels.append(class_name_to_idx.get(label_name, -1))
 
-            # --- Make Prediction and Collect Full Results ---
-            results = self.model.predict(item["image"], verbose=False, **predict_kwargs_for_call)
-            pred_results_with_probs.append(results)
+                    gt_image_ids.append(i)
 
         # The GT and raw prediction data is prepared. Now run the core evaluation logic.
         performance_results = object_classification_performance(
@@ -154,7 +160,7 @@ class Evaluator:
             **kwargs,
         )
 
-        # Apply naming to the mAP results (which still use integer IDs internally)
+        # Apply naming to the mAP results
         if "per_class_AP_at_last_iou" in performance_results:
             class_aps = performance_results["per_class_AP_at_last_iou"]
             named_class_aps = {idx_to_name.get(class_id, class_id): ap for class_id, ap in class_aps.items()}

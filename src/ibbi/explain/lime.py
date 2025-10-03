@@ -63,8 +63,8 @@ def _prediction_wrapper(model: ModelType, text_prompt: Optional[str] = None) -> 
             predictions = np.zeros((image_array.shape[0], 1))
             for i, img in enumerate(images_to_predict):
                 res = model.predict(img, text_prompt=text_prompt)
-                if res["scores"].nelement() > 0:
-                    predictions[i, 0] = res["scores"].max().item()
+                if res["scores"]:
+                    predictions[i, 0] = max(res["scores"])
 
         elif isinstance(model, HuggingFaceFeatureExtractor):
             # This model type doesn't support batching in the same way.

@@ -60,7 +60,7 @@ def object_classification_performance(
     pred_results_with_probs: list[dict],
     gt_label_names: list[str],
     iou_thresholds: Union[float, list[float], np.ndarray] | None = None,
-    confidence_threshold: float = 0.5,
+    confidence_threshold: float = 0.1,
     average: str = "macro",
     zero_division: Union[str, int, float] = np.nan,
     model_classes: Optional[list[str]] = None,
