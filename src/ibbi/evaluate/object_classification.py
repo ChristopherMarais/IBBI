@@ -58,6 +58,7 @@ def object_classification_performance(
     gt_labels: list[int],
     gt_image_ids: list[Any],
     pred_results_with_probs: list[dict],
+    gt_label_names: list[str],
     iou_thresholds: Union[float, list[float], np.ndarray] | None = None,
     confidence_threshold: float = 0.5,
     average: str = "macro",
@@ -77,6 +78,7 @@ def object_classification_performance(
         gt_image_ids (list[Any]): A list of image identifiers for each ground truth box.
         pred_results_with_probs (list[dict]): A list of prediction results (one per image), where each
                                               result dictionary must contain 'full_results' with per-class probabilities.
+        gt_label_names (list[str]): A list of the original ground truth label names from the dataset.
         iou_thresholds (Union[float, list[float], np.ndarray], optional): The IoU threshold(s)
             for mAP and classification metric calculation. Defaults to np.arange(0.5, 1.0, 0.05).
         confidence_threshold (float, optional): The confidence score threshold below which
@@ -114,13 +116,14 @@ def object_classification_performance(
         full_results = res.get("full_results", [None] * len(res["boxes"]))
 
         for box, label, score, full_result in zip(res["boxes"], res["labels"], res["scores"], full_results):
-            # Only consider predictions above the confidence threshold and matching a known class name
-            if score >= confidence_threshold and label in name_to_idx:
+            # Only consider predictions above the confidence threshold
+            if score >= confidence_threshold:
                 # For mAP/Classification (needs flat lists of integer IDs)
-                pred_boxes.append(np.array(box).flatten())
-                pred_labels.append(name_to_idx[label])
-                pred_scores.append(score)
-                pred_image_ids.append(image_id)
+                if label in name_to_idx:
+                    pred_boxes.append(np.array(box).flatten())
+                    pred_labels.append(name_to_idx[label])
+                    pred_scores.append(score)
+                    pred_image_ids.append(image_id)
 
                 # For the object_level_performance table
                 image_to_preds[image_id].append({"box": box, "score": score, "label_name": label, "full_results": full_result})
@@ -133,8 +136,10 @@ def object_classification_performance(
 
     all_gt_labels = list(set(gt_labels))
     all_pred_labels = list(set(pred_labels))
-    class_lst = list(set(all_gt_labels) | set(all_pred_labels))
-    all_classes = sorted(class_lst)
+    class_lst_us = list(set(all_gt_labels) | set(all_pred_labels))
+    class_lst = sorted(class_lst_us)
+    all_classes_us = list(set(c for c in class_lst if c != -1))  # Exclude -1 from all_classes
+    all_classes = sorted(all_classes_us)
 
     # Group GT by image for faster lookups and 'used' tracking
     gt_by_image = defaultdict(lambda: {"boxes": [], "labels": [], "used": []})
@@ -249,12 +254,12 @@ def object_classification_performance(
         kappa = cohen_kappa_score(true_class_labels_for_iou, pred_class_labels_for_iou) if has_multiple_effective_classes else np.nan
         mcc = matthews_corrcoef(true_class_labels_for_iou, pred_class_labels_for_iou) if has_multiple_effective_classes else np.nan
 
-        extended_classes_lst = list(set(all_classes) | {-1})
-        extended_classes = sorted(extended_classes_lst)
+        extended_classes_us = list(set(all_classes) | {-1})
+        extended_classes = sorted(extended_classes_us)
         extended_target_names = [idx_to_name.get(c, "No_Match") for c in extended_classes]
 
-        class_subset_for_metrics_lst = list(set(true_class_labels_for_iou) - {-1})
-        class_subset_for_metrics = sorted(class_subset_for_metrics_lst)
+        class_subset_for_metrics_us = list(set(true_class_labels_for_iou) - {-1})
+        class_subset_for_metrics = sorted(class_subset_for_metrics_us)
         target_subset_for_metrics = [idx_to_name.get(c, c) for c in class_subset_for_metrics]
 
         precision, recall, f1, _ = precision_recall_fscore_support(
@@ -293,74 +298,53 @@ def object_classification_performance(
 
     final_map_averaged = np.mean(list(per_threshold_scores.values())) if per_threshold_scores else 0.0
 
-    # --- 4. New: Object Level Performance Table Generation ---
+    # --- 4. Object Level Performance Table Generation ---
     object_performance_data = []
+    gt_object_id_counter = defaultdict(int)
 
-    # Group GT by image, retaining a local index for 'object_id'
-    final_gt_by_image = defaultdict(list)
-    for i, box, label in zip(gt_image_ids, gt_boxes, gt_labels):
-        final_gt_by_image[i].append(
-            {
-                "box": box,
-                "label_int": label,
-            }
-        )
+    for i in range(len(gt_boxes)):
+        image_id = gt_image_ids[i]
+        gt_box = gt_boxes[i]
+        gt_label_name = gt_label_names[i]
+        object_local_id = gt_object_id_counter[image_id]
+        gt_object_id_counter[image_id] += 1
 
-    # Iterate through all ground truth objects to find the best match
-    for image_id, gt_list in final_gt_by_image.items():
         current_preds = image_to_preds[image_id]
+        best_iou = 0.0
+        best_pred_box = None
+        best_pred_full_results = None
 
-        for object_local_id, gt_data in enumerate(gt_list):
-            gt_box = gt_data["box"]
-            gt_label_int = gt_data["label_int"]
-            gt_label_name = idx_to_name.get(gt_label_int, f"unknown_class_{gt_label_int}")
+        for pred in current_preds:
+            iou = _calculate_iou(gt_box, pred["box"])
+            if iou > best_iou:
+                best_iou = iou
+                best_pred_box = pred["box"]
+                best_pred_full_results = pred["full_results"]
 
-            best_iou = 0.0
-            best_pred_box = None
-            best_pred_full_results = None
+        row = {
+            "image_id": image_id,
+            "object_id": object_local_id,
+            "gt_bbox": gt_box,
+            "gt_label": gt_label_name,
+        }
 
-            # Find the best IoU match across all confidently predicted objects in the image
-            for pred in current_preds:
-                iou = _calculate_iou(gt_box, pred["box"])
+        if best_iou >= confidence_threshold:
+            row["pred_bbox"] = best_pred_box
+            row["iou"] = best_iou
+        else:
+            row["pred_bbox"] = [np.nan] * 4
+            row["iou"] = 0.0
 
-                if iou > best_iou:
-                    best_iou = iou
-                    best_pred_box = pred["box"]
-                    best_pred_full_results = pred["full_results"]
+        class_confidences = dict.fromkeys(model_classes, 0.0)
+        if best_pred_full_results and best_pred_full_results.get("class_probabilities"):
+            for class_name_in_model_classes, prob in zip(model_classes, best_pred_full_results["class_probabilities"]):
+                class_confidences[class_name_in_model_classes] = prob
 
-            # Prepare row data
-            row = {
-                "image_id": image_id,
-                "object_id": object_local_id,
-                "gt_bbox": gt_box,
-                "gt_label": gt_label_name,
-            }
-
-            # Match is considered valid if IoU meets the confidence threshold.
-            if best_iou >= confidence_threshold:
-                row["pred_bbox"] = best_pred_box
-                row["iou"] = best_iou
-            else:
-                # Use np.nan for bounding box when no match, 0.0 for IoU as requested
-                row["pred_bbox"] = [np.nan] * 4
-                row["iou"] = 0.0
-
-            # Add dynamic class columns. Default to 0.0 if no match/prob data exists.
-            class_confidences = dict.fromkeys(model_classes, 0.0)
-
-            # The structure of 'class_probabilities' depends on the model's prediction output
-            if best_pred_full_results and best_pred_full_results.get("class_probabilities"):
-                # Use the probabilities from the best matched prediction object
-                # This assumes the class_probabilities list is ordered consistently with model_classes
-                for class_name_in_model_classes, prob in zip(model_classes, best_pred_full_results["class_probabilities"]):
-                    class_confidences[class_name_in_model_classes] = prob
-
-            row.update({f"conf_{name}": conf for name, conf in class_confidences.items()})
-            object_performance_data.append(row)
+        row.update({f"conf_{name}": conf for name, conf in class_confidences.items()})
+        object_performance_data.append(row)
 
     object_level_performance_df = pd.DataFrame(object_performance_data)
 
-    # Final output dictionary, removing the unwanted keys
     return {
         "mAP": final_map_averaged,
         "per_class_AP_at_last_iou": {idx_to_name.get(k, k): v for k, v in aps_last_iou.items()},

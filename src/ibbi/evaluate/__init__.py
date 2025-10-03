@@ -116,7 +116,7 @@ class Evaluator:
         class_name_to_idx = {v: k for k, v in enumerate(model_classes)}
         idx_to_name = dict(enumerate(model_classes))
 
-        gt_boxes, gt_labels, gt_image_ids = [], [], []
+        gt_boxes, gt_labels, gt_image_ids, gt_label_names = [], [], [], []
         pred_results_with_probs = []  # Full prediction result per image
 
         print("Extracting ground truth and making predictions...")
@@ -128,6 +128,7 @@ class Evaluator:
             if "objects" in item and "bbox" in item["objects"] and "category" in item["objects"]:
                 for j in range(len(item["objects"]["category"])):
                     label_name = item["objects"]["category"][j]
+                    gt_label_names.append(label_name)
                     bbox = item["objects"]["bbox"][j]
                     x1, y1, w, h = bbox
                     x2 = x1 + w
@@ -146,6 +147,7 @@ class Evaluator:
             gt_labels,
             gt_image_ids,
             pred_results_with_probs,
+            gt_label_names=gt_label_names,
             iou_thresholds=iou_thresholds,
             model_classes=model_classes,
             idx_to_name=idx_to_name,
