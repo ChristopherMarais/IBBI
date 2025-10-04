@@ -13,6 +13,7 @@ Additionally, it provides several factory functions, decorated with `@register_m
 to easily instantiate specific, pretrained single-class detection models.
 """
 
+import numpy as np
 import torch
 from ultralytics import RTDETR, YOLO
 
@@ -43,28 +44,54 @@ class YOLOSingleClassBeetleDetector:
         self.classes = list(self.model.names.values())
         print(f"YOLO Model loaded on device: {self.device}")
 
-    def predict(self, image, **kwargs):
+    def predict(self, image, include_full_probabilities: bool = False, **kwargs):
         """Performs single-class object detection on an image.
 
         Args:
             image (Union[str, np.ndarray, Image.Image]): The input image. Can be a file path,
                                                          a numpy array, or a PIL Image object.
+            include_full_probabilities (bool, optional): If True, includes a 'full_results' key in the
+                                                         output with detailed probabilities for each class.
+                                                         Defaults to False.
             **kwargs: Additional keyword arguments to be passed to the underlying
                       `ultralytics.YOLO.predict` method.
 
         Returns:
-            dict: A dictionary containing the detection results with keys for 'scores',
-                  'labels' (which will be the single class name), and 'boxes'.
+            dict: A dictionary containing the detection results.
         """
         results = self.model.predict(image, **kwargs)
 
         result_dict = {"scores": [], "labels": [], "boxes": []}
+        if include_full_probabilities:
+            result_dict["full_results"] = []
+            result_dict["class_names"] = self.classes
 
         if results and hasattr(results[0], "boxes") and results[0].boxes is not None:
             for box in results[0].boxes:
-                result_dict["scores"].append(box.conf.item())
-                result_dict["labels"].append(self.model.names[int(box.cls)])
-                result_dict["boxes"].append(box.xyxy[0].tolist())
+                confidence = box.conf.item()
+                class_id = int(box.cls)
+                label = self.model.names[class_id]
+                bbox = box.xyxy[0].tolist()
+
+                result_dict["scores"].append(confidence)
+                result_dict["labels"].append(label)
+                result_dict["boxes"].append(bbox)
+
+                if include_full_probabilities:
+                    # For single-class, we create a proxy probability distribution
+                    probabilities = np.zeros(len(self.classes))
+                    if self.classes:
+                        probabilities[class_id] = confidence
+
+                    result_dict["full_results"].append(
+                        {
+                            "predicted_class": label,
+                            "predicted_class_id": class_id,
+                            "confidence": confidence,
+                            "class_probabilities": probabilities.tolist(),
+                            "bbox": bbox,
+                        }
+                    )
 
         return result_dict
 
@@ -117,7 +144,7 @@ class RTDETRSingleClassBeetleDetector:
         self.classes = list(self.model.names.values())
         print(f"RT-DETR Model loaded on device: {self.device}")
 
-    def predict(self, image, **kwargs):
+    def predict(self, image, include_full_probabilities: bool = False, **kwargs):
         """Performs single-class object detection on an image.
 
         Args:
@@ -131,12 +158,35 @@ class RTDETRSingleClassBeetleDetector:
         results = self.model.predict(image, **kwargs)
 
         result_dict = {"scores": [], "labels": [], "boxes": []}
+        if include_full_probabilities:
+            result_dict["full_results"] = []
+            result_dict["class_names"] = self.classes
 
         if results and hasattr(results[0], "boxes") and results[0].boxes is not None:
             for box in results[0].boxes:
-                result_dict["scores"].append(box.conf.item())
-                result_dict["labels"].append(self.model.names[int(box.cls)])
-                result_dict["boxes"].append(box.xyxy[0].tolist())
+                confidence = box.conf.item()
+                class_id = int(box.cls)
+                label = self.model.names[class_id]
+                bbox = box.xyxy[0].tolist()
+
+                result_dict["scores"].append(confidence)
+                result_dict["labels"].append(label)
+                result_dict["boxes"].append(bbox)
+
+                if include_full_probabilities:
+                    probabilities = np.zeros(len(self.classes))
+                    if self.classes:
+                        probabilities[class_id] = confidence
+
+                    result_dict["full_results"].append(
+                        {
+                            "predicted_class": label,
+                            "predicted_class_id": class_id,
+                            "confidence": confidence,
+                            "class_probabilities": probabilities.tolist(),
+                            "bbox": bbox,
+                        }
+                    )
 
         return result_dict
 

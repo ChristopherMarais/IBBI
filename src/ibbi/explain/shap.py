@@ -68,8 +68,8 @@ def _prediction_wrapper(model: ModelType, text_prompt: Optional[str] = None) -> 
             predictions = np.zeros((num_images, num_classes))
             results = [model.predict(img, text_prompt=text_prompt) for img in images_to_predict]
             for i, res in enumerate(results):
-                if res["scores"].nelement() > 0:
-                    predictions[i, 0] = res["scores"].max().item()
+                if res["scores"]:
+                    predictions[i, 0] = max(res["scores"])
         else:  # Covers YOLOWorld and other standard models
             class_names = model.get_classes()
             num_classes = len(class_names)

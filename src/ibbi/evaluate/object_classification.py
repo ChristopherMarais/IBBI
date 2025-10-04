@@ -1,4 +1,3 @@
-# src/ibbi/evaluate/object_classification.py
 """
 Provides a unified function for evaluating object detection and classification performance.
 
@@ -58,88 +57,96 @@ def object_classification_performance(
     gt_boxes: np.ndarray,
     gt_labels: list[int],
     gt_image_ids: list[Any],
-    pred_boxes: np.ndarray,
-    pred_labels: list[int],
-    pred_scores: list[float],
-    pred_image_ids: list[Any],
+    pred_results_with_probs: list[dict],
+    gt_label_names: list[str],
     iou_thresholds: Union[float, list[float], np.ndarray] | None = None,
-    confidence_threshold: float = 0.5,
+    confidence_threshold: float = 0.1,
     average: str = "macro",
     zero_division: Union[str, int, float] = np.nan,
+    model_classes: Optional[list[str]] = None,
+    idx_to_name: Optional[dict[int, str]] = None,
 ) -> dict[str, Any]:
     """Calculates a comprehensive suite of object detection and classification metrics.
 
-    This function provides a holistic evaluation of an object detection model's performance.
-    It computes the mean Average Precision (mAP) over a range of Intersection over Union (IoU)
-    thresholds to assess localization accuracy. Simultaneously, it calculates a full suite of
-    classification metrics (accuracy, precision, recall, F1-score, etc.) for each IoU threshold by
-    matching predicted objects to ground truth objects.
-
-    This unified approach allows for a detailed breakdown of a model's ability to both find
-    and correctly identify objects at various levels of localization stringency.
+    This function performs a holistic evaluation, combining mAP and standard classification
+    metrics. It also generates a detailed object-level table mapping ground truth objects
+    to their best-matching predictions and full per-class confidence scores.
 
     Args:
-        gt_boxes (np.ndarray): A NumPy array of ground truth bounding boxes, with each box
-                               in [x1, y1, x2, y2] format. Shape: (N, 4).
-        gt_labels (list[int]): A list of integer labels corresponding to each ground truth box. Length: N.
-        gt_image_ids (list[Any]): A list of image identifiers for each ground truth box, used to
-                                  group boxes by image. Length: N.
-        pred_boxes (np.ndarray): A NumPy array of predicted bounding boxes in [x1, y1, x2, y2] format. Shape: (M, 4).
-        pred_labels (list[int]): A list of predicted integer labels for each predicted box. Length: M.
-        pred_scores (list[float]): A list of confidence scores for each predicted box. Length: M.
-        pred_image_ids (list[Any]): A list of image identifiers for each predicted box. Length: M.
+        gt_boxes (np.ndarray): A NumPy array of ground truth bounding boxes, in [x1, y1, x2, y2] format.
+        gt_labels (list[int]): A list of integer labels corresponding to each ground truth box.
+        gt_image_ids (list[Any]): A list of image identifiers for each ground truth box.
+        pred_results_with_probs (list[dict]): A list of prediction results (one per image), where each
+                                              result dictionary must contain 'full_results' with per-class probabilities.
+        gt_label_names (list[str]): A list of the original ground truth label names from the dataset.
         iou_thresholds (Union[float, list[float], np.ndarray], optional): The IoU threshold(s)
-            for mAP and classification metric calculation. Can be a single float or a list/array of floats.
-            Defaults to np.arange(0.5, 1.0, 0.05).
+            for mAP and classification metric calculation. Defaults to np.arange(0.5, 1.0, 0.05).
         confidence_threshold (float, optional): The confidence score threshold below which
-            predictions are ignored. Defaults to 0.5.
-        average (str, optional): The averaging method for multiclass classification metrics
-            (e.g., 'micro', 'macro', 'weighted'). Defaults to "macro".
-        zero_division (Union[str, int], optional): Sets the value to return when there is a zero
-            division in classification metric calculations (e.g., "warn" for a warning output, 0, or np.nan). Defaults to "np.nan".
+            predictions are ignored for mAP/classification and matching. Defaults to 0.5.
+        average (str, optional): The averaging method for multiclass classification metrics. Defaults to "macro".
+        zero_division (Union[str, int, float], optional): Sets the value to return when there is a zero
+            division in classification metric calculations. Defaults to "np.nan".
+        model_classes (list[str], optional): A list of all class names the model was trained/set for.
+        idx_to_name (dict, optional): A mapping from integer class IDs to class names.
 
     Returns:
         dict[str, Any]: A dictionary containing a comprehensive set of performance metrics:
                         - "mAP": The mean Average Precision averaged over all IoU thresholds.
-                        - "per_class_AP_at_last_iou": A dict mapping class IDs to their AP score at the last IoU threshold.
+                        - "per_class_AP_at_last_iou": A dict mapping class names to their AP score at the last IoU threshold.
                         - "per_threshold_scores": A dict mapping each IoU threshold to its mAP score.
-                        - "per_iou_classification_metrics": A dictionary where keys are IoU thresholds (e.g., "iou_0.50")
-                          and values are dictionaries containing a full suite of classification metrics calculated
-                          at that specific IoU threshold. This includes accuracy, balanced accuracy, precision,
-                          recall, F1-score, Cohen's Kappa, Matthews Correlation Coefficient, a confusion matrix DataFrame,
-                          and a classification report.
-                        - "sample_results": A pandas DataFrame with detailed information on each
-                                            ground truth and predicted box for error analysis.
-                        - "object_table": A pandas DataFrame with detailed information on each matched object.
+                        - "per_iou_classification_metrics": A dictionary of classification metrics per IoU threshold.
+                        - "object_level_performance": A pandas DataFrame with detailed performance per ground truth object.
     """
+    if model_classes is None or idx_to_name is None:
+        raise ValueError("model_classes and idx_to_name must be provided.")
+
+    name_to_idx = {v: k for k, v in idx_to_name.items()}
+
+    # --- 1. Flatten Predictions for mAP Calculation and Store Detailed Preds for Matching ---
+    # These flat lists are used for mAP and classification metrics
+    pred_boxes, pred_labels, pred_scores, pred_image_ids = [], [], [], []
+    # This nested structure stores rich prediction data for the final table
+    image_to_preds = defaultdict(list)
+
+    for image_id, res in enumerate(pred_results_with_probs):
+        if not res or not res.get("boxes"):
+            continue
+
+        # Ensure we can iterate over full_results safely, even if a basic predict result is returned
+        full_results = res.get("full_results", [None] * len(res["boxes"]))
+
+        for box, label, score, full_result in zip(res["boxes"], res["labels"], res["scores"], full_results):
+            # Only consider predictions above the confidence threshold
+            if score >= confidence_threshold:
+                # For mAP/Classification (needs flat lists of integer IDs)
+                if label in name_to_idx:
+                    pred_boxes.append(np.array(box).flatten())
+                    pred_labels.append(name_to_idx[label])
+                    pred_scores.append(score)
+                    pred_image_ids.append(image_id)
+
+                # For the object_level_performance table
+                image_to_preds[image_id].append({"box": box, "score": score, "label_name": label, "full_results": full_result})
+
+    # --- 2. Setup for mAP/Classification Metrics ---
     if iou_thresholds is None:
         iou_thresholds = np.arange(0.5, 1.0, 0.05)
-
     if isinstance(iou_thresholds, (int, float)):
         iou_thresholds = [iou_thresholds]
-    class_lst = list(set(gt_labels) | set(pred_labels))
-    all_classes = sorted(class_lst)
-    target_names = [str(c) for c in all_classes]
 
-    # --- Data Restructuring ---
+    all_gt_labels = list(set(gt_labels))
+    all_pred_labels = list(set(pred_labels))
+    class_lst_us = list(set(all_gt_labels) | set(all_pred_labels))
+    class_lst = sorted(class_lst_us)
+    all_classes_us = list(set(c for c in class_lst if c != -1))  # Exclude -1 from all_classes
+    all_classes = sorted(all_classes_us)
+
+    # Group GT by image for faster lookups and 'used' tracking
     gt_by_image = defaultdict(lambda: {"boxes": [], "labels": [], "used": []})
     for box, label, image_id in zip(gt_boxes, gt_labels, gt_image_ids):
         gt_by_image[image_id]["boxes"].append(box)
         gt_by_image[image_id]["labels"].append(label)
         gt_by_image[image_id]["used"].append(False)
-
-    sample_results = []
-    for image_id, data in gt_by_image.items():
-        for i in range(len(data["boxes"])):
-            sample_results.append(
-                {
-                    "image_id": image_id,
-                    "type": "ground_truth",
-                    "box": data["boxes"][i],
-                    "label": data["labels"][i],
-                    "score": None,
-                }
-            )
 
     preds_by_class = defaultdict(list)
     gt_counts_by_class = defaultdict(int)
@@ -149,36 +156,36 @@ def object_classification_performance(
             gt_counts_by_class[label] += 1
 
     for box, label, score, image_id in zip(pred_boxes, pred_labels, pred_scores, pred_image_ids):
-        if score >= confidence_threshold:
-            preds_by_class[label].append({"box": box, "score": score, "image_id": image_id})
-            sample_results.append(
-                {
-                    "image_id": image_id,
-                    "type": "prediction",
-                    "box": box,
-                    "label": label,
-                    "score": score,
-                }
-            )
+        preds_by_class[label].append({"box": box, "score": score, "image_id": image_id})
 
     per_threshold_scores = {}
     per_iou_classification_metrics = {}
     aps_last_iou = {}
-    object_table = []
 
-    # --- mAP Calculation Loop ---
+    # --- 3. mAP/Classification Metrics Calculation Loop ---
+    all_preds_by_image_flat = defaultdict(list)
+    for box, label, score, image_id in zip(pred_boxes, pred_labels, pred_scores, pred_image_ids):
+        all_preds_by_image_flat[image_id].append(
+            {
+                "box": box,
+                "label": label,  # Integer ID
+                "score": score,
+            }
+        )
+
     for iou_threshold in iou_thresholds:
         aps = {}
         true_class_labels_for_iou = []
         pred_class_labels_for_iou = []
 
-        # Reset 'used' flags for each IoU threshold
+        # Reset 'used' flags for mAP calculation
         for data in gt_by_image.values():
             data["used"] = [False] * len(data["boxes"])
 
+        # a. mAP Calculation
         for class_id in all_classes:
             class_preds = sorted(preds_by_class[class_id], key=lambda x: x["score"], reverse=True)
-            num_gt_boxes = gt_counts_by_class[class_id]
+            num_gt_boxes = gt_counts_by_class.get(class_id, 0)
 
             if num_gt_boxes == 0:
                 aps[class_id] = 1.0 if not class_preds else 0.0
@@ -187,14 +194,11 @@ def object_classification_performance(
                 aps[class_id] = 0.0
                 continue
 
-            tp = np.zeros(len(class_preds))
-            fp = np.zeros(len(class_preds))
-
+            tp, fp = np.zeros(len(class_preds)), np.zeros(len(class_preds))
             for i, pred in enumerate(class_preds):
-                gt_data = gt_by_image[pred["image_id"]]
+                gt_data = gt_by_image.get(pred["image_id"], {"boxes": [], "labels": [], "used": []})
                 best_iou = -1.0
                 best_gt_idx = -1
-                best_gt_box = None
 
                 for j, gt_box in enumerate(gt_data["boxes"]):
                     if gt_data["labels"][j] == class_id:
@@ -202,61 +206,41 @@ def object_classification_performance(
                         if iou > best_iou:
                             best_iou = iou
                             best_gt_idx = j
-                            best_gt_box = gt_box
 
-                if best_iou >= iou_threshold:
+                if best_iou >= iou_threshold and best_gt_idx != -1:
                     if not gt_data["used"][best_gt_idx]:
                         tp[i] = 1
                         gt_data["used"][best_gt_idx] = True
-                        object_table.append(
-                            {
-                                "image_id": pred["image_id"],
-                                "gt_bbox": best_gt_box,
-                                "pred_bbox": pred["box"],
-                                "iou": best_iou,
-                                "class_id": class_id,
-                                "score": pred["score"],
-                            }
-                        )
                     else:
                         fp[i] = 1
                 else:
                     fp[i] = 1
 
-            tp_cumsum = np.cumsum(tp)
-            fp_cumsum = np.cumsum(fp)
-
+            tp_cumsum, fp_cumsum = np.cumsum(tp), np.cumsum(fp)
             recalls = tp_cumsum / (num_gt_boxes + np.finfo(float).eps)
             precisions = tp_cumsum / (tp_cumsum + fp_cumsum + np.finfo(float).eps)
-
             recalls = np.concatenate(([0.0], recalls, [1.0]))
             precisions = np.concatenate(([0.0], precisions, [0.0]))
-
             for j in range(len(precisions) - 2, -1, -1):
                 precisions[j] = max(precisions[j], precisions[j + 1])
-
             recall_indices = np.where(recalls[1:] != recalls[:-1])[0]
-            ap = np.sum((recalls[recall_indices + 1] - recalls[recall_indices]) * precisions[recall_indices + 1])
-            aps[class_id] = ap
+            aps[class_id] = np.sum((recalls[recall_indices + 1] - recalls[recall_indices]) * precisions[recall_indices + 1])
 
         per_threshold_scores[f"mAP@{iou_threshold:.2f}"] = np.mean(list(aps.values())) if aps else 0.0
         aps_last_iou = aps
 
-        # Classification metrics for this IoU
+        # b. Classification Metrics Calculation
         for gt_image_id, gt_data in gt_by_image.items():
             for gt_box, gt_label in zip(gt_data["boxes"], gt_data["labels"]):
                 true_class_labels_for_iou.append(gt_label)
+                best_iou = -1.0
+                best_pred_label = -1  # -1 is the "no-match" label
 
-                best_iou = -1
-                best_pred_label = -1
-
-                for pred_label, preds in preds_by_class.items():
-                    for pred in preds:
-                        if pred["image_id"] == gt_image_id:
-                            iou = _calculate_iou(gt_box, pred["box"])
-                            if iou > best_iou:
-                                best_iou = iou
-                                best_pred_label = pred_label
+                for pred in all_preds_by_image_flat[gt_image_id]:
+                    iou = _calculate_iou(gt_box, pred["box"])
+                    if iou > best_iou:
+                        best_iou = iou
+                        best_pred_label = pred["label"]  # Integer ID
 
                 if best_iou >= iou_threshold:
                     pred_class_labels_for_iou.append(best_pred_label)
@@ -265,27 +249,37 @@ def object_classification_performance(
 
         accuracy = accuracy_score(true_class_labels_for_iou, pred_class_labels_for_iou)
         balanced_accuracy = balanced_accuracy_score(true_class_labels_for_iou, pred_class_labels_for_iou)
-        kappa = cohen_kappa_score(true_class_labels_for_iou, pred_class_labels_for_iou)
-        mcc = matthews_corrcoef(true_class_labels_for_iou, pred_class_labels_for_iou)
+
+        has_multiple_effective_classes = len(np.unique(true_class_labels_for_iou)) > 1 and len(np.unique(pred_class_labels_for_iou)) > 1
+        kappa = cohen_kappa_score(true_class_labels_for_iou, pred_class_labels_for_iou) if has_multiple_effective_classes else np.nan
+        mcc = matthews_corrcoef(true_class_labels_for_iou, pred_class_labels_for_iou) if has_multiple_effective_classes else np.nan
+
+        extended_classes_us = list(set(all_classes) | {-1})
+        extended_classes = sorted(extended_classes_us)
+        extended_target_names = [idx_to_name.get(c, "No_Match") for c in extended_classes]
+
+        class_subset_for_metrics_us = list(set(true_class_labels_for_iou) - {-1})
+        class_subset_for_metrics = sorted(class_subset_for_metrics_us)
+        target_subset_for_metrics = [idx_to_name.get(c, c) for c in class_subset_for_metrics]
 
         precision, recall, f1, _ = precision_recall_fscore_support(
             true_class_labels_for_iou,
             pred_class_labels_for_iou,
             average=average,
             zero_division=zero_division,  # type: ignore
-            labels=all_classes,
+            labels=class_subset_for_metrics,
         )
 
-        cm = confusion_matrix(true_class_labels_for_iou, pred_class_labels_for_iou, labels=all_classes)
-        cm_df = pd.DataFrame(cm, index=pd.Index(target_names), columns=pd.Index(target_names))
+        cm = confusion_matrix(true_class_labels_for_iou, pred_class_labels_for_iou, labels=extended_classes)
+        cm_df = pd.DataFrame(cm, index=pd.Index(extended_target_names), columns=pd.Index(extended_target_names))
         cm_df.index.name = "True Label"
         cm_df.columns.name = "Predicted Label"
 
         report = classification_report(
             true_class_labels_for_iou,
             pred_class_labels_for_iou,
-            labels=all_classes,
-            target_names=target_names,
+            labels=class_subset_for_metrics,
+            target_names=target_subset_for_metrics,
             output_dict=True,
             zero_division=zero_division,  # type: ignore
         )
@@ -303,199 +297,58 @@ def object_classification_performance(
         }
 
     final_map_averaged = np.mean(list(per_threshold_scores.values())) if per_threshold_scores else 0.0
-    object_df = pd.DataFrame(object_table)
+
+    # --- 4. Object Level Performance Table Generation ---
+    object_performance_data = []
+    gt_object_id_counter = defaultdict(int)
+
+    for i in range(len(gt_boxes)):
+        image_id = gt_image_ids[i]
+        gt_box = gt_boxes[i]
+        gt_label_name = gt_label_names[i]
+        object_local_id = gt_object_id_counter[image_id]
+        gt_object_id_counter[image_id] += 1
+
+        current_preds = image_to_preds[image_id]
+        best_iou = 0.0
+        best_pred_box = None
+        best_pred_full_results = None
+
+        for pred in current_preds:
+            iou = _calculate_iou(gt_box, pred["box"])
+            if iou > best_iou:
+                best_iou = iou
+                best_pred_box = pred["box"]
+                best_pred_full_results = pred["full_results"]
+
+        row = {
+            "image_id": image_id,
+            "object_id": object_local_id,
+            "gt_bbox": gt_box,
+            "gt_label": gt_label_name,
+        }
+
+        if best_iou >= confidence_threshold:
+            row["pred_bbox"] = best_pred_box
+            row["iou"] = best_iou
+        else:
+            row["pred_bbox"] = [np.nan] * 4
+            row["iou"] = 0.0
+
+        class_confidences = dict.fromkeys(model_classes, 0.0)
+        if best_pred_full_results and best_pred_full_results.get("class_probabilities"):
+            for class_name_in_model_classes, prob in zip(model_classes, best_pred_full_results["class_probabilities"]):
+                class_confidences[class_name_in_model_classes] = prob
+
+        row.update({f"conf_{name if name else 'background'}": conf for name, conf in class_confidences.items()})
+        object_performance_data.append(row)
+
+    object_level_performance_df = pd.DataFrame(object_performance_data)
 
     return {
         "mAP": final_map_averaged,
-        "per_class_AP_at_last_iou": aps_last_iou,
+        "per_class_AP_at_last_iou": {idx_to_name.get(k, k): v for k, v in aps_last_iou.items()},
         "per_threshold_scores": per_threshold_scores,
         "per_iou_classification_metrics": per_iou_classification_metrics,
-        "sample_results": pd.DataFrame(sample_results),
-        "object_table": object_df,
-    }
-
-
-def out_of_distribution_detection(
-    id_results: list[dict],
-    ood_results: list[dict],
-    id_dataset: list[dict],
-    ood_dataset: list[dict],
-    class_names: list[str],
-    thresholds: Optional[np.ndarray] = None,
-) -> dict[str, Any]:
-    """Performs a comprehensive out-of-distribution (OOD) analysis.
-
-    This function compares the model's behavior on in-distribution (ID) versus
-    out-of-distribution (OOD) data. It provides detailed statistics on confidence
-    scores, allowing for the determination of an optimal threshold for separating
-    known from unknown classes.
-
-    Args:
-        id_results (list[dict]): A list of prediction results from the model on the ID dataset.
-        ood_results (list[dict]): A list of prediction results from the model on the OOD dataset.
-        id_dataset (list[dict]): The in-distribution dataset.
-        ood_dataset (list[dict]): The out-of-distribution dataset.
-        class_names (list[str]): A list of the model's class names.
-        thresholds (np.ndarray, optional): An array of confidence thresholds to evaluate.
-                                           Defaults to np.arange(0.05, 1.0, 0.05).
-
-    Returns:
-        dict[str, Any]: A dictionary containing a comprehensive OOD analysis, including:
-                        - "confidence_score_analysis": A DataFrame with comparative statistics
-                          (mean, std, percentiles) for ID and OOD confidence scores.
-                        - "per_threshold_metrics": A DataFrame showing TPR, FNR, FPR, and TNR
-                          for both ID and OOD data at various thresholds.
-                        - "ood_sample_analysis": A DataFrame with a column for the true label
-                          and a column for each predicted species' confidence score.
-                        - "id_sample_analysis": A DataFrame with a column for the true label
-                          and a column for each predicted species' confidence score for the in-distribution data.
-                        - "id_object_table": A pandas DataFrame with detailed information on each matched in-distribution object.
-                        - "ood_object_table": A pandas DataFrame with detailed information on each matched out-of-distribution object.
-    """
-    # set default thresholds if none provided
-    if thresholds is None:
-        thresholds = np.arange(0.05, 1.0, 0.05)
-
-    # --- 1. Confidence Score Analysis ---
-    id_max_confidences = [max(res["scores"]) if res and res.get("scores") else 0 for res in id_results]
-    ood_max_confidences = [max(res["scores"]) if res and res.get("scores") else 0 for res in ood_results]
-
-    confidence_stats = {
-        "Metric": ["Mean", "Std Dev", "Median", "95th Percentile", "99th Percentile"],
-        "In-Distribution": [
-            np.mean(id_max_confidences),
-            np.std(id_max_confidences),
-            np.median(id_max_confidences),
-            np.percentile(id_max_confidences, 95),
-            np.percentile(id_max_confidences, 99),
-        ],
-        "Out-of-Distribution": [
-            np.mean(ood_max_confidences),
-            np.std(ood_max_confidences),
-            np.median(ood_max_confidences),
-            np.percentile(ood_max_confidences, 95),
-            np.percentile(ood_max_confidences, 99),
-        ],
-    }
-    confidence_df = pd.DataFrame(confidence_stats)
-
-    # --- 2. Per-Threshold Metrics (TPR, FNR, FPR, TNR) ---
-    threshold_metrics = []
-    for t in thresholds:
-        id_tp = np.sum([1 for conf in id_max_confidences if conf >= t])
-        id_fn = len(id_max_confidences) - id_tp
-        ood_fp = np.sum([1 for conf in ood_max_confidences if conf >= t])
-        ood_tn = len(ood_max_confidences) - ood_fp
-
-        tpr_id = id_tp / len(id_max_confidences) if id_max_confidences else 0
-        fnr_id = id_fn / len(id_max_confidences) if id_max_confidences else 0
-        fpr_ood = ood_fp / len(ood_max_confidences) if ood_max_confidences else 0
-        tnr_ood = ood_tn / len(ood_max_confidences) if ood_max_confidences else 0
-
-        threshold_metrics.append(
-            {
-                "Threshold": t,
-                "TPR_ID": tpr_id,
-                "FNR_ID": fnr_id,
-                "FPR_OOD": fpr_ood,
-                "TNR_OOD": tnr_ood,
-            }
-        )
-    threshold_df = pd.DataFrame(threshold_metrics)
-
-    # --- 3. OOD Sample-Level Analysis with Full Class Confidences ---
-    ood_sample_details = []
-    for i, res in enumerate(ood_results):
-        true_label = "Unknown"
-        if "objects" in ood_dataset[i] and "category" in ood_dataset[i]["objects"] and ood_dataset[i]["objects"]["category"]:
-            true_label = ood_dataset[i]["objects"]["category"][0]
-        row = {"true_label": true_label}
-
-        if res and res.get("full_results"):
-            # Assuming one detection per image for OOD, take the first one
-            full_result = res["full_results"][0]
-            for class_name, prob in zip(class_names, full_result["class_probabilities"]):
-                row[class_name] = prob
-        else:
-            # If no detection, fill with zeros
-            for class_name in class_names:
-                row[class_name] = 0.0
-
-        ood_sample_details.append(row)
-
-    ood_sample_df = pd.DataFrame(ood_sample_details)
-
-    # --- 4. ID Sample-Level Analysis with Full Class Confidences ---
-    id_sample_details = []
-    for i, res in enumerate(id_results):
-        true_label = "Unknown"
-        if "objects" in id_dataset[i] and "category" in id_dataset[i]["objects"] and id_dataset[i]["objects"]["category"]:
-            true_label = id_dataset[i]["objects"]["category"][0]
-        row = {"true_label": true_label}
-
-        if res and res.get("full_results"):
-            # Assuming one detection per image for ID, take the first one
-            full_result = res["full_results"][0]
-            for class_name, prob in zip(class_names, full_result["class_probabilities"]):
-                row[class_name] = prob
-        else:
-            # If no detection, fill with zeros
-            for class_name in class_names:
-                row[class_name] = 0.0
-
-        id_sample_details.append(row)
-
-    id_sample_df = pd.DataFrame(id_sample_details)
-
-    # --- 5. Object Table Generation ---
-    def _generate_object_table(dataset, results, class_names):
-        gt_by_image = defaultdict(lambda: {"boxes": [], "labels": [], "used": []})
-        for i, item in enumerate(dataset):
-            if "objects" in item and "bbox" in item["objects"] and "category" in item["objects"]:
-                for j in range(len(item["objects"]["category"])):
-                    label_name = item["objects"]["category"][j]
-                    if label_name in class_names:
-                        bbox = item["objects"]["bbox"][j]
-                        x1, y1, w, h = bbox
-                        x2 = x1 + w
-                        y2 = y1 + h
-                        gt_by_image[i]["boxes"].append([x1, y1, x2, y2])
-                        gt_by_image[i]["labels"].append(class_names.index(label_name))
-                        gt_by_image[i]["used"].append(False)
-
-        preds_by_class = defaultdict(list)
-        for i, res in enumerate(results):
-            if res and res.get("boxes"):
-                for box, label, score in zip(res["boxes"], res["labels"], res["scores"]):
-                    if label in class_names:
-                        preds_by_class[class_names.index(label)].append({"box": box, "score": score, "image_id": i})
-
-        object_table = []
-        for class_id, class_preds in preds_by_class.items():
-            for pred in class_preds:
-                gt_data = gt_by_image[pred["image_id"]]
-                best_iou = -1.0
-                best_gt_box = None
-
-                for j, gt_box in enumerate(gt_data["boxes"]):
-                    if gt_data["labels"][j] == class_id:
-                        iou = _calculate_iou(pred["box"], gt_box)
-                        if iou > best_iou:
-                            best_iou = iou
-                            best_gt_box = gt_box
-
-                if best_iou >= 0.5:  # Using a fixed 0.5 IoU threshold for simplicity
-                    object_table.append({"image_id": pred["image_id"], "gt_bbox": best_gt_box, "pred_bbox": pred["box"], "iou": best_iou})
-        return pd.DataFrame(object_table)
-
-    id_object_table = _generate_object_table(id_dataset, id_results, class_names)
-    ood_object_table = _generate_object_table(ood_dataset, ood_results, class_names)
-
-    return {
-        "confidence_score_analysis": confidence_df,
-        "per_threshold_metrics": threshold_df,
-        "ood_sample_analysis": ood_sample_df,
-        "id_sample_analysis": id_sample_df,
-        "id_object_table": id_object_table,
-        "ood_object_table": ood_object_table,
+        "object_level_performance": object_level_performance_df,
     }
