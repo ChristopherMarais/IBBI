@@ -154,9 +154,10 @@ class GroundingDINOModel:
                 if include_full_probabilities:
                     # Create a simple proxy probability distribution
                     probabilities = np.zeros(len(self.classes))
-                    # Clean the label and the class list for robust matching
-                    cleaned_label = label.strip()
-                    cleaned_classes = [c.strip() for c in self.classes]
+                    # Clean the label and the class list for robust, case-insensitive matching
+                    cleaned_label = label.strip().lower()
+                    cleaned_classes = [c.strip().lower() for c in self.classes]
+                    class_id = -1
                     if cleaned_label in cleaned_classes:
                         class_id = cleaned_classes.index(cleaned_label)
                         probabilities[class_id] = score.item()
@@ -164,7 +165,7 @@ class GroundingDINOModel:
                     result_dict["full_results"].append(
                         {
                             "predicted_class": label,
-                            "predicted_class_id": self.classes.index(label) if label in self.classes else -1,
+                            "predicted_class_id": class_id,
                             "confidence": score.item(),
                             "class_probabilities": probabilities.tolist(),
                             "bbox": bbox,

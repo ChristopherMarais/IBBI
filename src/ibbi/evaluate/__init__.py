@@ -103,7 +103,15 @@ class Evaluator:
 
         gt_boxes, gt_labels, gt_image_ids, gt_label_names = [], [], [], []
         pred_results_with_probs = []  # Full prediction result per image
+        # Initialize model_classes before the loop.
         model_classes: list[str] = []
+        if isinstance(self.model, (GroundingDINOModel)):
+            if hasattr(self.model, "get_classes") and callable(self.model.get_classes):
+                raw_model_classes = self.model.get_classes()
+                if isinstance(raw_model_classes, dict):
+                    model_classes = list(raw_model_classes.values())
+                else:
+                    model_classes = raw_model_classes
         class_name_to_idx: dict[str, int] = {}
         idx_to_name: dict[int, str] = {}
 
@@ -115,7 +123,7 @@ class Evaluator:
             results = self.model.predict(item["image"], verbose=False, **predict_kwargs_for_call)
             pred_results_with_probs.append(results)
 
-            if model_classes is None:
+            if not model_classes:
                 if not hasattr(self.model, "get_classes") or not callable(self.model.get_classes):
                     print("Warning: Model does not have a 'get_classes' method for class mapping. Skipping evaluation.")
                     return {}

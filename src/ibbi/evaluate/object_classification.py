@@ -340,7 +340,7 @@ def object_classification_performance(
             for class_name_in_model_classes, prob in zip(model_classes, best_pred_full_results["class_probabilities"]):
                 class_confidences[class_name_in_model_classes] = prob
 
-        row.update({f"conf_{name}": conf for name, conf in class_confidences.items()})
+        row.update({f"conf_{name if name else 'background'}": conf for name, conf in class_confidences.items()})
         object_performance_data.append(row)
 
     object_level_performance_df = pd.DataFrame(object_performance_data)
