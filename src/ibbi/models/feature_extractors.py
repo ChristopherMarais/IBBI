@@ -10,19 +10,18 @@ features for other machine learning models.
 The module includes two primary wrapper classes:
 - `UntrainedFeatureExtractor`: For using pretrained models from the `timm` library.
 - `HuggingFaceFeatureExtractor`: For using pretrained models from the Hugging Face Hub
-  via the `transformers` pipeline.
+  via the `transformers` library.
 
 Additionally, it provides several factory functions, decorated with `@register_model`,
 to easily instantiate specific, recommended feature extraction models.
 """
 
-import numpy as np
 import timm
 import torch
 from PIL import Image
 from timm.data.config import resolve_model_data_config
 from timm.data.transforms_factory import create_transform
-from transformers import pipeline
+from transformers import AutoModel, AutoProcessor
 
 from ._registry import register_model
 
@@ -60,15 +59,25 @@ class UntrainedFeatureExtractor:
         """
         raise NotImplementedError("This model is for feature extraction only and does not support prediction.")
 
-    def extract_features(self, image, **kwargs):
-        """Extracts deep feature embeddings from an image.
+    def extract_features(self, image, pool: bool = True, **kwargs):
+        """Extracts deep features from an image, offering both pooled embeddings and raw feature maps.
+
+        This method processes an image and returns either a single, flat feature vector (embedding)
+        or the raw feature map from the model's backbone. The pooled embedding is
+        useful for tasks like classification or clustering, while the raw feature map retains
+        spatial information required for tasks like object detection.
 
         Args:
             image (Union[str, Image.Image]): The input image, which can be a file path or a PIL Image object.
+            pool (bool, optional): If True (the default), returns a flat, pooled feature vector (embedding)
+                                   by passing the features through the model's head. If False, returns
+                                   the raw, un-pooled feature map directly from the model's backbone.
+                                   Defaults to True.
             **kwargs: Additional keyword arguments (not used in this implementation but included for API consistency).
 
         Returns:
-            torch.Tensor: A tensor containing the extracted feature embedding.
+            torch.Tensor: A tensor containing the extracted features. Its shape will be either a
+                          flat vector (if `pool=True`) or a multi-dimensional feature map (if `pool=False`).
         """
         if isinstance(image, str):
             img = Image.open(image).convert("RGB")
@@ -84,9 +93,23 @@ class UntrainedFeatureExtractor:
         input_tensor = torch.as_tensor(transformed_img).unsqueeze(0).to(self.device)
 
         features = self.model.forward_features(input_tensor)  # type: ignore
-        output = self.model.forward_head(features, pre_logits=True)  # type: ignore
 
-        return output.detach()
+        if pool:
+            # Current behavior: return the flat embedding vector
+            output = self.model.forward_head(features, pre_logits=True)  # type: ignore
+            return output.detach()
+        else:
+            # New behavior: return the raw feature map.
+            # For ViT-style models, this is a 3D tensor [batch, num_tokens, dim].
+            # We remove the [CLS] token as it is for classification.
+            if (
+                features.dim() == 3
+                and hasattr(self.model, "num_prefix_tokens")
+                and isinstance(self.model.num_prefix_tokens, int)
+                and self.model.num_prefix_tokens > 0
+            ):
+                return features[:, self.model.num_prefix_tokens :, :].detach()
+            return features.detach()
 
     def get_classes(self) -> list[str]:
         """This method is not applicable to feature extraction models.
@@ -100,8 +123,9 @@ class UntrainedFeatureExtractor:
 class HuggingFaceFeatureExtractor:
     """A wrapper class for using pretrained Hugging Face models for feature extraction.
 
-    This class uses the `transformers` pipeline to provide an easy-to-use interface for
-    extracting features from models hosted on the Hugging Face Hub.
+    This class uses the `transformers` library to provide a standardized interface for
+    extracting features from models hosted on the Hugging Face Hub. It loads the model
+    and processor directly to allow flexible access to different types of outputs.
 
     Args:
         model_name (str): The name of the Hugging Face model to be loaded.
@@ -114,9 +138,9 @@ class HuggingFaceFeatureExtractor:
             model_name (str): The model identifier from the Hugging Face Hub.
         """
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        device_id = 0 if self.device == "cuda" else -1
-        self.feature_extractor = pipeline(task="image-feature-extraction", model=model_name, device=device_id)
-        print(f"{model_name} model loaded successfully using the pipeline on device: {self.device}")
+        self.processor = AutoProcessor.from_pretrained(model_name)
+        self.model = AutoModel.from_pretrained(model_name).to(self.device).eval()
+        print(f"{model_name} model loaded successfully on device: {self.device}")
 
     def predict(self, image, **kwargs):
         """This method is not implemented for this class.
@@ -126,15 +150,27 @@ class HuggingFaceFeatureExtractor:
         """
         raise NotImplementedError("This model is for feature extraction only and does not support prediction.")
 
-    def extract_features(self, image, **kwargs):
-        """Extracts deep feature embeddings from an image.
+    def extract_features(self, image, pool: bool = True, **kwargs):
+        """Extracts deep features from an image, offering both pooled embeddings and raw patch embeddings.
+
+        This method processes an image and returns either a single, flat feature vector (embedding)
+        representing the whole image, or the full sequence of patch embeddings (feature map) from
+        the transformer's last hidden state. The pooled embedding is useful for classification, while
+        the sequence of patch embeddings retains spatial information for detection tasks.
 
         Args:
             image (Union[str, Image.Image]): The input image, which can be a file path or a PIL Image object.
-            **kwargs: Additional keyword arguments to be passed to the feature extraction pipeline.
+            pool (bool, optional): If True (the default), returns the `pooler_output`, which is a
+                                   single feature vector summarizing the image (often derived from the
+                                   [CLS] token). If False, returns the `last_hidden_state` (excluding
+                                   the CLS token), which is the sequence of patch embeddings.
+                                   Defaults to True.
+            **kwargs: Additional keyword arguments (not used in this implementation).
 
         Returns:
-            torch.Tensor: A tensor containing the extracted feature embedding.
+            torch.Tensor: A tensor containing the extracted features. Its shape will be a
+                          2D tensor (batch, features) if `pool=True` or a 3D tensor
+                          (batch, num_patches, features) if `pool=False`.
         """
         if isinstance(image, str):
             img = Image.open(image).convert("RGB")
@@ -143,9 +179,18 @@ class HuggingFaceFeatureExtractor:
         else:
             raise TypeError("Image must be a PIL Image or a file path.")
 
-        embedding = self.feature_extractor(img, **kwargs)
-        global_features = np.array(embedding)[0, 0, :]
-        return torch.tensor(global_features).to(self.device)
+        inputs = self.processor(images=img, return_tensors="pt").to(self.device)
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+
+        # --- ✅ MODIFICATION: Conditionally return pooled or raw features ---
+        if pool:
+            # Current behavior: return the pooled output, typically from the [CLS] token
+            return outputs.pooler_output.detach()
+        else:
+            # New behavior: return the full sequence of patch embeddings (raw features)
+            # We slice [:, 1:, :] to remove the [CLS] token, which is not needed for detection.
+            return outputs.last_hidden_state[:, 1:, :].detach()
 
     def get_classes(self) -> list[str]:
         """This method is not applicable to feature extraction models.
