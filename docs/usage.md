@@ -6,6 +6,13 @@ This guide provides an in-depth walkthrough of the `ibbi` package's functionalit
 
 Getting `ibbi` set up on your system is a two-step process. Since `ibbi` relies on PyTorch for its deep learning capabilities, it's crucial to install it first to ensure compatibility with your hardware, especially if you have a GPU.
 
+#### Hardware Requirements
+* **Disk Space**: A minimum of 10-20 GB of disk space is recommended to accommodate the Python environment, downloaded models, and cached datasets.
+
+* **CPU & RAM**: Running inference on a CPU is possible but can be slow. For model evaluation on large datasets (like the built-in test set), a significant amount of RAM (16GB, 32GB, or more) is highly recommended to avoid memory crashes.
+
+* **GPU (Recommended)**: A CUDA-enabled GPU (e.g., NVIDIA T4, RTX 3060 or better) with at least 8GB of VRAM is strongly recommended for both inference and model evaluation.
+
 **1. Install PyTorch**
 
 For optimal performance, particularly with GPU acceleration, it is essential to install the correct version of PyTorch for your system (Windows/Mac/Linux) and CUDA version.
@@ -43,7 +50,7 @@ pixi init
 
 # 3. Add ibbi to your project. Pixi will automatically handle the
 # creation of the environment and resolve all dependencies, including PyTorch.
-pixi add ibbi
+pixi add --pypi ibbi
 
 # 4. Run commands or scripts within the managed environment
 # For example, to start an interactive python session:
@@ -118,7 +125,7 @@ NOTE: We recommend to create different instances of the model for inference and 
 **Input Image:**
 
 <p align="center">
-    <img src="assets/images/beetles.png" alt="Input image" width="33%">
+    <img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles.png" alt="Input image" width="33%">
 </p>
 
 ```python
@@ -127,7 +134,7 @@ import ibbi
 detector = ibbi.create_model("beetle_detector", pretrained=True)
 
 # You can use a local file path
-image_source = "docs/assets/images/beetles.png"
+image_source = "https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles.png"
 
 # Get bounding box predictions. The model returns a dictionary.
 results = detector.predict(image_source)
@@ -231,11 +238,21 @@ Beyond basic inference, `ibbi` provides powerful tools for rigorously evaluating
 
 The `ibbi.Evaluator` class provides a simple and standardized interface for assessing model performance across different tasks. This is essential for understanding a model's strengths and weaknesses, comparing different models objectively, and reporting robust, quantitative results in publications.
 
+> **⚠️ Important Note on Memory Usage**
+>
+> The `Evaluator` methods (`.classification()`, `.embeddings()`) currently process the entire dataset in memory. Attempting to run evaluation on the full test dataset (~2,000 images) at once may exhaust all available RAM and crash your session.
+>
+> To avoid this, we **strongly recommend** evaluating on a smaller subset of the data, as demonstrated in the code example below (using `data.select(range(10))`). You can evaluate incrementally over several subsets to build a complete performance picture.
+
 ```python
 import ibbi
 
 # --- 1. Import the test dataset included with the package ---
 data = ibbi.get_dataset()
+
+# --- Create a small subset for evaluation ---
+# Use .select() to create a new Dataset object, not data[:10]
+data_subset = data.select(range(10))
 
 # --- 2. Create a model to evaluate ---
 model = ibbi.create_model(model_name="species_classifier", pretrained=True)
@@ -277,7 +294,7 @@ import ibbi
 # --- 1. Create a Model and Explainer ---
 model = ibbi.create_model(model_name="species_classifier", pretrained=True)
 explainer = ibbi.Explainer(model=model)
-image_to_explain = "docs/assets/images/beetles.png"
+image_to_explain = "https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles.png"
 
 
 # --- 2. Explain with LIME ---

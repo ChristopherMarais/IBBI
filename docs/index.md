@@ -28,7 +28,7 @@ The accurate and timely identification of bark and ambrosia beetle species is fu
 
 The models in `ibbi` are trained using a detailed workflow, from data collection and annotation to model evaluation. This process ensures high-quality, reliable models for your research.
 
-![IBBI Workflow](assets/images/data_flow_ibbi.png)
+![IBBI Workflow](https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/data_flow_ibbi.png)
 
 ---
 
@@ -36,6 +36,6 @@ The models in `ibbi` are trained using a detailed workflow, from data collection
 
 The `ibbi` package is designed for ease of use. The main functions, inputs, and outputs are summarized below.
 
-![IBBI Inputs and Outputs](assets/images/ibbi_inputs_outputs.png)
+![IBBI Inputs and Outputs](https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/ibbi_inputs_outputs.png)
 
 Ready to get started? Check out the **[Usage Guide](usage.md)**.

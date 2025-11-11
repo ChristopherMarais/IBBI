@@ -2,6 +2,12 @@
 
 First off, thank you for considering contributing to IBBI! Your help is greatly appreciated. This document provides guidelines for contributing to the project.
 
+## Seeking Support
+
+If you have a general question about how to use `ibbi`, are not sure about a feature, or are encountering a bug, the best way to get help is by opening an issue on our [GitHub Issue Tracker](https://github.com/ChristopherMarais/ibbi/issues).
+
+This is the preferred method for getting support, as it allows the community and maintainers to track and respond to your query in one central place.
+
 ## How Can I Contribute?
 
 There are many ways to contribute, from writing tutorials to implementing new models. Here are a few ideas:
