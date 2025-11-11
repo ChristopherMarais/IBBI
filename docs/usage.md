@@ -43,7 +43,7 @@ pixi init
 
 # 3. Add ibbi to your project. Pixi will automatically handle the
 # creation of the environment and resolve all dependencies, including PyTorch.
-pixi add ibbi
+pixi add --pypi ibbi
 
 # 4. Run commands or scripts within the managed environment
 # For example, to start an interactive python session:
