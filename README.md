@@ -74,7 +74,7 @@ The IBBI package provides a powerful, modern solution to overcome these obstacle
 The trained models in `ibbi` are the result of a comprehensive data collection, annotation, and training pipeline by the Forest Entomology Lab at the University of Florida.
 
 <p align="center">
-  <img src="docs/assets/images/data_flow_ibbi.png" alt="IBBI Data Flow" width="800">
+  <img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/data_flow_ibbi.png" alt="IBBI Data Flow" width="800">
 </p>
 
 1.  **Data Collection and Curation:** The process begins with data collection from various sources. A zero-shot detection model performs initial bark beetle localization, followed by human-in-the-loop verification to ensure accurate bounding box annotations. Species classification is performed by expert taxonomists to provide high-quality species labels.
@@ -84,7 +84,7 @@ The trained models in `ibbi` are the result of a comprehensive data collection, 
 
     Note - No additional training is performed for the zero-shot detection and general feature extraction models, as they leverage pre-trained weights from large, diverse datasets.
 
-1.  **Evaluation and Deployment:** A held-out test set is used to evaluate all models. A summary of performance metrics can be viewed with `ibbi.list_models()` or by simply viewing the [`model summary table`](src/ibbi/data/ibbi_model_summary.csv). Alternatively evalutation can be done independently by running `ibbi.Evaluator()`. The trained models are stored under the [`IBBI-bio Hugging Face Hub community`](https://huggingface.co/IBBI-bio) for easy access.
+3.  **Evaluation and Deployment:** A held-out test set is used to evaluate all models. A summary of performance metrics can be viewed with `ibbi.list_models()` or by simply viewing the [`model summary table`](src/ibbi/data/ibbi_model_summary.csv). Alternatively evalutation can be done independently by running `ibbi.Evaluator()`. The trained models are stored under the [`IBBI-bio Hugging Face Hub community`](https://huggingface.co/IBBI-bio) for easy access.
 
 ---
 
@@ -93,7 +93,7 @@ The trained models in `ibbi` are the result of a comprehensive data collection, 
 The `ibbi` package is designed to be simple and intuitive. The following diagram summarizes the main functions, classes and methods including their inputs and outputs.
 
 <p align="center">
-  <img src="docs/assets/images/ibbi_inputs_outputs.png" alt="IBBI Inputs and Outputs" width="800">
+  <img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/ibbi_inputs_outputs.png" alt="IBBI Inputs and Outputs" width="800">
 </p>
 
 ---
@@ -217,10 +217,10 @@ NOTE: This only works for zero-shot, single-class, and multi-class detection mod
   </thead>
   <tbody>
     <tr>
-      <td style="text-align: center;"><img src="docs/assets/images/beetles.png" alt="Beetles" style="max-width: 100%;"></td>
-      <td style="text-align: center;"><img src="docs/assets/images/beetles_od.png" alt="Object Detection" style="max-width: 100%;"></td>
-      <td style="text-align: center;"><img src="docs/assets/images/beetles_oc.png" alt="Object Classification" style="max-width: 100%;"></td>
-      <td style="text-align: center;"><img src="docs/assets/images/beetles_zsoc.png" alt="Zero-Shot Classification" style="max-width: 100%;"></td>
+      <td style="text-align: center;"><img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles.png" alt="Beetles" style="max-width: 100%;"></td>
+      <td style="text-align: center;"><img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles_od.png" alt="Object Detection" style="max-width: 100%;"></td>
+      <td style="text-align: center;"><img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles_oc.png" alt="Object Classification" style="max-width: 100%;"></td>
+      <td style="text-align: center;"><img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles_zsoc.png" alt="Zero-Shot Classification" style="max-width: 100%;"></td>
     </tr>
   </tbody>
 </table>

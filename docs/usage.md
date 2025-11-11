@@ -118,7 +118,7 @@ NOTE: We recommend to create different instances of the model for inference and 
 **Input Image:**
 
 <p align="center">
-    <img src="assets/images/beetles.png" alt="Input image" width="33%">
+    <img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles.png" alt="Input image" width="33%">
 </p>
 
 ```python
@@ -127,7 +127,7 @@ import ibbi
 detector = ibbi.create_model("beetle_detector", pretrained=True)
 
 # You can use a local file path
-image_source = "docs/assets/images/beetles.png"
+image_source = "https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles.png"
 
 # Get bounding box predictions. The model returns a dictionary.
 results = detector.predict(image_source)
@@ -277,7 +277,7 @@ import ibbi
 # --- 1. Create a Model and Explainer ---
 model = ibbi.create_model(model_name="species_classifier", pretrained=True)
 explainer = ibbi.Explainer(model=model)
-image_to_explain = "docs/assets/images/beetles.png"
+image_to_explain = "https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles.png"
 
 
 # --- 2. Explain with LIME ---
