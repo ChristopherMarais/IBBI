@@ -3,6 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/ibbi.svg)](https://badge.fury.io/py/ibbi)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://gcmarais.com/IBBI/)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChristopherMarais/IBBI/blob/main/notebooks/ibbi_quickstart.ipynb)
 
 **IBBI** is a Python package that provides a simple and unified interface for detecting and classifying bark and ambrosia beetles from images using state-of-the-art computer vision models.
 
@@ -61,6 +62,7 @@ The IBBI package provides a powerful, modern solution to overcome these obstacle
   - [Workflow: How the Models Were Built](#workflow-how-the-models-were-built)
   - [Package API and Usage](#package-api-and-usage)
   - [Installation](#installation)
+    - [Hardware Requirements](#hardware-requirements)
   - [Quick Start](#quick-start)
   - [Available Models](#available-models)
   - [Advanced Usage](#advanced-usage)
@@ -119,6 +121,12 @@ Or install the latest development version directly from GitHub:
 pip install git+https://github.com/ChristopherMarais/IBBI.git
 ```
 
+### Hardware Requirements
+* **Disk Space**: A minimum of 10-20 GB of disk space is recommended to accommodate the Python environment, downloaded models, and cached datasets.
+
+* **CPU & RAM**: Running inference on a CPU is possible but can be slow. For model evaluation on large datasets (like the built-in test set), a significant amount of RAM (16GB, 32GB, or more) is highly recommended to avoid memory crashes.
+
+* **GPU (Recommended)**: A CUDA-enabled GPU (e.g., NVIDIA T4, RTX 3060 or better) with at least 8GB of VRAM is strongly recommended for both inference and model evaluation.
 ---
 
 ## Quick Start

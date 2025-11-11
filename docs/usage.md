@@ -6,6 +6,13 @@ This guide provides an in-depth walkthrough of the `ibbi` package's functionalit
 
 Getting `ibbi` set up on your system is a two-step process. Since `ibbi` relies on PyTorch for its deep learning capabilities, it's crucial to install it first to ensure compatibility with your hardware, especially if you have a GPU.
 
+#### Hardware Requirements
+* **Disk Space**: A minimum of 10-20 GB of disk space is recommended to accommodate the Python environment, downloaded models, and cached datasets.
+
+* **CPU & RAM**: Running inference on a CPU is possible but can be slow. For model evaluation on large datasets (like the built-in test set), a significant amount of RAM (16GB, 32GB, or more) is highly recommended to avoid memory crashes.
+
+* **GPU (Recommended)**: A CUDA-enabled GPU (e.g., NVIDIA T4, RTX 3060 or better) with at least 8GB of VRAM is strongly recommended for both inference and model evaluation.
+
 **1. Install PyTorch**
 
 For optimal performance, particularly with GPU acceleration, it is essential to install the correct version of PyTorch for your system (Windows/Mac/Linux) and CUDA version.
