@@ -478,6 +478,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hardware-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardware Requirements
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -802,6 +817,18 @@
 <p>This guide provides an in-depth walkthrough of the <code>ibbi</code> package's functionalities. We will cover everything from installation and basic setup to advanced applications like model evaluation and explainability, complete with detailed code examples and explanations to help you integrate <code>ibbi</code> into your research workflow.</p>
 <h2 id="installation">Installation</h2>
 <p>Getting <code>ibbi</code> set up on your system is a two-step process. Since <code>ibbi</code> relies on PyTorch for its deep learning capabilities, it's crucial to install it first to ensure compatibility with your hardware, especially if you have a GPU.</p>
+<h4 id="hardware-requirements">Hardware Requirements</h4>
+<ul>
+<li>
+<p><strong>Disk Space</strong>: A minimum of 10-20 GB of disk space is recommended to accommodate the Python environment, downloaded models, and cached datasets.</p>
+</li>
+<li>
+<p><strong>CPU &amp; RAM</strong>: Running inference on a CPU is possible but can be slow. For model evaluation on large datasets (like the built-in test set), a significant amount of RAM (16GB, 32GB, or more) is highly recommended to avoid memory crashes.</p>
+</li>
+<li>
+<p><strong>GPU (Recommended)</strong>: A CUDA-enabled GPU (e.g., NVIDIA T4, RTX 3060 or better) with at least 8GB of VRAM is strongly recommended for both inference and model evaluation.</p>
+</li>
+</ul>
 <p><strong>1. Install PyTorch</strong></p>
 <p>For optimal performance, particularly with GPU acceleration, it is essential to install the correct version of PyTorch for your system (Windows/Mac/Linux) and CUDA version.
 Please follow the official, system-specific instructions at <a href="https://pytorch.org/get-started/locally/">pytorch.org</a>. This will ensure you leverage the full power of your hardware.</p>
@@ -836,7 +863,7 @@ pixi init
 
 # 3. Add ibbi to your project. Pixi will automatically handle the
 # creation of the environment and resolve all dependencies, including PyTorch.
-pixi add ibbi
+pixi add --pypi ibbi
 
 # 4. Run commands or scripts within the managed environment
 # For example, to start an interactive python session:
@@ -892,7 +919,7 @@ feature_extractor = ibbi.create_model(&quot;feature_extractor&quot;, pretrained=
 <p><strong>Use Case:</strong> These models are optimized to answer a simple but crucial question: "Is there a beetle in this image, and where?" They identify the location (bounding boxes) of any beetle without identifying the species. This is highly effective for initial screening of field-trap images or other raw collection data to quickly quantify the number of specimens.</p>
 <p><strong>Input Image:</strong></p>
 <p align="center">
-    <img src="assets/images/beetles.png" alt="Input image" width="33%">
+    <img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles.png" alt="Input image" width="33%">
 </p>
 
 <pre><code class="language-python">import ibbi
@@ -900,7 +927,7 @@ feature_extractor = ibbi.create_model(&quot;feature_extractor&quot;, pretrained=
 detector = ibbi.create_model(&quot;beetle_detector&quot;, pretrained=True)
 
 # You can use a local file path
-image_source = &quot;docs/assets/images/beetles.png&quot;
+image_source = &quot;https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles.png&quot;
 
 # Get bounding box predictions. The model returns a dictionary.
 results = detector.predict(image_source)
@@ -984,10 +1011,19 @@ print(f&quot;Extracted feature vector of shape: {features.shape}&quot;)
 <p>Beyond basic inference, <code>ibbi</code> provides powerful tools for rigorously evaluating model performance and understanding their internal decision-making processes. These features are crucial for conducting transparent and reproducible scientific research.</p>
 <h3 id="model-evaluation">Model Evaluation</h3>
 <p>The <code>ibbi.Evaluator</code> class provides a simple and standardized interface for assessing model performance across different tasks. This is essential for understanding a model's strengths and weaknesses, comparing different models objectively, and reporting robust, quantitative results in publications.</p>
+<blockquote>
+<p><strong>⚠️ Important Note on Memory Usage</strong></p>
+<p>The <code>Evaluator</code> methods (<code>.classification()</code>, <code>.embeddings()</code>) currently process the entire dataset in memory. Attempting to run evaluation on the full test dataset (~2,000 images) at once may exhaust all available RAM and crash your session.</p>
+<p>To avoid this, we <strong>strongly recommend</strong> evaluating on a smaller subset of the data, as demonstrated in the code example below (using <code>data.select(range(10))</code>). You can evaluate incrementally over several subsets to build a complete performance picture.</p>
+</blockquote>
 <pre><code class="language-python">import ibbi
 
 # --- 1. Import the test dataset included with the package ---
 data = ibbi.get_dataset()
+
+# --- Create a small subset for evaluation ---
+# Use .select() to create a new Dataset object, not data[:10]
+data_subset = data.select(range(10))
 
 # --- 2. Create a model to evaluate ---
 model = ibbi.create_model(model_name=&quot;species_classifier&quot;, pretrained=True)
@@ -1025,7 +1061,7 @@ print(f&quot;  Mantel Correlation (r): {embedding_results['mantel_correlation'][
 # --- 1. Create a Model and Explainer ---
 model = ibbi.create_model(model_name=&quot;species_classifier&quot;, pretrained=True)
 explainer = ibbi.Explainer(model=model)
-image_to_explain = &quot;docs/assets/images/beetles.png&quot;
+image_to_explain = &quot;https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles.png&quot;
 
 
 # --- 2. Explain with LIME ---
