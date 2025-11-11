@@ -231,6 +231,12 @@ Beyond basic inference, `ibbi` provides powerful tools for rigorously evaluating
 
 The `ibbi.Evaluator` class provides a simple and standardized interface for assessing model performance across different tasks. This is essential for understanding a model's strengths and weaknesses, comparing different models objectively, and reporting robust, quantitative results in publications.
 
+> **⚠️ Important Note on Memory Usage**
+>
+> The `Evaluator` methods (`.classification()`, `.embeddings()`) currently process the entire dataset in memory. Attempting to run evaluation on the full test dataset (~2,000 images) at once may exhaust all available RAM and crash your session.
+>
+> To avoid this, we **strongly recommend** evaluating on a smaller subset of the data, as demonstrated in the code example below (using `data.select(range(10))`). You can evaluate incrementally over several subsets to build a complete performance picture.
+
 ```python
 import ibbi
 

@@ -252,6 +252,12 @@ NOTE: We recommend to create different instances of the model for inference and 
 
 Evaluate model performance on a held-out test set using the `ibbi.Evaluator()` wrapper. This wrapper provides methods for computing classification, object detection, and embedding/clustering metrics to estimate the quality of feature embeddings.
 
+> **⚠️ Important Note on Memory Usage**
+>
+> The `Evaluator` methods (`.classification()`, `.embeddings()`) currently process the entire dataset in memory. Attempting to run evaluation on the full test dataset (~2,000 images) at once may exhaust all available RAM and crash your session.
+>
+> To avoid this, we **strongly recommend** evaluating on a smaller subset of the data, as demonstrated in the code example below (using `data.select(range(10))`). You can evaluate incrementally over several subsets to build a complete performance picture.
+
 ```python
 # --- Import Data ---
 data = ibbi.get_dataset()
