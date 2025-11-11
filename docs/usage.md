@@ -237,6 +237,10 @@ import ibbi
 # --- 1. Import the test dataset included with the package ---
 data = ibbi.get_dataset()
 
+# --- Create a small subset for evaluation ---
+# Use .select() to create a new Dataset object, not data[:10]
+data_subset = data.select(range(10))
+
 # --- 2. Create a model to evaluate ---
 model = ibbi.create_model(model_name="species_classifier", pretrained=True)
 
