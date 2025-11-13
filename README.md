@@ -231,7 +231,7 @@ NOTE: This only works for zero-shot, single-class, and multi-class detection mod
       <td style="text-align: center;"><img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles.png" alt="Beetles" style="max-width: 100%;"></td>
       <td style="text-align: center;"><img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles_od.png" alt="Object Detection" style="max-width: 100%;"></td>
       <td style="text-align: center;"><img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles_oc.png" alt="Object Classification" style="max-width: 100%;"></td>
-      <td style="text-align: center;"><img src="docs/assets/images/beetles_zsoc.png" alt="Zero-Shot Classification" style="max-width: 100%;"></td>
+      <td style="text-align: center;"><img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles_zsoc.png" alt="Zero-Shot Classification" style="max-width: 100%;"></td>
     </tr>
   </tbody>
 </table>

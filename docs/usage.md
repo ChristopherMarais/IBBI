@@ -152,7 +152,7 @@ if results['boxes']:
 The output image shows the detected beetles, each enclosed in a red bounding box with its confidence score.
 
 <p align="center">
-    <img src="assets/images/beetles_od.png" alt="Detection image" width="33%">
+    <img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles_od.png" alt="Detection image" width="33%">
 </p>
 
 ### Example 2: Species Detection (Multi-Class)
@@ -180,7 +180,7 @@ if results['boxes']:
 The output image now includes species-level labels and confidence scores, allowing for precise identification of each specimen.
 
 <p align="center">
-    <img src="assets/images/beetles_oc.png" alt="Detection image" width="33%">
+    <img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles_oc.png" alt="Detection image" width="33%">
 </p>
 
 ### Example 3: Zero-Shot Detection
@@ -205,7 +205,7 @@ print(results)
 The model successfully identifies objects matching the text prompt, demonstrating its ability to generalize beyond its core training data.
 
 <p align="center">
-    <img src="assets/images/beetles_zsoc.png" alt="Detection image" width="33%">
+    <img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles_zsoc.png" alt="Detection image" width="33%">
 </p>
 
 ### Example 4: Feature Extraction
