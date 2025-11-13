@@ -315,8 +315,8 @@ lime_results = explainer.with_lime(image="path/to/your/image.jpg")
 
 ## How to Contribute
 
-Contributions are welcome! If you would like to improve IBBI, please see the [Contribution Guide](docs/CONTRIBUTING.md).
+Contributions are welcome! If you would like to improve IBBI, please see the [Contribution Guide](https://github.com/ChristopherMarais/IBBI/blob/main/docs/CONTRIBUTING.md).
 
 ## License
 
-This project is licensed under the MIT License. See the [`LICENSE`](LICENSE) file for details.
+This project is licensed under the MIT License. See the [`LICENSE`](https://github.com/ChristopherMarais/IBBI/blob/main/LICENSE.md) file for details.
