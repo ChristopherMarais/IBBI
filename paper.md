@@ -74,7 +74,7 @@ The `ibbi` package is designed for ease of use and flexibility. Its core functio
 ### Model Curation and Datasets
 The models provided in `ibbi` are the result of a comprehensive data pipeline (Figure 1). The process involved collecting images from diverse sources, using a zero-shot detection model for initial beetle localization, and employing a human-in-the-loop process to verify annotations. The curated data was then used to train the object-detection and object-classification models. To promote transparency and reproducibility, the package provides a helper function to access the testing dataset used for evaluation. Furthermore, users can programmatically view all available models and their performance metrics using the `ibbi.list_models()` function, allowing for informed model selection.
 
-![Overview of the data collection, curation, and model training workflow for the `ibbi` package.](docs/assets/images/data_flow_ibbi.png)
+![Overview of the data collection, curation, and model training workflow for the `ibbi` package.](https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/data_flow_ibbi.png)
 *Figure 1: Overview of the data collection, curation, and model training workflow for the `ibbi` package.*
 
 ### Core Tasks and API
