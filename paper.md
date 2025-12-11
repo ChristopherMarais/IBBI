@@ -52,20 +52,20 @@ Automated species identification using computer vision has seen significant prog
 
 Large-scale projects, often powered by citizen-science datasets like iNaturalist, have successfully developed generalist models for identifying a wide range of common taxa [@horn2018]. Similarly, comprehensive toolkits like Pytorch-Wildlife offer powerful, pre-trained models, such as MegaDetector, for identifying a broad spectrum of wildlife in camera trap images [@hernandez2024pytorch]. However, these generalist models, while powerful for common categories, often struggle with the fine-grained distinctions required for less common or cryptic species, particularly in specialized groups like bark and ambrosia beetles, where morphological similarities can lead to misidentification [@kirkendall2015].
 
-This has led to a growing trend of developing specialized tools for specific taxonomic groups of high economic or ecological importance. For example, various research initiatives have focused on creating models for identifying bees to monitor pollinators or for classifying mosquito species to track disease vectors [@buschbacher2020image, @goodwin2021mosquito]. These efforts demonstrate the recognized need for domain-specific tools, but the resulting models are rarely distributed in an accessible, unified software package.
+This has led to a growing trend of developing specialized tools for specific taxonomic groups of high economic or ecological importance. For example, various research initiatives have focused on creating models for identifying bees to monitor pollinators or for classifying mosquito species to track disease vectors [@buschbacher2020image; @goodwin2021mosquito]. These efforts demonstrate the recognized need for domain-specific tools, but the resulting models are rarely distributed in an accessible, unified software package.
 
-On the other end of the spectrum, numerous studies have developed bespoke computer vision models for bark beetle classification [@marais2025progress, @sun2024intelligent]. While valuable, these models are typically created for a specific research question and are not released as accessible, reusable, or maintained software. Consequently, they are not universally benchmarked, and their performance on different datasets is unknown.
+On the other end of the spectrum, numerous studies have developed bespoke computer vision models for bark beetle classification [@marais2025progress; @sun2024intelligent]. While valuable, these models are typically created for a specific research question and are not released as accessible, reusable, or maintained software. Consequently, they are not universally benchmarked, and their performance on different datasets is unknown.
 
-ibbi is novel in that it bridges this gap. It is, to our knowledge, the first software package to:
+`ibbi` is novel in that it bridges this gap. It is, to our knowledge, the first software package to:
 
 1. Aggregate multiple deep learning architectures specifically for bark and ambrosia beetle identification into a single, cohesive framework.
 2. Train these models on one of the largest and most taxonomically diverse datasets of bark and ambrosia beetles available.
 3. Provide a standardized method for benchmarking these models, allowing for direct performance comparisons.
 4. Distribute the models and inference code as an easy-to-install Python package, promoting transparency, reusability, and extensibility.
 
-The first version of ibbi is made possible by powerful open-source libraries that provide state-of-the-art model implementations, such as timm [@rw2021timm] and ultralytics [@jocher2020yolov5], and frameworks such as HuggingFace for model and data sharing [@wolf2019huggingface].
+The first version of `ibbi` is made possible by powerful open-source libraries that provide state-of-the-art model implementations, such as timm [@rw2021timm] and ultralytics [@jocher2020yolov5], and frameworks such as Hugging Face for model and data sharing [@wolf2019huggingface].
 
-By making these changes, you clearly position ibbi not as a replacement for tools like MegaDetector but as a necessary, specialized tool that addresses a gap those generalist models cannot fill, while also improving on the inaccessible nature of bespoke academic models.
+Consequently, `ibbi` is established not as a substitute for broad frameworks like MegaDetector, but as a specialized complement that fills a critical gap in functionality, while simultaneously overcoming the accessibility barriers often associated with bespoke academic models.
 
 # Functionality
 
@@ -79,9 +79,13 @@ The models provided in `ibbi` are the result of a comprehensive data pipeline (F
 
 ### Core Tasks and API
 The package supports four primary tasks:
+
 - **Single-class Object-Detection**: Identifies and localizes any bark and ambrosia beetles in an image, returning bounding box coordinates. This is ideal for processing raw images from traps or collection sheets and is based on fine-tuned high-performance architectures like YOLO [@redmon2016] and detection transformers [@lv2023rtdetr].
+
 - **Zero-Shot Object-Detection**: Detects arbitrary objects in an image based on a user-provided text prompt. This powerful feature uses the GroundingDINO model [@liu2023grounding] and allows for flexible analysis beyond predefined categories. However, this model has not been fine-tuned specifically on bark and ambrosia beetle images.
+
 - **Multi-class Object-Detection**: Predicts the species of a beetle from an image, returning species class probabilities. This currently supports 63 species and is also based on fine-tuned high-performance architectures like YOLO [@redmon2016] and detection transformers [@lv2023rtdetr]. However, it is important to note that the models are not fine tuned on a dataset as large as the one used for single-class object-detection, and therefore may not perform as well on images that are not tightly cropped around the specimen. This task is the main focus for the future roadmap of the package, with plans to expand the number of species supported and improve model performance.
+
 - **Feature Extraction**: Generates deep-learning feature embeddings (vectors) from an image. This task is available for models of all tasks. These feature embeddings can be used for downstream tasks like clustering, similarity analysis, or visual search engines.
 
 ### A typical Workflow:
