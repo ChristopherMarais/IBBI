@@ -1,0 +1,38 @@
+{
+    "title": "IBBI: A Python package for the detection and classification of bark and ambrosia beetles",
+    "description": "The Intelligent Bark Beetle Identifier (IBBI) is an open-source Python package that provides a simple, unified interface for the automated detection and classification of bark and ambrosia beetles from images.",
+    "creators": [
+        {
+            "name": "Marais, Christopher",
+            "affiliation": "School of Forest, Fisheries, and Geomatics Sciences, University of Florida",
+            "orcid": "0000-0003-3409-0473"
+        },
+        {
+            "name": "Kuo, Eric",
+            "affiliation": "School of Forest, Fisheries, and Geomatics Sciences, University of Florida",
+            "orcid": "0009-0003-4748-4241"
+        },
+        {
+            "name": "Hulcr, Jiri",
+            "affiliation": "School of Forest, Fisheries, and Geomatics Sciences, University of Florida",
+            "orcid": "0000-0002-8706-4618"
+        },
+        {
+            "name": "Dias, Raquel",
+            "affiliation": "Microbiology and Cell Science, University of Florida",
+            "orcid": "0000-0003-3680-6834"
+        }
+    ],
+    "access_right": "open",
+    "license": "MIT",
+    "keywords": [
+        "Python",
+        "PyTorch",
+        "computer vision",
+        "deep learning",
+        "entomology",
+        "object detection",
+        "object classification",
+        "forest health"
+    ]
+}
