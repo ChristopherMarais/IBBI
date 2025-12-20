@@ -142,3 +142,5 @@ The authors declare that they have no conflicts of interest.
 # Acknowledgements
 
 We thank the numerous collaborators, students, and technicians in the Hulcr lab at the University of Florida who have contributed to the collection, curation, and annotation of the image dataset that made this work possible. We also acknowledge the National Science Foundation, the USDA Forest Service, and the Florida Forest Service for their financial support.
+
+# References
