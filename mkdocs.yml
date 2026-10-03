@@ -1,9 +1,10 @@
 # mkdocs.yml
 
 site_name: IBBI Documentation
-site_url: https://ChristopherMarais.github.io/ibbi/
-repo_url: https://github.com/ChristopherMarais/ibbi
-repo_name: ChristopherMarais/ibbi
+site_description: Detection, hierarchical identification and benchmarking of bark and ambrosia beetles.
+site_url: https://gcmarais.com/IBBI/
+repo_url: https://github.com/ChristopherMarais/IBBI
+repo_name: ChristopherMarais/IBBI
 edit_uri: ""
 
 theme:
@@ -22,6 +23,8 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+  logo: assets/images/IBBI_logo.png
+  favicon: assets/images/IBBI_logo.png
   features:
     - navigation.tabs
     - navigation.sections
@@ -38,9 +41,17 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
+          paths: [src]
           options:
-            show_root_heading: yes
-            show_source: yes
+            docstring_style: google
+            docstring_options:
+              warn_missing_types: false
+            show_root_heading: true
+            show_source: false
+            members_order: source
+            separate_signature: true
+            show_signature_annotations: true
+            filters: ["!^_"]
 
 nav:
   - Home: index.md
@@ -48,6 +59,7 @@ nav:
     - 'Usage Guide': usage.md
     - 'Models': models.md
     - 'Benchmark Results': benchmark.md
+    - 'Changelog': changelog.md
   - 'API':
     - 'Reference': api.md
   - 'Development':
@@ -57,6 +69,14 @@ nav:
 markdown_extensions:
   - tables
   - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+  - toc:
+      permalink: true
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid

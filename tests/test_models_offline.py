@@ -85,7 +85,7 @@ def test_classifier_records(tiny_classifier):
     rec = tiny_classifier.predict(img)
     assert set(rec) >= {*LEVELS, "depth", "reported", "depth_by_op"}
     assert 0 <= rec["depth"] <= 4
-    assert set(rec["depth_by_op"]) == {"0.90", "0.95", "0.99", "gallery"}
+    assert set(rec["depth_by_op"]) == {"0.9", "0.95", "0.99", "gallery"}
     # top-down: each taxon lies inside its predicted parent
     tbl = tiny_classifier.taxonomy_table
     row = tbl[tbl["scientificName"] == rec["species"]["taxon"]].iloc[0]
@@ -122,7 +122,10 @@ def test_operating_points(tiny_classifier):
     lenient = tiny_classifier.predict(img, operating_point="0.99")
     strict = tiny_classifier.predict(img, operating_point="0.90")
     assert lenient["depth"] >= strict["depth"]  # lower thresholds never reduce the depth
-    with pytest.raises(KeyError):
+    # the released configs store "0.9"; "0.90", "0.9" and 0.9 name the same operating point
+    assert tiny_classifier.predict(img, operating_point="0.9")["depth"] == strict["depth"]
+    assert tiny_classifier.predict(img, operating_point=0.9)["depth"] == strict["depth"]
+    with pytest.raises(ValueError):
         tiny_classifier.predict(img, operating_point="0.5")
 
 

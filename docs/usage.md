@@ -64,7 +64,51 @@ All models have the same core methods:
 | `extract_features(image)` | an embedding tensor |
 | `get_classes()` | class names (species, "arthropod" or the current prompts) |
 
-Images can be file paths, URLs, RGB numpy arrays or PIL images.
+Images can be file paths, URLs, RGB numpy arrays or PIL images, alone or in a list (a list returns a list of
+results). Every model has a sensible default confidence (`conf=0.25` for the detectors); the arthropod and zero-shot
+detectors also have an `operating_conf` (at most ~0.2 false alarms per image on their validation sample).
+
+### Which model should I use?
+
+| Goal | Use |
+|---|---|
+| Identify beetles in images that may contain species outside the 65 trained ones | `ibbi.create_pipeline()` |
+| Identify specimens that are already cropped | `hierarchical_classifier` |
+| Count or locate specimens, whatever their species | `arthropod_detector` |
+| The fastest one-step detection when all specimens belong to the 65 species | a species detector |
+| Detect something other than arthropods, or with your own wording | a zero-shot detector with `text_prompt=` |
+| Embeddings for clustering or retrieval | `feature_extractor` |
+
+### Examples
+
+Two held-out benchmark trays, chosen before running any model: a trained species, *Platypus koryoensis*
+(`iid_test`), and an unseen species of a trained genus, *Platypus cylindrus* (`semantic_ood`), whose correct answer
+is "*Platypus* sp.". Arthropod detector at its operating confidence (0.70), species detector at 0.25, pipeline with
+the detector at 0.70 and the `gallery` operating point, Grounding DINO at its operating confidence (0.60).
+
+| | Trained species | Unseen species |
+|---|---|---|
+| Input | ![](assets/images/example_known_input.jpg) | ![](assets/images/example_unseen_input.jpg) |
+| Arthropod detector | ![](assets/images/example_known_arthropod_detector.jpg) | ![](assets/images/example_unseen_arthropod_detector.jpg) |
+| Species detector (YOLO12x) | ![](assets/images/example_known_species_detector.jpg) | ![](assets/images/example_unseen_species_detector.jpg) |
+| Pipeline (detector + DINOv3) | ![](assets/images/example_known_pipeline.jpg) | ![](assets/images/example_unseen_pipeline.jpg) |
+| Zero-shot (Grounding DINO) | ![](assets/images/example_known_zero_shot.jpg) | ![](assets/images/example_unseen_zero_shot.jpg) |
+
+Pipeline colours: green = species, orange = genus, dark orange = tribe, pink = subfamily, red = unrecognised.
+
+<!-- EXAMPLE_CAPTION_START -->
+**What the examples show.** On the trained species, the arthropod detector finds all 11 specimens and both the
+species detector and the pipeline name every one *Platypus koryoensis* (Grounding DINO, at its strict operating
+confidence, finds 5). On the unseen species, the species detector names 9 of the 10 specimens *Euplatypus compositus*:
+a confident answer in the wrong genus, the only kind of answer it can give. The pipeline backs off to the correct tribe
+(Platypodini) for 2 specimens but still names a wrong *Euplatypus* species for the other 8. Over-commitment on unseen
+species of trained genera is the main open problem of the classifiers (about 58% of `near_genus` specimens on the
+benchmark; see [benchmark results](benchmark.md#hierarchical-classifiers-ground-truth-crops)).
+
+<sub>Images: Bark and Ambrosia Beetle Detection Benchmark v2.0.1, `iid_test/c6c569ff-6a4b-4f0d-b298-8da5e4b9f2b2.jpg`
+(Averie M. Kulbeda) and `semantic_ood/1de1a58e-41c8-4b52-8647-31284228858f.jpg` (Isabelle C. Stratton), University of
+Florida Forest Entomology Lab, CC BY-NC 4.0. Produced with `ibbi` v0.3 default models.</sub>
+<!-- EXAMPLE_CAPTION_END -->
 
 ---
 
@@ -87,12 +131,33 @@ image on the detector's validation sample; the default 0.25 finds more specimens
 
 ### The hierarchical record
 
+A real record (first specimen of the trained-species example above):
+
+<!-- EXAMPLE_RECORD_START -->
+```python
+>>> res = ibbi.create_pipeline(det_conf=0.70).predict(image)
+>>> res["classifications"][0]           # values rounded; "entropy" and the third top3 entry omitted
+{
+  "subfamily": {"taxon": "Platypodinae", "prob": 1.000, "score": 0.401, "threshold": 0.012, "known": True,
+                "top3": [["Platypodinae", 1.000], ["Scolytinae", 0.000]]},
+  "tribe":     {"taxon": "Platypodini", "prob": 1.000, "score": 0.917, "threshold": 0.051, "known": True, ...},
+  "genus":     {"taxon": "Platypus", "prob": 0.991, "score": 0.595, "threshold": 0.051, "known": True,
+                "top3": [["Platypus", 0.991], ["Treptoplatypus", 0.004], ["Crossotarsus", 0.002]]},
+  "species":   {"taxon": "Platypus koryoensis", "prob": 0.991, "score": 0.748, "threshold": 0.054, "known": True,
+                "top3": [["Platypus koryoensis", 0.991], ["Treptoplatypus solidus", 0.004], ["Crossotarsus kuntzeni", 0.002]]},
+  "depth_by_op": {"0.9": 4, "0.95": 4, "0.99": 4, "gallery": 4},
+  "depth": 4,
+  "reported": "Platypus koryoensis"
+}
+```
+<!-- EXAMPLE_RECORD_END -->
+
 ```python
 rec = res["classifications"][0]
 rec["reported"]          # human-readable answer
 rec["depth"]             # 0 unrecognised, 1 subfamily, 2 tribe, 3 genus, 4 species
 rec["genus"]             # {"taxon", "prob", "score", "known", "threshold", "entropy", "top3"}
-rec["depth_by_op"]       # the depth under every operating point: {"0.90": 3, "0.95": 3, "0.99": 4, "gallery": 3}
+rec["depth_by_op"]       # the depth under every operating point: {"0.9": 3, "0.95": 3, "0.99": 4, "gallery": 3}
 ```
 
 * `prob` is the calibrated probability of the predicted taxon at that level; the levels are consistent
@@ -219,6 +284,10 @@ background = ibbi.get_shap_background_dataset(image_size=(336, 336), n_images=32
 values = explainer.with_shap([{"image": crop}], background, num_explain_samples=1, image_size=(336, 336), max_evals=500)
 ibbi.plot_shap_explanation(values[0], model, top_k=3)
 ```
+
+| LIME (green: supports the species, red: against it) | SHAP (red: supports the species, blue: against it) |
+|---|---|
+| ![](assets/images/example_lime.jpg) | ![](assets/images/example_shap.jpg) |
 
 Detectors are explained through their highest confidence per class, zero-shot detectors per prompt
 (`text_prompt=` sets the prompts), classifiers through their calibrated species probabilities.

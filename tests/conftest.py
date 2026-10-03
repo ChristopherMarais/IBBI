@@ -157,7 +157,8 @@ def tiny_classifier_files(tmp_path_factory, taxonomy, known_species):
         for m in members[lvl]:
             tensors[f"valsorted.{m}.{lvl}"] = torch.from_numpy(np.sort(rng.random(50)).astype(np.float32))
     save_file(tensors, str(d / "deploy.safetensors"))
-    thr = {op: dict.fromkeys(LEVELS, v) for op, v in (("0.90", 0.1), ("0.95", 0.05), ("0.99", 0.01))}
+    # operating point keys as in the released configs ("0.9", not "0.90")
+    thr = {op: dict.fromkeys(LEVELS, v) for op, v in (("0.9", 0.1), ("0.95", 0.05), ("0.99", 0.01))}
     thr["gallery"] = {lvl: (0.01 if lvl == "subfamily" else 0.05) for lvl in LEVELS}
     cfg = {
         "ibbi_model_type": "hierarchical_classifier",

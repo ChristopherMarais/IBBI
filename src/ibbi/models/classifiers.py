@@ -171,9 +171,7 @@ class HierarchicalClassifier:
         nov = config["novelty"]
         self.members: dict[str, list[str]] = nov["members"]
         self.thresholds: dict[str, dict[str, float]] = nov["thresholds"]
-        self.operating_point = str(operating_point or nov.get("default_op", "gallery"))
-        if self.operating_point not in self.thresholds:
-            raise ValueError(f"Unknown operating point '{self.operating_point}'. Available: {list(self.thresholds)}")
+        self.operating_point = self._resolve_op(operating_point or nov.get("default_op", "gallery"))
         dep = load_file(deploy_path)
         self.bank = dep["knn_bank"].to(self.device).float()
         self.valsorted = {(m, lvl): dep[f"valsorted.{m}.{lvl}"].numpy() for lvl in LEVELS for m in self.members[lvl]}
@@ -229,13 +227,30 @@ class HierarchicalClassifier:
         return out
 
     # -- public API -----------------------------------------------------------------------------------------------
+    def _resolve_op(self, op: str | float) -> str:
+        """Maps an operating point to its stored key, so that "0.90", "0.9" and 0.9 all name the same one."""
+        key = str(op)
+        if key in self.thresholds:
+            return key
+        try:
+            value = float(key)
+        except ValueError:
+            value = None
+        for k in self.thresholds:
+            try:
+                if value is not None and abs(float(k) - value) < 1e-9:
+                    return k
+            except ValueError:
+                continue
+        raise ValueError(f"Unknown operating point '{op}'. Available: {list(self.thresholds)}")
+
     def classify_crops(self, crops: list[ImageInput], operating_point: str | None = None, batch_size: int = 32) -> list[dict[str, Any]]:
         """Classifies specimen crops (one specimen per image). Returns one record per crop (see module docstring).
 
         Each record also has "depth" (0-4), "reported" (the human-readable result), "depth_by_op" (the depth under
         every stored operating point) and "embedding" is not included (use `extract_features`).
         """
-        op = str(operating_point or self.operating_point)
+        op = self._resolve_op(operating_point or self.operating_point)
         thr = self.thresholds[op]
         out = []
         for i in range(0, len(crops), batch_size):

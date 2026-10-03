@@ -67,16 +67,19 @@ benchmark results and licence terms. Benchmark numbers: [benchmark.md](benchmark
 
 ## Zero-shot detectors
 
-| Name | Model | Default prompts | Tiling | Operating conf. | Upstream licence |
-|---|---|---|---|---|---|
-| `grounding_dino_zero_shot_detector` (alias `zero_shot_detector`) | IDEA-Research/grounding-dino-base | 13 arthropod taxa | 1024 px | 0.60 | Apache-2.0 |
-| `owlv2_zero_shot_detector` | google/owlv2-large-patch14-ensemble | "a photo of an insect" | 1024 px | 0.725 | Apache-2.0 |
-| `yoloworld_zero_shot_detector` | Ultralytics yolov8x-worldv2 (1024 px) | 13 arthropod taxa | 1024 px | 0.50 | AGPL-3.0 |
-| `sam3_zero_shot_detector` | facebook/sam3 (gated) | insect, spider, arthropod | 1024 px | 0.95 | SAM License |
+| Name | Model | Parameters | Default prompts | Tiling | Operating conf. | Upstream licence |
+|---|---|---|---|---|---|---|
+| `grounding_dino_zero_shot_detector` (alias `zero_shot_detector`) | [IDEA-Research/grounding-dino-base](https://huggingface.co/IDEA-Research/grounding-dino-base) | 232 M | 13 arthropod taxa | 1024 px | 0.60 | Apache-2.0 |
+| `owlv2_zero_shot_detector` | [google/owlv2-large-patch14-ensemble](https://huggingface.co/google/owlv2-large-patch14-ensemble) | 438 M | "a photo of an insect" | 1024 px | 0.725 | Apache-2.0 |
+| `yoloworld_zero_shot_detector` | Ultralytics yolov8x-worldv2 (1024 px) | 224 M | 13 arthropod taxa | 1024 px | 0.50 | AGPL-3.0 |
+| `sam3_zero_shot_detector` | [facebook/sam3](https://huggingface.co/facebook/sam3) (gated) | 840 M | insect, spider, arthropod | 1024 px | 0.95 | SAM License |
 
 The 13 taxa: insect, spider, beetle, moth, fly, bee, ant, wasp, butterfly, caterpillar, mite, springtail, bug. Prompt set
 and tiling were chosen per model on the 1,813-image validation sample of the arthropod detection corpus (best AP); the
 operating confidence gives ≤ 0.2 false alarms per image there. Weights are downloaded from their authors.
+"Tiling" means the image is also processed in overlapping 1024 px tiles (plus the whole image) and the boxes merged
+with non-maximum suppression, so that small specimens on large trays are found; `tile=0` turns it off. Parameter
+counts include the text encoders.
 
 ## Removed in v0.3
 
