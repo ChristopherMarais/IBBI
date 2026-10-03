@@ -75,11 +75,20 @@ ignore = [
     "B007",
     "E721",
     "RUF015",
-    "UP038",
     "C401",
     "C408",
     "C409",
+    "B905",   # zip() without strict=: lengths are equal by construction
+    "RUF001", # en dashes in table output are intended
+    "RUF012", # class-level defaults in test fakes
+    "RUF046",
+    "RUF059",
+    "UP007",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
+"benchmarks/*" = ["E501"]
 
 [tool.ruff.format]
 quote-style = "double"

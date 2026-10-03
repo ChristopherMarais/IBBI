@@ -46,8 +46,19 @@ nav:
   - Home: index.md
   - 'User Documentation':
     - 'Usage Guide': usage.md
+    - 'Models': models.md
+    - 'Benchmark Results': benchmark.md
   - 'API':
     - 'Reference': api.md
   - 'Development':
     - 'Contributing': CONTRIBUTING.md
     - 'License': LICENSE.md
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format

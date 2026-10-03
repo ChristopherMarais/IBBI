@@ -24,16 +24,8 @@ try:
 except ImportError:
     _umap_available = False
 
-try:
-    from skbio.stats.distance import mantel
-
-    _skbio_available = True
-except ImportError:
-    _skbio_available = False
-
 if TYPE_CHECKING:
     import umap
-    from skbio.stats.distance import mantel
 
 
 def _cluster_purity(y_true, y_pred):
@@ -260,8 +252,10 @@ class EmbeddingEvaluator:
                                                     the p-value, the number of items compared, and a DataFrame
                                                     of the mean embedding vector for each class (for inspection).
         """
-        if not _skbio_available:
-            raise ImportError("Mantel test requires 'scikit-bio' to be installed.")
+        try:  # imported here so that an import failure reports its real cause
+            from skbio.stats.distance import mantel
+        except ImportError as e:
+            raise ImportError(f"The Mantel test needs scikit-bio, which could not be imported: {e}") from e
 
         # --- 1. Create full pairwise distance matrix from original embeddings using PyTorch ---
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
