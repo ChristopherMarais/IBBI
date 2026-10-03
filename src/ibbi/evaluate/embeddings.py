@@ -1,7 +1,7 @@
 # src/ibbi/evaluate/embeddings.py
 
-from importlib import resources as pkg_resources
-from typing import TYPE_CHECKING, Optional, cast
+from pathlib import Path
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pandas as pd
@@ -83,7 +83,7 @@ class EmbeddingEvaluator:
         umap_metric: str = "cosine",
         # --- HDBSCAN Parameters ---
         min_cluster_size: int = 15,
-        min_samples: Optional[int] = None,
+        min_samples: int | None = None,
         cluster_selection_epsilon: float = 0.0,
         hdbscan_metric: str = "euclidean",
         allow_single_cluster: bool = False,
@@ -151,7 +151,7 @@ class EmbeddingEvaluator:
         self.predicted_labels = clusterer.fit_predict(self.processed_data)
         print("HDBSCAN clustering complete.")
 
-    def get_sample_results(self, true_labels: Optional[np.ndarray] = None, label_map: Optional[dict[int, str]] = None) -> pd.DataFrame:
+    def get_sample_results(self, true_labels: np.ndarray | None = None, label_map: dict[int, str] | None = None) -> pd.DataFrame:
         """Returns a DataFrame with true and predicted cluster labels for each sample.
 
         Args:
@@ -234,13 +234,13 @@ class EmbeddingEvaluator:
     def compare_to_distance_matrix(
         self,
         true_labels: np.ndarray,
-        label_map: Optional[dict[int, str]] = None,
+        label_map: dict[int, str] | None = None,
         embedding_metric: str = "cosine",
-        ext_dist_matrix_path: str = "ibbi_species_distance_matrix.csv",
-        batch_size: int = 32,  # Added batch_size parameter
+        ext_distance: pd.DataFrame | str | Path | None = None,
+        batch_size: int = 32,
     ) -> tuple[float, float, int, pd.DataFrame]:
         """Calculates Mantel correlation between embedding distances and an external distance matrix.
-        The default is to use a distance matrix based on phylogenetic and taxonomic distance between species.
+        The default is the taxonomic distance between benchmark species (`ibbi.utils.data.taxonomic_distance_matrix`).
         This version computes the average pairwise distances between all embeddings for each pair of species
         and leverages a GPU if available.
 
@@ -250,8 +250,8 @@ class EmbeddingEvaluator:
                                                         Defaults to None.
             embedding_metric (str, optional): The distance metric to use for the embedding space ('cosine' or 'euclidean').
                                             Defaults to "cosine".
-            ext_dist_matrix_path (str, optional): The path to the external distance matrix file.
-                                                Defaults to "ibbi_species_distance_matrix.csv".
+            ext_distance (pd.DataFrame | str | Path | None, optional): External distance matrix (species x species),
+                or a CSV path to one. Defaults to the taxonomic distance of the benchmark species.
             batch_size (int, optional): The batch size for GPU distance matrix calculation.
                                         Defaults to 32.
 
@@ -321,14 +321,14 @@ class EmbeddingEvaluator:
             columns=pd.Index(class_names),
         )
 
-        try:
-            with pkg_resources.path("ibbi.data", ext_dist_matrix_path) as data_file_path:
-                ext_matrix_df = pd.read_csv(str(data_file_path), index_col=0)
-        except FileNotFoundError as e:
-            raise FileNotFoundError(
-                f"The '{ext_dist_matrix_path}' file was not found within the package data. "
-                "Ensure the package was installed correctly with the data file included."
-            ) from e
+        if ext_distance is None:
+            from ..utils.data import taxonomic_distance_matrix
+
+            ext_matrix_df = taxonomic_distance_matrix()
+        elif isinstance(ext_distance, (str, Path)):
+            ext_matrix_df = pd.read_csv(ext_distance, index_col=0)
+        else:
+            ext_matrix_df = ext_distance
 
         # --- 3. Align matrices and run test ---
         common_labels_list = list(set(embedding_dist_matrix.index) & set(ext_matrix_df.index))
