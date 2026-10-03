@@ -1,94 +1,84 @@
 # src/ibbi/__init__.py
 
 """
-Main initialization file for the ibbi package.
+ibbi: Intelligent Bark Beetle Identifier.
 
-This file serves as the primary entry point for the `ibbi` library. It exposes the most
-important high-level functions and classes, making them directly accessible to the user
-under the `ibbi` namespace. This includes the core model creation factory (`create_model`),
-the main workflow classes (`Evaluator`, `Explainer`), and key utility functions for
-accessing datasets and managing the cache.
+Detect, identify and evaluate bark and ambrosia beetles (Curculionidae: Scolytinae and Platypodinae) with models
+trained and benchmarked on the Bark and Ambrosia Beetle Detection Benchmark.
 
-The goal of this top-level `__init__.py` is to provide a clean and intuitive API,
-simplifying the user experience by abstracting away the underlying module structure.
+    import ibbi
+    pipe = ibbi.create_pipeline()                      # arthropod detector + hierarchical classifier
+    result = pipe.predict("beetles.jpg")
+    detector = ibbi.create_model("species_detector")   # one-step species detector
+    data = ibbi.get_dataset("iid_test")                # benchmark split
+    ibbi.Evaluator(detector).benchmark()               # crowd-aware benchmark scores
 """
 
 import importlib.metadata
 from typing import Any
 
-# --- Get the package version dynamically ---
 try:
     __version__ = importlib.metadata.version("ibbi")
 except importlib.metadata.PackageNotFoundError:
-    # Fallback version for when the package is not installed
     __version__ = "Package not installed"
 
-# --- Core Functionality ---
-# --- High-level classes for streamlined workflow ---
 from .evaluate import Evaluator
 from .explain import Explainer, plot_lime_explanation, plot_shap_explanation
 from .models import ModelType
 from .models._registry import model_registry
+from .pipeline import IdentificationPipeline, create_pipeline
 from .utils.cache import clean_cache, get_cache_dir
 from .utils.data import download_benchmark, get_dataset, get_ood_dataset, get_shap_background_dataset, get_taxonomy
 from .utils.info import list_models
 
-# --- Model Aliases for User Convenience ---
+# --- Task-based aliases -----------------------------------------------------------------------------------------------
 MODEL_ALIASES = {
-    "beetle_detector": "yolov10x_bb_detect_model",
-    "species_classifier": "yolov12x_bb_multi_class_detect_model",
-    "feature_extractor": "dinov3_vitl16_lvd1689m_features_model",
-    "zero_shot_detector": "grounding_dino_detect_model",
+    "arthropod_detector": "yolo11x_arthropod_detector",
+    "beetle_detector": "yolo11x_arthropod_detector",
+    "species_detector": "yolo12x_species_detector",
+    "hierarchical_classifier": "dinov3_hierarchical_classifier",
+    "species_classifier": "dinov3_hierarchical_classifier",
+    "feature_extractor": "dinov3_hierarchical_classifier",
+    "zero_shot_detector": "grounding_dino_zero_shot_detector",
 }
 
 
-def create_model(model_name: str, pretrained: bool = False, **kwargs: Any) -> ModelType:
-    """Creates a model from a name or a task-based alias.
-
-    This function is the main entry point for instantiating models within the `ibbi`
-    package. It uses a model registry to look up and create a model instance based on
-    the provided `model_name`. Users can either specify the exact name of a model
-    or use a convenient, task-based alias (e.g., "species_classifier").
-
-    When `pretrained=True`, the function will download the model's weights from the
-    Hugging Face Hub and cache them locally for future use.
+def create_model(model_name: str, pretrained: bool = True, **kwargs: Any) -> ModelType:
+    """Creates a model from its name or a task alias.
 
     Args:
-        model_name (str): The name or alias of the model to create. A list of available
-                          model names and aliases can be obtained using `ibbi.list_models()`.
-        pretrained (bool, optional): If True, loads pretrained weights for the model.
-                                     Defaults to False.
-        **kwargs (Any): Additional keyword arguments that will be passed to the underlying
-                        model's factory function. This allows for advanced customization.
+        model_name (str): A model name (see `ibbi.list_models()`) or an alias: "arthropod_detector" (also
+            "beetle_detector"), "species_detector", "hierarchical_classifier" (also "species_classifier" and
+            "feature_extractor") or "zero_shot_detector".
+        pretrained (bool): Load the trained IBBI weights (default True). For detectors, False loads the generic
+            Ultralytics COCO checkpoint of the same architecture.
+        **kwargs: Passed to the model factory, e.g. `device="cpu"`, `revision=...`, `operating_point="0.95"` for
+            classifiers, `prompts=[...]` / `tile=0` for zero-shot detectors.
 
     Returns:
-        ModelType: An instantiated model object ready for prediction or feature extraction.
+        ModelType: The model, ready for `predict`, `predict_proba` and `extract_features`.
 
     Raises:
-        KeyError: If the provided `model_name` or its resolved alias is not found in the
-                  model registry.
+        KeyError: If the name is neither a model nor an alias.
     """
-    # Resolve alias if used
-    if model_name in MODEL_ALIASES:
-        model_name = MODEL_ALIASES[model_name]
-
+    model_name = MODEL_ALIASES.get(model_name, model_name)
     if model_name not in model_registry:
         available = ", ".join(model_registry.keys())
         aliases = ", ".join(MODEL_ALIASES.keys())
         raise KeyError(f"Model '{model_name}' not found. Available models: [{available}]. Available aliases: [{aliases}].")
-
-    model_factory = model_registry[model_name]
-    model = model_factory(pretrained=pretrained, **kwargs)
-    return model
+    return model_registry[model_name](pretrained=pretrained, **kwargs)
 
 
 __all__ = [
+    "MODEL_ALIASES",
     "Evaluator",
     "Explainer",
+    "IdentificationPipeline",
     "ModelType",
     "__version__",
     "clean_cache",
     "create_model",
+    "create_pipeline",
     "download_benchmark",
     "get_cache_dir",
     "get_dataset",

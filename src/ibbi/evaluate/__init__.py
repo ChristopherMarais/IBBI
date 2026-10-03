@@ -15,7 +15,7 @@ Provides the high-level `Evaluator` class for assessing IBBI models on the Bark 
 import warnings
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
 from tqdm import tqdm

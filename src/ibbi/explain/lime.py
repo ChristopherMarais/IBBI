@@ -5,99 +5,22 @@ Highly optimized LIME-based model explainability for IBBI models,
 featuring batched predictions and faster segmentation.
 """
 
-from typing import Callable, Optional
-
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 from lime import lime_image
 from PIL import Image
 from skimage.segmentation import slic
 from skimage.transform import resize
 
 from ..models import ModelType
-from ..models.feature_extractors import HuggingFaceFeatureExtractor
-from ..models.zero_shot import GroundingDINOModel
-
-
-def _prediction_wrapper(model: ModelType, text_prompt: Optional[str] = None) -> Callable:
-    """Creates a highly efficient, batched prediction function for LIME.
-
-    This function acts as a factory, returning a `predict` function that is compatible
-    with LIME's expectation of processing a numpy array of perturbed images. It handles
-    different model types and ensures predictions are returned in the required format
-    (a numpy array of class probabilities).
-
-    Args:
-        model (ModelType): The instantiated `ibbi` model to be explained.
-        text_prompt (Optional[str], optional): A text prompt required for zero-shot models
-                                               like GroundingDINO. Defaults to None.
-
-    Returns:
-        Callable: A `predict` function that takes a batch of images as a numpy array
-                  and returns a numpy array of prediction probabilities.
-    """
-
-    def predict(image_array: np.ndarray, verbose: bool = False) -> np.ndarray:
-        """Batched prediction function for LIME.
-
-        Args:
-            image_array (np.ndarray): A numpy array representing a batch of images,
-                                      with shape (num_samples, height, width, channels).
-            verbose (bool, optional): Whether to print prediction details. Defaults to False.
-
-        Returns:
-            np.ndarray: A 2D numpy array of shape (num_samples, num_classes) containing the
-                        prediction probabilities for each image and class.
-        """
-        if image_array.ndim == 3:
-            image_array = np.expand_dims(image_array, 0)
-
-        # --- Handle different model types ---
-        if isinstance(model, GroundingDINOModel):
-            if not text_prompt:
-                raise ValueError("A 'text_prompt' is required for explaining a GroundingDINOModel.")
-            images_to_predict = [Image.fromarray(img) for img in image_array]
-            # GroundingDINO predict is not batched, so we iterate
-            predictions = np.zeros((image_array.shape[0], 1))
-            for i, img in enumerate(images_to_predict):
-                res = model.predict(img, text_prompt=text_prompt)
-                if res["scores"]:
-                    predictions[i, 0] = max(res["scores"])
-
-        elif isinstance(model, HuggingFaceFeatureExtractor):
-            # This model type doesn't support batching in the same way.
-            # It also doesn't have classes or predict scores, so this is a fallback.
-            print("Warning: LIME is not designed for pure feature extractors. Returning zero scores.")
-            return np.zeros((image_array.shape[0], 1))
-
-        else:  # Covers standard detection models like YOLO, RT-DETR
-            image_tensor = torch.from_numpy(image_array).permute(0, 3, 1, 2).float() / 255.0
-            device = next(model.model.parameters()).device
-            image_tensor = image_tensor.to(device)
-
-            class_names = model.get_classes()
-            num_classes = len(class_names)
-            predictions = np.zeros((image_array.shape[0], num_classes))
-
-            results = model.model(image_tensor, verbose=verbose)
-
-            for i, res in enumerate(results):
-                if hasattr(res, "boxes") and res.boxes is not None:
-                    for box in res.boxes:
-                        class_idx = int(box.cls)
-                        confidence = box.conf.item()
-                        predictions[i, class_idx] = max(predictions[i, class_idx], confidence)
-        return predictions
-
-    return predict
+from ._common import prediction_function as _prediction_wrapper
 
 
 def explain_with_lime(
     model: ModelType,
     image: Image.Image,
-    text_prompt: Optional[str] = None,
+    text_prompt: str | None = None,
     image_size: tuple[int, int] = (640, 640),
     batch_size: int = 50,
     num_samples: int = 1000,

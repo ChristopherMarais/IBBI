@@ -4,17 +4,15 @@
 SHAP-based model explainability for IBBI models using PartitionExplainer.
 """
 
-from typing import Callable, Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 import shap
-from PIL import Image
 from shap import maskers
 
 # Import specific model types to handle them differently
 from ..models import ModelType
-from ..models.zero_shot import GroundingDINOModel
+from ._common import class_names
+from ._common import prediction_function as _prediction_wrapper
 
 
 def _prepare_image_for_shap(image_array: np.ndarray) -> np.ndarray:
@@ -35,59 +33,6 @@ def _prepare_image_for_shap(image_array: np.ndarray) -> np.ndarray:
     return image_array
 
 
-def _prediction_wrapper(model: ModelType, text_prompt: Optional[str] = None) -> Callable:
-    """Creates a prediction function compatible with SHAP explainers.
-
-    This function returns a callable that SHAP's `PartitionExplainer` can use to get
-    model predictions. It handles the necessary preprocessing for different `ibbi`
-    model types and ensures the output is a numpy array of prediction scores.
-
-    Args:
-        model (ModelType): The instantiated `ibbi` model to be explained.
-        text_prompt (Optional[str], optional): A text prompt required for zero-shot models
-                                               like GroundingDINO. Defaults to None.
-
-    Returns:
-        Callable: A function that takes a batch of images as a 4D numpy array and returns
-                  a 2D numpy array of prediction scores.
-    """
-
-    def predict(image_batch: np.ndarray) -> np.ndarray:
-        # PartitionExplainer provides a 4D array of shape (num_samples, height, width, channels)
-        num_images = image_batch.shape[0]
-
-        if image_batch.max() <= 1.0:
-            image_batch = (image_batch * 255).astype(np.uint8)
-
-        images_to_predict = [Image.fromarray(img) for img in image_batch]
-
-        if isinstance(model, GroundingDINOModel):
-            if not text_prompt:
-                raise ValueError("A 'text_prompt' is required for explaining a GroundingDINOModel.")
-            num_classes = 1
-            predictions = np.zeros((num_images, num_classes))
-            results = [model.predict(img, text_prompt=text_prompt) for img in images_to_predict]
-            for i, res in enumerate(results):
-                if res["scores"]:
-                    predictions[i, 0] = max(res["scores"])
-        else:  # Covers YOLOWorld and other standard models
-            class_names = model.get_classes()
-            num_classes = len(class_names)
-            predictions = np.zeros((num_images, num_classes))
-            results = model.predict(images_to_predict, verbose=False)  # Use the wrapper's predict method
-            if not isinstance(results, list):
-                results = [results]
-            for i, res in enumerate(results):
-                if res and res.get("boxes"):
-                    for j, box in enumerate(res["boxes"]):
-                        class_idx = list(class_names).index(res["labels"][j])
-                        confidence = res["scores"][j]
-                        predictions[i, class_idx] = max(predictions[i, class_idx], confidence)
-        return predictions
-
-    return predict
-
-
 def explain_with_shap(
     model: ModelType,
     explain_dataset: list,
@@ -95,7 +40,7 @@ def explain_with_shap(
     num_explain_samples: int,
     max_evals: int = 1000,
     image_size: tuple = (224, 224),
-    text_prompt: Optional[str] = None,
+    text_prompt: str | None = None,
     **kwargs,  # Absorb unused kwargs
 ) -> shap.Explanation:
     """Generates SHAP explanations for a given model using the PartitionExplainer.
@@ -119,12 +64,7 @@ def explain_with_shap(
     """
     prediction_fn = _prediction_wrapper(model, text_prompt=text_prompt)
 
-    if isinstance(model, GroundingDINOModel):
-        if not text_prompt:
-            raise ValueError("A 'text_prompt' is required for explaining a GroundingDINOModel.")
-        output_names = [text_prompt]
-    else:
-        output_names = model.get_classes()
+    output_names = class_names(model)
 
     # --- Prepare Datasets ---
     background_pil_images = [d["image"] for d in background_dataset]
@@ -154,7 +94,7 @@ def plot_shap_explanation(
     shap_explanation_for_single_image: shap.Explanation,
     model: ModelType,
     top_k: int = 5,
-    text_prompt: Optional[str] = None,
+    text_prompt: str | None = None,
 ) -> None:
     """Plots SHAP explanations for a SINGLE image.
 
