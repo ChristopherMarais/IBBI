@@ -1,398 +1,333 @@
 # src/ibbi/models/zero_shot.py
 
 """
-This module provides models for zero-shot object detection. These models are capable of
-detecting objects in images based on arbitrary text prompts, without being explicitly
-trained on a predefined set of classes. This makes them highly flexible for a wide
-range of detection tasks.
+Zero-shot (open-vocabulary) detectors: they find objects described by text prompts, without training on beetles.
 
-The module includes two primary wrapper classes for different zero-shot architectures:
-- `GroundingDINOModel`: For the GroundingDINO model, which excels at open-set object detection.
-- `YOLOWorldModel`: For the YOLOWorld model, which extends the YOLO architecture with zero-shot capabilities.
+One model per open-vocabulary family, with the released weights of their authors:
 
-Additionally, it provides factory functions, decorated with `@register_model`, to easily
-instantiate these models with pretrained weights.
+    grounding_dino_zero_shot_detector  Grounding DINO base (grounded transformer), IDEA-Research/grounding-dino-base
+    owlv2_zero_shot_detector           OWLv2 large ensemble (CLIP-style), google/owlv2-large-patch14-ensemble
+    yoloworld_zero_shot_detector       YOLO-World v2-X (real-time YOLO), Ultralytics yolov8x-worldv2.pt
+    sam3_zero_shot_detector            SAM 3 (segment anything with concepts), facebook/sam3 (gated: accept the licence
+                                       on the Hub and log in with `hf auth login`)
+
+Defaults (prompt set, sliding-window tiling) are the settings each model scored best with on the validation sample of
+the IBBI arthropod detection corpus (1,813 images across lab, trap, camera-trap and field imagery); they were never
+tuned on test data or on the beetle benchmark. With `tile=1024` the image is processed in 1024 px windows with 20%
+overlap plus the whole image, merged with non-maximum suppression, which helps on small specimens and large images.
 """
 
-from io import BytesIO
-from typing import Optional, Union
+from typing import Any
 
 import numpy as np
-import requests
 import torch
 from PIL import Image
-from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
-from ultralytics import YOLOWorld
 
+from ._common import ImageInput, empty_result, is_batch, load_image, nms, resolve_device
 from ._registry import register_model
 
+THIRTEEN_TAXA = ["insect", "spider", "beetle", "moth", "fly", "bee", "ant", "wasp", "butterfly", "caterpillar", "mite", "springtail", "bug"]
 
-class GroundingDINOModel:
-    """A wrapper class for the GroundingDINO zero-shot object detection model.
 
-    This class provides a standardized interface for using the GroundingDINO model for
-    detecting objects in an image based on a text prompt. It handles model and processor
-    loading from the Hugging Face Hub, device placement, and provides methods for both
-    prediction and feature extraction.
+class ZeroShotDetector:
+    """Base class: prompt handling, tiling, NMS and the common output format.
 
     Args:
-        model_id (str, optional): The model identifier from the Hugging Face Hub.
-                                Defaults to "IDEA-Research/grounding-dino-base".
+        prompts (list[str]): Default text prompts (one class per prompt).
+        tile (int): Sliding-window size in px; 0 processes the whole image only.
+        device (str | None): Device; defaults to the best available.
+        operating_conf (float): Confidence of the model's operating point on the detector-corpus validation sample
+            (at most 0.2 false alarms per image).
+        name (str): Registry name.
     """
 
-    def __init__(self, model_id: str = "IDEA-Research/grounding-dino-base"):
-        """Initializes the GroundingDINOModel.
+    is_species_level = False
+    nms_iou = 0.6
 
-        Args:
-            model_id (str): The Hugging Face Hub model identifier for the GroundingDINO model.
-        """
-        self.processor = AutoProcessor.from_pretrained(model_id)
-        self.model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id)
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model.to(self.device)
-        self.classes: list[str] = []
-        print(f"GroundingDINO model loaded on device: {self.device}")
+    def __init__(self, prompts: list[str], tile: int = 0, device: str | None = None, operating_conf: float = 0.5, name: str = ""):
+        self.device = resolve_device(device)
+        self.prompts = list(prompts)
+        self.tile = int(tile)
+        self.operating_conf = float(operating_conf)
+        self.name = name or type(self).__name__
+        self.score_floor = 0.05
+        self.benchmark_kwargs = {"conf": 0.02}
+
+    # -- prompts --------------------------------------------------------------------------------------------------
+    def set_classes(self, classes: list[str] | str) -> None:
+        """Sets the text prompts. A string is split on "." (e.g. "beetle . insect")."""
+        if isinstance(classes, str):
+            classes = [c.strip() for c in classes.split(".") if c.strip()]
+        self.prompts = list(classes)
 
     def get_classes(self) -> list[str]:
-        """Returns the classes the model is currently set to detect.
+        return list(self.prompts)
 
-        For zero-shot models, this is determined by the last `text_prompt` used.
+    # -- inference ------------------------------------------------------------------------------------------------
+    def _detect(self, img: Image.Image, conf: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Whole-image detection: (boxes [N,4] xyxy, scores [N], prompt index [N])."""
+        raise NotImplementedError
 
-        Returns:
-            list[str]: A list of the class names currently set for detection.
-        """
-        return self.classes
+    def _detect_tiled(self, img: Image.Image, conf: float, tile: int, overlap: float = 0.2):
+        W, H = img.size
+        if not tile or max(W, H) <= tile:
+            return self._detect(img, conf)
+        step = int(tile * (1 - overlap))
+        xs = sorted({max(0, v) for v in [*range(0, max(W - tile, 0) + 1, step), W - tile]})
+        ys = sorted({max(0, v) for v in [*range(0, max(H - tile, 0) + 1, step), H - tile]})
+        B, S, L = [], [], []
+        for y in ys:
+            for x in xs:
+                b, s, lab = self._detect(img.crop((x, y, min(x + tile, W), min(y + tile, H))), conf)
+                if len(b):
+                    b = b.copy()
+                    b[:, [0, 2]] += x
+                    b[:, [1, 3]] += y
+                    B.append(b), S.append(s), L.append(lab)
+        b, s, lab = self._detect(img, conf)  # plus the whole image, for large specimens
+        B.append(b), S.append(s), L.append(lab)
+        b, s, lab = np.concatenate(B), np.concatenate(S), np.concatenate(L)
+        k = nms(b, s, self.nms_iou)
+        return b[k], s[k], lab[k]
 
-    def set_classes(self, classes: Union[list[str], str]):
-        """Sets the classes for the model to detect.
-
-        Args:
-            classes (Union[list[str], str]): A list of class names or a single string
-                                            with class names separated by " . ".
-        """
-        if isinstance(classes, str):
-            self.classes = [c.strip() for c in classes.split(" . ")]
-        else:
-            self.classes = classes
-        # print(f"GroundingDINO classes set to: {self.classes}")
-
-    def predict(
-        self,
-        image,
-        text_prompt: Optional[str] = None,
-        box_threshold: float = 0.05,
-        text_threshold: float = 0.05,
-        verbose: bool = False,
-        include_full_probabilities: bool = False,
-        **kwargs,
-    ):
-        """Performs zero-shot object detection on an image given a text prompt.
+    def predict(self, image, text_prompt: str | list[str] | None = None, conf: float | None = None, tile: int | None = None, **kwargs):
+        """Detects the prompted objects in one image or a list of images.
 
         Args:
-            image (Union[str, np.ndarray, Image.Image]): The input image. Can be a file path, URL,
-                                                        numpy array, or PIL Image object.
-            text_prompt (str, optional): The text prompt describing the object(s) to detect.
-                                        If provided, this will set the detection classes for the model.
-            box_threshold (float, optional): The confidence threshold for filtering bounding boxes.
-                                            Defaults to 0.05.
-            text_threshold (float, optional): The confidence threshold for filtering text labels.
-                                            Defaults to 0.05.
-            verbose (bool, optional): If True, prints detailed detection results. Defaults to False.
-            include_full_probabilities (bool, optional): If True, includes a 'full_results' key in the
-                                                         output with detailed probabilities for each class.
-                                                         Defaults to False.
+            image: Path, URL, RGB array or PIL image, or a list of them.
+            text_prompt (str | list[str] | None): New prompts (sets the classes). Defaults to the current prompts.
+            conf (float | None): Minimum score. Defaults to 0.05.
+            tile (int | None): Sliding-window size (0 = whole image). Defaults to the model's chosen setting.
 
         Returns:
-            dict: A dictionary containing the detection results with keys for 'scores',
-                'labels', and 'boxes'.
+            dict | list[dict]: Per image, {"boxes" (xyxy), "scores", "labels" (the matching prompt)}.
         """
+        for k in ("verbose", "include_full_probabilities", "box_threshold", "text_threshold"):
+            kwargs.pop(k, None)
         if text_prompt:
             self.set_classes(text_prompt)
+        conf = self.score_floor if conf is None else float(conf)
+        tile = self.tile if tile is None else int(tile)
+        images = list(image) if is_batch(image) else [image]
+        outs = []
+        for im in images:
+            img = load_image(im)
+            W, H = img.size
+            with torch.inference_mode():
+                b, s, lab = self._detect_tiled(img, conf, tile)
+            if len(b):
+                b[:, [0, 2]] = b[:, [0, 2]].clip(0, W)
+                b[:, [1, 3]] = b[:, [1, 3]].clip(0, H)
+            o = empty_result()
+            o["boxes"], o["scores"] = b.tolist(), s.tolist()
+            o["labels"] = [self.prompts[int(i)] if 0 <= int(i) < len(self.prompts) else "object" for i in lab]
+            outs.append(o)
+        return outs if is_batch(image) else outs[0]
 
-        if not self.classes:
-            raise ValueError("No classes set for detection. Please provide a 'text_prompt' or call 'set_classes' first.")
+    def predict_proba(self, images: list[ImageInput], **kwargs) -> np.ndarray:
+        """Per image, the highest score for each prompt: array [N, n_prompts]."""
+        out = np.zeros((len(images), len(self.prompts)), dtype=np.float32)
+        for i, r in enumerate(self.predict(list(images), conf=kwargs.get("conf", 0.01), tile=kwargs.get("tile", 0))):
+            for lab, s in zip(r["labels"], r["scores"]):
+                if lab in self.prompts:
+                    j = self.prompts.index(lab)
+                    out[i, j] = max(out[i, j], s)
+        return out
 
-        prompt = " . ".join(self.classes)
+    def extract_features(self, image: ImageInput, **kwargs) -> torch.Tensor | None:
+        raise NotImplementedError(f"{self.name} does not provide image embeddings.")
 
-        if isinstance(image, str):
-            if image.startswith("http"):
-                response = requests.get(image)
-                image_pil = Image.open(BytesIO(response.content)).convert("RGB")
-            else:
-                image_pil = Image.open(image).convert("RGB")
-        elif isinstance(image, np.ndarray):
-            image_pil = Image.fromarray(image).convert("RGB")
-        elif isinstance(image, Image.Image):
-            image_pil = image.convert("RGB")
-        else:
-            raise ValueError("Unsupported image type. Use a file path, URL, numpy array, or PIL image.")
 
-        inputs = self.processor(images=image_pil, text=prompt, return_tensors="pt").to(self.device)
-        with torch.no_grad():
-            outputs = self.model(**inputs)
+class GroundingDINOModel(ZeroShotDetector):
+    """Grounding DINO (transformers)."""
 
-        results = self.processor.post_process_grounded_object_detection(
-            outputs,
-            inputs.input_ids,
-            threshold=box_threshold,
-            text_threshold=text_threshold,
-            target_sizes=[image_pil.size[::-1]],
+    def __init__(self, model_id: str = "IDEA-Research/grounding-dino-base", **kwargs):
+        super().__init__(**kwargs)
+        from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
+
+        self.processor = AutoProcessor.from_pretrained(model_id)
+        self.model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id).to(self.device).eval()
+        print(f"{self.name} loaded on device: {self.device}")
+
+    def _detect(self, img, conf):
+        W, H = img.size
+        text = " . ".join(p.lower() for p in self.prompts) + " ."
+        inp = self.processor(images=img, text=text, return_tensors="pt").to(self.device)
+        out = self.model(**inp)
+        res = self.processor.post_process_grounded_object_detection(out, inp.input_ids, threshold=conf, text_threshold=conf, target_sizes=[(H, W)])[0]
+        lows = [p.lower() for p in self.prompts]
+        labels = res.get("text_labels", res.get("labels", []))
+        idx = np.array(
+            [lows.index(str(t).strip().lower()) if str(t).strip().lower() in lows else _best_prompt(str(t), lows) for t in labels], dtype=int
         )
+        b, s = res["boxes"].cpu().numpy(), res["scores"].cpu().numpy()
+        k = nms(b, s, self.nms_iou)
+        return b[k], s[k], idx[k] if len(idx) else idx
 
-        result_dict = {"scores": [], "labels": [], "boxes": []}
-        if include_full_probabilities:
-            result_dict["full_results"] = []
-            result_dict["class_names"] = self.classes
-
-        if results and results[0]["scores"].nelement() > 0:
-            for score, label, box in zip(results[0]["scores"], results[0]["labels"], results[0]["boxes"]):
-                result_dict["scores"].append(score.item())
-                result_dict["labels"].append(label)
-                bbox = box.tolist()
-                result_dict["boxes"].append(bbox)
-
-                if include_full_probabilities:
-                    # Create a simple proxy probability distribution
-                    probabilities = np.zeros(len(self.classes))
-                    # Clean the label and the class list for robust, case-insensitive matching
-                    cleaned_label = label.strip().lower()
-                    cleaned_classes = [c.strip().lower() for c in self.classes]
-                    class_id = -1
-                    if cleaned_label in cleaned_classes:
-                        class_id = cleaned_classes.index(cleaned_label)
-                        probabilities[class_id] = score.item()
-
-                    result_dict["full_results"].append(
-                        {
-                            "predicted_class": label,
-                            "predicted_class_id": class_id,
-                            "confidence": score.item(),
-                            "class_probabilities": probabilities.tolist(),
-                            "bbox": bbox,
-                        }
-                    )
-
-        if verbose:
-            print("\n--- Detection Results ---")
-            for score, label, box in zip(result_dict["scores"], result_dict["labels"], result_dict["boxes"]):
-                print(f"- Label: '{label}', Confidence: {score:.4f}, Box: {[round(c, 2) for c in box]}")
-            print("-------------------------\n")
-
-        return result_dict
-
-    def extract_features(self, image, text_prompt: str = "object"):
-        """Extracts deep features (embeddings) from the model for an image.
-
-        Args:
-            image (Union[str, np.ndarray, Image.Image]): The input image.
-            text_prompt (str, optional): A text prompt to guide feature extraction.
-                                    Defaults to "object".
-
-        Returns:
-            Optional[torch.Tensor]: A tensor containing the extracted feature embeddings,
-                                    or None if features could not be extracted.
-        """
-        # print(f"Extracting features from GroundingDINO using prompt: '{text_prompt}'...")
-
-        if isinstance(image, str):
-            if image.startswith("http"):
-                response = requests.get(image)
-                image_pil = Image.open(BytesIO(response.content)).convert("RGB")
-            else:
-                image_pil = Image.open(image).convert("RGB")
-        elif isinstance(image, np.ndarray):
-            image_pil = Image.fromarray(image).convert("RGB")
-        elif isinstance(image, Image.Image):
-            image_pil = image.convert("RGB")
-        else:
-            raise ValueError("Unsupported image type. Use a file path, URL, numpy array, or PIL image.")
-
-        inputs = self.processor(images=image_pil, text=text_prompt, return_tensors="pt").to(self.device)
-        with torch.no_grad():
-            outputs = self.model(**inputs)
-
-        if hasattr(outputs, "encoder_last_hidden_state_vision") and outputs.encoder_last_hidden_state_vision is not None:
-            vision_features = outputs.encoder_last_hidden_state_vision
-            pooled_features = torch.mean(vision_features, dim=1)
-            return pooled_features.detach()
-        else:
-            print("Could not extract 'encoder_last_hidden_state_vision' from GroundingDINO output.")
-            print(f"Available attributes in 'outputs': {dir(outputs)}")
-            return None
+    def extract_features(self, image: ImageInput, text_prompt: str = "insect", **kwargs) -> torch.Tensor | None:
+        """Mean of the last vision-encoder state, conditioned on `text_prompt`."""
+        img = load_image(image)
+        inp = self.processor(images=img, text=text_prompt, return_tensors="pt").to(self.device)
+        with torch.inference_mode():
+            out = self.model(**inp)
+        v = getattr(out, "encoder_last_hidden_state_vision", None)
+        return v.mean(dim=1).detach() if v is not None else None
 
 
-class YOLOWorldModel:
-    """A wrapper class for the YOLOWorld zero-shot object detection model.
+def _best_prompt(text: str, prompts: list[str]) -> int:
+    """Grounding DINO can return a span joining several prompt words; pick the first prompt it mentions."""
+    for i, p in enumerate(prompts):
+        if p in text.lower():
+            return i
+    return -1
 
-    This class provides a standardized interface for using the YOLOWorld model, which
-    extends the YOLO architecture with zero-shot detection capabilities. It allows for
-    setting detection classes dynamically and performs prediction and feature extraction.
 
-    Args:
-        model_path (str): The local file path to the YOLOWorld model's weights file.
-    """
+class OWLv2Model(ZeroShotDetector):
+    """OWLv2 (transformers)."""
 
-    def __init__(self, model_path: str):
-        """Initializes the YOLOWorldModel.
+    def __init__(self, model_id: str = "google/owlv2-large-patch14-ensemble", **kwargs):
+        super().__init__(**kwargs)
+        from transformers import Owlv2ForObjectDetection, Owlv2Processor
 
-        Args:
-            model_path (str): Path to the YOLOWorld model weights file.
-        """
-        self.model = YOLOWorld(model_path)
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model.to(self.device)
-        self.model.eval()
-        print(f"YOLO-World model loaded on device: {self.device}")
+        self.processor = Owlv2Processor.from_pretrained(model_id)
+        self.model = Owlv2ForObjectDetection.from_pretrained(model_id).to(self.device).eval()
+        print(f"{self.name} loaded on device: {self.device}")
 
-        # Perform a minimal warm-up by setting a dummy class. This initializes
-        # the text encoder's weights and state without running a full prediction,
-        # which was causing state conflicts.
-        print("Performing one-time warm-up for YOLOWorld text encoder...")
-        try:
-            with torch.no_grad():
-                self.set_classes(["warm-up"])
-            print("Warm-up complete.")
-        except Exception as e:
-            print(f"Warning: YOLOWorld warm-up failed with an error: {e}")
+    def _detect(self, img, conf):
+        W, H = img.size
+        inp = self.processor(text=[self.prompts], images=img, return_tensors="pt").to(self.device)
+        out = self.model(**inp)
+        side = max(W, H)  # OWLv2 pads to a square: boxes are in the padded frame
+        res = self.processor.post_process_grounded_object_detection(out, threshold=conf, target_sizes=[(side, side)])[0]
+        b, s, lab = res["boxes"].cpu().numpy(), res["scores"].cpu().numpy(), res["labels"].cpu().numpy().astype(int)
+        k = nms(b, s, self.nms_iou)
+        return b[k], s[k], lab[k]
 
-    def get_classes(self) -> list[str]:
-        """Returns the classes the model is currently set to detect.
 
-        Returns:
-            list[str]: A list of the class names currently set for detection.
-        """
-        return list(self.model.names.values())
+class YOLOWorldModel(ZeroShotDetector):
+    """YOLO-World v2-X (Ultralytics). The text encoder is installed by Ultralytics on first use."""
 
-    def set_classes(self, classes: Union[list[str], str]):
-        """Sets the classes for the model to detect.
+    def __init__(self, weights: str = "yolov8x-worldv2.pt", imgsz: int = 1024, **kwargs):
+        super().__init__(**kwargs)
+        from ultralytics import YOLOWorld
 
-        This method now includes a targeted fix to ensure the internal CLIP model
-        is in the correct evaluation state before processing text.
+        self.model = YOLOWorld(weights)
+        self.imgsz = imgsz
+        self._set_on_model(self.prompts)
+        print(f"{self.name} loaded on device: {self.device}")
 
-        Args:
-            classes (Union[list[str], str]): A list of class names or a single string
-                                            with class names separated by " . ".
-        """
-        if isinstance(classes, str):
-            class_list = [c.strip() for c in classes.split(".") if c.strip()]
-        else:
-            class_list = classes
-
-        # The root cause of the error is the internal state of the CLIP text encoder.
-        # Explicitly setting the clip_model to eval() mode here ensures that its
-        # parameters are not tracking gradients, which resolves the 'version counter'
-        # conflict even when this method is called multiple times.
+    def _set_on_model(self, prompts):
         if hasattr(self.model, "clip_model") and self.model.clip_model is not None:
             self.model.clip_model.eval()
-
         with torch.no_grad():
-            self.model.set_classes(class_list)
+            self.model.set_classes(list(prompts))
 
-    def predict(self, image, text_prompt: Optional[str] = None, include_full_probabilities: bool = False, **kwargs):
-        """Performs zero-shot object detection on an image.
+    def set_classes(self, classes):
+        super().set_classes(classes)
+        self._set_on_model(self.prompts)
 
-        Args:
-            image (Union[str, np.ndarray, Image.Image]): The input image.
-            text_prompt (str, optional): The text prompt describing the object(s) to detect.
-            **kwargs: Additional keyword arguments for the `ultralytics.YOLOWorld.predict` method.
+    def _detect(self, img, conf):
+        r = self.model.predict(img, conf=conf, iou=self.nms_iou, max_det=300, imgsz=self.imgsz, agnostic_nms=True, verbose=False, device=self.device)[
+            0
+        ]
+        if r.boxes is None or len(r.boxes) == 0:
+            return np.zeros((0, 4)), np.zeros(0), np.zeros(0, dtype=int)
+        return r.boxes.xyxy.cpu().numpy(), r.boxes.conf.cpu().numpy(), r.boxes.cls.cpu().numpy().astype(int)
 
-        Returns:
-            dict: A dictionary of detection results.
-        """
-        with torch.no_grad():
-            if text_prompt:
-                new_classes = [c.strip() for c in text_prompt.split(".") if c.strip()]
-                if new_classes != self.get_classes():
-                    self.set_classes(new_classes)
+    def extract_features(self, image: ImageInput, **kwargs) -> torch.Tensor | None:
+        feats = self.model.embed(load_image(image), verbose=False)
+        return feats[0] if feats else None
 
-            results = self.model.predict(image, **kwargs)
 
-        result_dict = {"scores": [], "labels": [], "boxes": []}
-        if include_full_probabilities:
-            result_dict["full_results"] = []
-            result_dict["class_names"] = self.get_classes()
+class SAM3Model(ZeroShotDetector):
+    """SAM 3 (transformers). Boxes come from its instance predictions, one prompt at a time."""
 
-        if results and hasattr(results[0], "boxes") and results[0].boxes is not None:
-            for box in results[0].boxes:
-                confidence = box.conf.item()
-                class_id = int(box.cls)
-                label = self.model.names[class_id]
-                bbox = box.xyxy[0].tolist()
+    def __init__(self, model_id: str = "facebook/sam3", **kwargs):
+        super().__init__(**kwargs)
+        try:
+            from transformers import Sam3Model, Sam3Processor
+        except ImportError as e:  # pragma: no cover
+            raise ImportError("SAM 3 needs transformers >= 5.0.") from e
+        try:
+            self.processor = Sam3Processor.from_pretrained(model_id)
+            self.model = Sam3Model.from_pretrained(model_id).to(self.device).eval()
+        except OSError as e:
+            raise OSError(
+                f"Could not load '{model_id}'. SAM 3 is gated: accept its licence at https://huggingface.co/{model_id} "
+                "and log in with `hf auth login`."
+            ) from e
+        print(f"{self.name} loaded on device: {self.device}")
 
-                result_dict["scores"].append(confidence)
-                result_dict["labels"].append(label)
-                result_dict["boxes"].append(bbox)
+    def _detect(self, img, conf):
+        W, H = img.size
+        B, S, L = [], [], []
+        # post-process at <= 1536 px and scale back: full-resolution masks are only needed for boxes and can need
+        # >100 GB on very large scanner images; SAM 3 itself sees a 1008 px input
+        sc = min(1.0, 1536 / max(H, W))
+        for i, prompt in enumerate(self.prompts):
+            inp = self.processor(images=img, text=prompt, return_tensors="pt").to(self.device)
+            out = self.model(**inp)
+            res = self.processor.post_process_instance_segmentation(
+                out, threshold=conf, mask_threshold=0.5, target_sizes=[(max(1, round(H * sc)), max(1, round(W * sc)))]
+            )[0]
+            if len(res["scores"]):
+                B.append(res["boxes"].cpu().numpy() / sc)
+                S.append(res["scores"].cpu().numpy())
+                L.append(np.full(len(res["scores"]), i, dtype=int))
+        if not B:
+            return np.zeros((0, 4)), np.zeros(0), np.zeros(0, dtype=int)
+        b, s, lab = np.concatenate(B), np.concatenate(S), np.concatenate(L)
+        k = nms(b, s, self.nms_iou)
+        return b[k], s[k], lab[k]
 
-                if include_full_probabilities:
-                    # Create a proxy probability distribution
-                    probabilities = np.zeros(len(self.get_classes()))
-                    if label in self.get_classes():
-                        class_id_in_list = self.get_classes().index(label)
-                        probabilities[class_id_in_list] = confidence
 
-                    result_dict["full_results"].append(
-                        {
-                            "predicted_class": label,
-                            "predicted_class_id": self.get_classes().index(label) if label in self.get_classes() else -1,
-                            "confidence": confidence,
-                            "class_probabilities": probabilities.tolist(),
-                            "bbox": bbox,
-                        }
-                    )
-
-        return result_dict
-
-    def extract_features(self, image, **kwargs):
-        """Extracts deep feature embeddings from an image.
-
-        Args:
-            image (Union[str, np.ndarray, Image.Image]): The input image.
-            **kwargs: Additional arguments, including 'text_prompt'.
-
-        Returns:
-            Optional[torch.Tensor]: A tensor of feature embeddings.
-        """
-        with torch.no_grad():
-            if "text_prompt" in kwargs:
-                text_prompt = kwargs.pop("text_prompt")
-                new_classes = [c.strip() for c in text_prompt.split(". ")]
-                if new_classes != self.get_classes():
-                    self.set_classes(new_classes)
-
-            features = self.model.embed(image, **kwargs)
-        return features[0] if features else None
+# ----------------------------------------------------------------------------------------------------------------------
+def _kw(kwargs: dict[str, Any], prompts: list[str], tile: int, op: float, name: str) -> dict[str, Any]:
+    return {
+        "prompts": kwargs.pop("prompts", prompts),
+        "tile": kwargs.pop("tile", tile),
+        "device": kwargs.pop("device", None),
+        "operating_conf": kwargs.pop("operating_conf", op),
+        "name": name,
+    }
 
 
 @register_model
-def grounding_dino_detect_model(pretrained: bool = True, **kwargs):
-    """Factory function for the GroundingDINO beetle detector.
+def grounding_dino_zero_shot_detector(pretrained: bool = True, **kwargs):
+    """Grounding DINO base. Default prompts: 13 arthropod taxa; tiling 1024 px (best setting on the validation sample).
 
-    Args:
-        pretrained (bool, optional): This argument is ignored as the model is always loaded
-                                    with pretrained weights. Defaults to True.
-        **kwargs: Additional keyword arguments, such as `model_id` to specify a different
-                GroundingDINO model from the Hugging Face Hub.
-
-    Returns:
-        GroundingDINOModel: An instance of the GroundingDINO model wrapper.
+    Keyword args: `prompts` (list[str]), `tile` (int, 0 = off), `device`, `model_id`.
     """
-    if not pretrained:
-        print("Warning: `pretrained=False` has no effect. GroundingDINO is always loaded from pretrained weights.")
-    model_id = kwargs.get("model_id", "IDEA-Research/grounding-dino-base")
-    return GroundingDINOModel(model_id=model_id)
+    model_id = kwargs.pop("model_id", "IDEA-Research/grounding-dino-base")
+    return GroundingDINOModel(model_id=model_id, **_kw(kwargs, THIRTEEN_TAXA, 1024, 0.6, "grounding_dino_zero_shot_detector"))
 
 
 @register_model
-def yoloworldv2_bb_detect_model(pretrained: bool = True, **kwargs):
-    """Factory function for the YOLOWorld beetle detector.
+def owlv2_zero_shot_detector(pretrained: bool = True, **kwargs):
+    """OWLv2 large ensemble. Default prompt "a photo of an insect"; tiling 1024 px (best setting on the validation sample).
 
-    Args:
-        pretrained (bool, optional): If True, loads the default 'yolov8x-worldv2.pt' weights.
-                                    This argument is effectively always True for this model.
-        **kwargs: Additional keyword arguments (not used).
-
-    Returns:
-        YOLOWorldModel: An instance of the YOLOWorld model wrapper.
+    Keyword args: `prompts`, `tile`, `device`, `model_id`.
     """
-    local_weights_path = "yolov8x-worldv2.pt"
-    return YOLOWorldModel(model_path=local_weights_path)
+    model_id = kwargs.pop("model_id", "google/owlv2-large-patch14-ensemble")
+    return OWLv2Model(model_id=model_id, **_kw(kwargs, ["a photo of an insect"], 1024, 0.725, "owlv2_zero_shot_detector"))
+
+
+@register_model
+def yoloworld_zero_shot_detector(pretrained: bool = True, **kwargs):
+    """YOLO-World v2-X at 1024 px. Default prompts: 13 arthropod taxa; tiling 1024 px (best setting on the validation sample).
+
+    Keyword args: `prompts`, `tile`, `device`, `weights`, `imgsz`.
+    """
+    weights = kwargs.pop("weights", "yolov8x-worldv2.pt")
+    imgsz = kwargs.pop("imgsz", 1024)
+    return YOLOWorldModel(weights=weights, imgsz=imgsz, **_kw(kwargs, THIRTEEN_TAXA, 1024, 0.5, "yoloworld_zero_shot_detector"))
+
+
+@register_model
+def sam3_zero_shot_detector(pretrained: bool = True, **kwargs):
+    """SAM 3 (gated on the Hub). Default prompts: insect, spider, arthropod; tiling 1024 px (best setting on the validation sample).
+
+    Keyword args: `prompts`, `tile`, `device`, `model_id`.
+    """
+    model_id = kwargs.pop("model_id", "facebook/sam3")
+    return SAM3Model(model_id=model_id, **_kw(kwargs, ["insect", "spider", "arthropod"], 1024, 0.95, "sam3_zero_shot_detector"))

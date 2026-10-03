@@ -1,61 +1,45 @@
 # src/ibbi/utils/hub.py
 
 """
-This module provides utility functions for interacting with the Hugging Face Hub.
-It includes helpers for downloading model files and configuration files, while
-ensuring they are stored in the appropriate local cache directory managed by the
-`ibbi.utils.cache` module.
+Downloads model files from the Hugging Face Hub into the ibbi cache.
+
+Set the environment variable `IBBI_MODELS_DIR` to a folder that contains one sub-folder per repository name (for
+example `$IBBI_MODELS_DIR/ibbi_yolo11x_arthropod_detector/model.pt`) to load models from disk instead, e.g. on a
+machine without internet access.
 """
 
 import json
+import os
+from pathlib import Path
 from typing import Any
 
 from huggingface_hub import hf_hub_download
 
 from .cache import get_cache_dir
 
+HF_ORG = "IBBI-bio"
 
-def download_from_hf_hub(repo_id: str, filename: str) -> str:
-    """Downloads a model file from a Hugging Face Hub repository.
 
-    This function handles the download of a specific file from a repository on the
-    Hugging Face Hub. It uses the package's caching mechanism to store the file
-    locally, avoiding repeated downloads.
+def download_from_hf_hub(repo_id: str, filename: str, revision: str | None = None) -> str:
+    """Returns a local path to `filename` from `repo_id`, downloading it into the ibbi cache if needed.
 
     Args:
-        repo_id (str): The repository ID on the Hugging Face Hub (e.g., "IBBI-bio/ibbi_yolov10_od").
-        filename (str): The name of the file to download from the repository (e.g., "model.pt").
+        repo_id (str): Repository on the Hugging Face Hub, e.g. "IBBI-bio/ibbi_yolo11x_arthropod_detector".
+        filename (str): File inside the repository, e.g. "model.pt".
+        revision (str | None): Branch, tag or commit. Defaults to the main branch.
 
     Returns:
-        str: The local file path to the downloaded model file.
+        str: Local file path.
     """
-    cache_path = get_cache_dir()
-    print(f"Downloading {filename} from Hugging Face hub repository '{repo_id}'...")
+    local_root = os.getenv("IBBI_MODELS_DIR")
+    if local_root:
+        p = Path(local_root) / repo_id.split("/")[-1] / filename
+        if p.exists():
+            return str(p)
+    return hf_hub_download(repo_id=repo_id, filename=filename, revision=revision, cache_dir=str(get_cache_dir()))
 
-    # Pass the cache_dir to the download function
-    local_model_path = hf_hub_download(repo_id=repo_id, filename=filename, cache_dir=str(cache_path))
-    print("Download complete. Model cached at:", local_model_path)
-    return local_model_path
 
-
-def get_model_config_from_hub(repo_id: str) -> dict[str, Any]:
-    """Downloads and loads the 'config.json' file from a Hugging Face Hub repository.
-
-    This function specifically targets the `config.json` file within a given repository.
-    It downloads the file, caches it, and then loads its JSON content into a Python dictionary.
-
-    Args:
-        repo_id (str): The repository ID on the Hugging Face Hub.
-
-    Returns:
-        dict[str, Any]: A dictionary containing the parsed JSON configuration.
-    """
-    cache_path = get_cache_dir()
-    print(f"Downloading config.json from Hugging Face hub repository '{repo_id}'...")
-
-    # Pass the cache_dir to the download function
-    config_path = hf_hub_download(repo_id=repo_id, filename="config.json", cache_dir=str(cache_path))
-    print("Download complete. Config cached at:", config_path)
-    with open(config_path) as f:
-        config = json.load(f)
-    return config
+def get_model_config_from_hub(repo_id: str, revision: str | None = None) -> dict[str, Any]:
+    """Downloads and parses `config.json` of a model repository."""
+    with open(download_from_hf_hub(repo_id, "config.json", revision=revision)) as f:
+        return json.load(f)
