@@ -1,294 +1,306 @@
 # src/ibbi/evaluate/__init__.py
 
 """
-Provides the high-level Evaluator class for comprehensive model assessment.
+Provides the high-level `Evaluator` class for assessing IBBI models on the Bark and Ambrosia Beetle Detection Benchmark.
 
-This module serves as the primary interface for evaluating models within the `ibbi` package.
-It introduces the `Evaluator` class, which streamlines the process of assessing models
-on various tasks, including object detection, classification, and embedding quality.
-By handling the boilerplate code for dataset iteration, prediction, and metric calculation,
-the `Evaluator` class allows users to focus on interpreting the results.
+* `Evaluator.benchmark` runs a detector (species-level, arthropod or zero-shot) or a detector + classifier pipeline on
+  the benchmark splits and scores the predictions with the benchmark's crowd-aware reference evaluator.
+* `Evaluator.hierarchical_classification` scores a hierarchical classifier on the ground-truth specimen crops:
+  per-level accuracy and calibration on known species, per-level novelty separation on the held-out species, and the
+  reported taxonomic depth against the deepest level that could be right.
+* `Evaluator.embeddings` measures how well a model's embeddings cluster by species and how well embedding distances
+  follow taxonomic distance.
 """
 
+import warnings
+from collections.abc import Sequence
+from pathlib import Path
 from typing import Any, Optional, Union
 
 import numpy as np
 from tqdm import tqdm
 
-from ..models import ModelType
-from ..models.feature_extractors import HuggingFaceFeatureExtractor, UntrainedFeatureExtractor
-from ..models.zero_shot import GroundingDINOModel, YOLOWorldModel
+from ..utils.data import BENCHMARK_REVISION, BenchmarkDataset, download_benchmark, get_dataset, taxonomic_distance_matrix
+from .benchmark import evaluate_class_agnostic, evaluate_predictions, to_coco_results
 from .embeddings import EmbeddingEvaluator
-from .object_classification import object_classification_performance
+from .hierarchical import evaluate_hierarchical_records
+
+DEFAULT_SPLITS = ("iid_test", "inat_test", "semantic_ood")
 
 
 class Evaluator:
-    """A unified evaluator for assessing IBBI models on various tasks.
+    """A unified evaluator for IBBI models.
 
-    This class provides a streamlined interface for evaluating the performance of
-    models on tasks such as object classification and embedding quality.
-    It handles the boilerplate code for iterating through datasets, making predictions,
-    and calculating a comprehensive suite of metrics for a holistic model assessment.
-
-    The `Evaluator` is initialized with a model instance from the `ibbi` package.
-    It provides methods to run different types of evaluations, returning detailed
-    performance reports.
-
-    Attributes:
-        model (ModelType): The instantiated `ibbi` model to be evaluated.
+    Args:
+        model: Any model created with `ibbi.create_model` or `ibbi.create_pipeline`.
     """
 
-    def __init__(self, model: ModelType):
-        """Initializes the Evaluator with a specific model.
-
-        Args:
-            model (ModelType): The model to be evaluated. This should be an instance of a class
-                               that adheres to the `ModelType` protocol, meaning it has `predict`
-                               and `extract_features` methods.
-        """
+    def __init__(self, model: Any):
         self.model = model
 
-    def object_classification(
-        self, dataset, iou_thresholds: Union[float, list[float]] = 0.5, predict_kwargs: Optional[dict[str, Any]] = None, **kwargs
-    ):
-        """Runs a comprehensive object detection and classification performance analysis.
+    # ------------------------------------------------------------------------------------------------------------
+    def predict_split(
+        self,
+        dataset: BenchmarkDataset,
+        predict_kwargs: dict[str, Any] | None = None,
+        max_images: int | None = None,
+        progress: bool = True,
+    ) -> list[dict[str, Any]]:
+        """Runs the model on every image of a benchmark split and returns COCO result dicts.
 
-        This method assesses the model's ability to both accurately localize and correctly
-        classify objects within a dataset. It iterates through the provided dataset, gathering
-        ground truth information and generating model predictions. These are then passed to the
-        `object_classification_performance` function to compute a detailed suite of metrics.
+        Species-level models write the benchmark's global category id of each predicted species; class-agnostic models
+        write category 1.
+        """
+        kwargs = dict(getattr(self.model, "benchmark_kwargs", {}) or {})
+        kwargs.update(predict_kwargs or {})
+        species_level = bool(getattr(self.model, "is_species_level", False))
+        name_to_cat = _benchmark_category_ids(dataset.root) if species_level else {}
+        n = len(dataset) if max_images is None else min(max_images, len(dataset))
+        preds: list[dict[str, Any]] = []
+        for i in tqdm(range(n), desc=f"{dataset.split}", disable=not progress):
+            item = dataset[i]
+            res = self.model.predict(item["image"], **kwargs)
+            labels = res.get("species", res.get("labels", []))
+            cats = None
+            if species_level:
+                cats = [name_to_cat.get(lbl, -1) for lbl in labels]
+                keep = [j for j, c in enumerate(cats) if c != -1]
+                res = {k: [res[k][j] for j in keep] for k in ("boxes", "scores")}
+                cats = [cats[j] for j in keep]
+            preds.extend(to_coco_results(item["image_id"], res["boxes"], res["scores"], cats))
+        return preds
 
-        The evaluation provides a holistic view of performance, combining traditional object
-        detection metrics (like mAP) with a full suite of classification metrics for each IoU
-        threshold.
+    def benchmark(
+        self,
+        splits: Sequence[str] = DEFAULT_SPLITS,
+        dataset_dir: str | Path | None = None,
+        predict_kwargs: dict[str, Any] | None = None,
+        max_images: int | None = None,
+        output_dir: str | Path | None = None,
+        model_name: str | None = None,
+        operating_conf: float | None = None,
+        revision: str = BENCHMARK_REVISION,
+    ) -> dict[str, Any]:
+        """Runs the model on the benchmark splits and scores it with the benchmark's crowd-aware evaluator.
+
+        Species-level models (the species detectors and detector + classifier pipelines) get the full reference
+        evaluation (COCO suite, detection / identification decomposition, taxonomic degradation on unseen species,
+        calibration, novelty). Class-agnostic detectors (arthropod and zero-shot detectors) get class-agnostic AP/AR
+        plus recall and precision at their operating confidence.
 
         Args:
-            dataset (iterable): An iterable dataset where each item is a dictionary-like object
-                                containing at least an 'image' key. For evaluation, items should
-                                also contain an 'objects' key, which is a dictionary with 'bbox'
-                                and 'category' keys.
-            iou_thresholds (Union[float, list[float]], optional): The IoU threshold(s) at which
-                to compute mAP and classification metrics. Can be a single float or a list of floats.
-                Defaults to 0.5.
-            predict_kwargs (Optional[dict[str, Any]], optional): A dictionary of keyword arguments
-                to be passed directly to the model's `predict` method during evaluation.
-                This is useful for model-specific parameters like `text_prompt` for zero-shot models.
-                Defaults to None.
-            **kwargs: Additional keyword arguments to be passed to the underlying
-                      `object_classification_performance` function (e.g., `average`, `zero_division`).
+            splits (Sequence[str]): Splits to evaluate. Defaults to iid_test, inat_test and semantic_ood.
+            dataset_dir (str | Path | None): Benchmark root; downloaded to the ibbi cache when omitted.
+            predict_kwargs (dict | None): Extra arguments for `model.predict` (override the model's benchmark defaults,
+                e.g. the low confidence floor used for AP).
+            max_images (int | None): Evaluate only the first N images of each split (quick checks; metrics are then
+                not comparable to published numbers).
+            output_dir (str | Path | None): Write predictions and evaluator reports here.
+            model_name (str | None): Name used for output files.
+            operating_conf (float | None): Operating confidence for class-agnostic recall/precision. Defaults to the
+                model's `operating_conf` attribute when it has one.
+            revision (str): Benchmark revision. Defaults to the pinned v2.0.1 commit.
 
         Returns:
-            dict: A dictionary containing a comprehensive set of object detection and
-                  classification metrics, including per-iou threshold classification performance,
-                  and a detailed object-level performance table.
+            dict: Evaluator output with a flat `"headline"` dict of the key metrics.
         """
-        if predict_kwargs is None:
-            predict_kwargs = {}
+        root = Path(dataset_dir) if dataset_dir is not None else None
+        if root is None:
+            root = download_benchmark(list(splits), revision=revision)
+        preds = {}
+        for split in splits:
+            ds = get_dataset(split, local_dir=root, revision=revision)
+            preds[split] = self.predict_split(ds, predict_kwargs=predict_kwargs, max_images=max_images)
+        name = model_name or getattr(self.model, "name", type(self.model).__name__)
+        if output_dir is not None:
+            import json
 
-        # Set classes for GroundingDINO before evaluation
-        if isinstance(self.model, GroundingDINOModel):
-            if "text_prompt" in predict_kwargs:
-                self.model.set_classes(predict_kwargs["text_prompt"])
+            out = Path(output_dir)
+            out.mkdir(parents=True, exist_ok=True)
+            for split, p in preds.items():
+                (out / f"{split}_predictions.json").write_text(json.dumps(p))
+        if getattr(self.model, "is_species_level", False):
+            return evaluate_predictions(preds, root, output_dir=output_dir, model_name=name)
+        op = operating_conf if operating_conf is not None else getattr(self.model, "operating_conf", None)
+        res = evaluate_class_agnostic(preds, root, operating_conf=op)
+        if output_dir is not None:
+            import json
 
-        print("Running object classification evaluation...")
+            (Path(output_dir) / f"{name}_class_agnostic.json").write_text(json.dumps(res, indent=1))
+        return res
 
-        if isinstance(self.model, (HuggingFaceFeatureExtractor, UntrainedFeatureExtractor)):
-            print("Warning: Object classification evaluation is not supported for pure feature extractors.")
-            return {}
+    # ------------------------------------------------------------------------------------------------------------
+    def hierarchical_classification(
+        self,
+        splits: Sequence[str] = DEFAULT_SPLITS,
+        dataset_dir: str | Path | None = None,
+        include_crowd: bool = False,
+        operating_point: str | None = None,
+        max_images: int | None = None,
+        batch_size: int = 32,
+        revision: str = BENCHMARK_REVISION,
+    ) -> dict[str, Any]:
+        """Scores a hierarchical classifier on ground-truth specimen crops of the benchmark.
 
-        if isinstance(self.model, (GroundingDINOModel, YOLOWorldModel)):
-            if "text_prompt" not in predict_kwargs and not self.model.get_classes():
-                print("Warning: Zero-shot model has no classes set. Please provide a 'text_prompt' in 'predict_kwargs'.")
-                return {}
+        Every annotated specimen is cropped at its box (grown by the classifier's padding) and classified. Metrics, per
+        level (subfamily, tribe, genus, species): accuracy and expected calibration error on taxa the classifier knows;
+        AUROC and FPR at 95% TPR of the novelty score for "known at this level" versus "unknown at this level" (the
+        held-out species are unknown at species level, and also at genus and tribe level when their genus or tribe is
+        absent from training); the reported depth against the ideal depth, including the over-commit rate (naming a
+        taxon below the deepest level that could be right).
 
-        gt_boxes, gt_labels, gt_image_ids, gt_label_names = [], [], [], []
-        pred_results_with_probs = []  # Full prediction result per image
-        # Initialize model_classes before the loop.
-        model_classes: list[str] = []
-        if isinstance(self.model, (GroundingDINOModel)):
-            if hasattr(self.model, "get_classes") and callable(self.model.get_classes):
-                raw_model_classes = self.model.get_classes()
-                if isinstance(raw_model_classes, dict):
-                    model_classes = list(raw_model_classes.values())
-                else:
-                    model_classes = raw_model_classes
-        class_name_to_idx: dict[str, int] = {}
-        idx_to_name: dict[int, str] = {}
+        Args:
+            splits (Sequence[str]): Splits to use. Defaults to iid_test, inat_test and semantic_ood.
+            dataset_dir (str | Path | None): Benchmark root; downloaded to the ibbi cache when omitted.
+            include_crowd (bool): Also classify the unscored crowd specimens of iid_test / inat_test (8x more known
+                specimens; the benchmark standard is the scored ones only). Defaults to False.
+            operating_point (str | None): Classifier operating point ("0.90", "0.95", "0.99", "gallery"). Defaults to
+                the classifier's default.
+            max_images (int | None): Use only the first N images per split.
+            batch_size (int): Crops per forward pass.
+            revision (str): Benchmark revision.
 
-        print("Extracting ground truth and making predictions...")
-        predict_kwargs_for_call = {**predict_kwargs, "include_full_probabilities": True}
+        Returns:
+            dict: `{"per_split": ..., "novelty": ..., "headline": {...}}`.
+        """
+        clf = getattr(self.model, "classifier", self.model)
+        if not hasattr(clf, "classify_crops"):
+            raise TypeError("hierarchical_classification needs a hierarchical classifier (or a pipeline that contains one).")
+        root = Path(dataset_dir) if dataset_dir is not None else download_benchmark(list(splits), revision=revision)
+        records, truths = [], []
+        for split in splits:
+            ds = get_dataset(split, local_dir=root, revision=revision)
+            n = len(ds) if max_images is None else min(max_images, len(ds))
+            crops, meta = [], []
+            for i in tqdm(range(n), desc=f"{split} crops"):
+                item = ds[i]
+                o = item["objects"]
+                for j, (x, y, w, h) in enumerate(o["bbox"]):
+                    if o["iscrowd"][j] and not include_crowd:
+                        continue
+                    if w < 2 or h < 2:
+                        continue
+                    crops.append(clf.crop(item["image"], (x, y, x + w, y + h)))
+                    meta.append({"split": split, "species": o["category"][j], "crowd": int(o["iscrowd"][j])})
+                if len(crops) >= 512 or (i == n - 1 and crops):
+                    recs = clf.classify_crops(crops, operating_point=operating_point, batch_size=batch_size)
+                    records.extend(recs)
+                    truths.extend(meta)
+                    crops, meta = [], []
+        return evaluate_hierarchical_records(records, truths, clf.taxonomy_table)
 
-        for i, item in enumerate(tqdm(dataset)):
-            # Make the first prediction to set classes for YOLOWorld
-            results = self.model.predict(item["image"], verbose=False, **predict_kwargs_for_call)
-            pred_results_with_probs.append(results)
-
-            if not model_classes:
-                if not hasattr(self.model, "get_classes") or not callable(self.model.get_classes):
-                    print("Warning: Model does not have a 'get_classes' method for class mapping. Skipping evaluation.")
-                    return {}
-
-                raw_model_classes = self.model.get_classes()
-                if isinstance(raw_model_classes, dict):
-                    model_classes: list[str] = list(raw_model_classes.values())
-                else:
-                    model_classes: list[str] = raw_model_classes
-
-                if not model_classes:
-                    print("Warning: Model returned an empty class list. Cannot proceed with classification-dependent metrics.")
-                    return {}
-
-                class_name_to_idx = {v: k for k, v in enumerate(model_classes)}
-                idx_to_name = dict(enumerate(model_classes))
-
-            # --- Extract Ground Truth ---
-            if "objects" in item and "bbox" in item["objects"] and "category" in item["objects"]:
-                for j in range(len(item["objects"]["category"])):
-                    label_name = item["objects"]["category"][j]
-                    gt_label_names.append(label_name)
-                    bbox = item["objects"]["bbox"][j]
-                    x1, y1, w, h = bbox
-                    x2 = x1 + w
-                    y2 = y1 + h
-                    gt_boxes.append([x1, y1, x2, y2])
-                    gt_labels.append(class_name_to_idx.get(label_name, -1))
-
-                    gt_image_ids.append(i)
-
-        # The GT and raw prediction data is prepared. Now run the core evaluation logic.
-        performance_results = object_classification_performance(
-            np.array(gt_boxes),
-            gt_labels,
-            gt_image_ids,
-            pred_results_with_probs,
-            gt_label_names=gt_label_names,
-            iou_thresholds=iou_thresholds,
-            model_classes=model_classes,
-            idx_to_name=idx_to_name,
-            **kwargs,
-        )
-
-        # Apply naming to the mAP results
-        if "per_class_AP_at_last_iou" in performance_results:
-            class_aps = performance_results["per_class_AP_at_last_iou"]
-            named_class_aps = {idx_to_name.get(class_id, class_id): ap for class_id, ap in class_aps.items()}
-            performance_results["per_class_AP_at_last_iou"] = named_class_aps
-
-        return performance_results
-
+    # ------------------------------------------------------------------------------------------------------------
     def embeddings(
         self,
         dataset,
-        evaluation_level: str = "image",
+        evaluation_level: str = "object",
         use_umap: bool = True,
-        extract_kwargs: Optional[dict[str, Any]] = None,
+        extract_kwargs: dict[str, Any] | None = None,
         batch_size: int = 32,
+        include_crowd: bool = True,
         **kwargs,
     ):
         """Evaluates the quality of the model's feature embeddings.
 
-        This method extracts feature embeddings from the provided dataset. It can operate
-        at two levels: 'image' (extracting one embedding per image) or 'object'
-        (extracting an embedding for each annotated object in each image). The quality of
-        these embeddings is then assessed using clustering algorithms and a suite of
-        internal and external validation metrics.
+        Embeddings are extracted per specimen crop ("object", default) or per image ("image"), clustered (optionally
+        after UMAP) and compared with the species labels (ARI, NMI, purity, internal cluster indices). A Mantel test
+        compares between-species embedding distances with taxonomic distance (0 same species, 1 same genus, 2 same tribe,
+        3 same subfamily, 4 otherwise).
 
         Args:
-            dataset (iterable): An iterable dataset where each item contains an 'image' key.
-                                For 'object' level evaluation, items should also contain 'objects'
-                                with 'bbox' and 'category' keys.
-            evaluation_level (str, optional): The level at which to evaluate embeddings.
-                                              Can be "image" or "object". Defaults to "image".
-            use_umap (bool, optional): If True, applies UMAP for dimensionality reduction
-                                       before clustering. Defaults to True.
-            extract_kwargs (Optional[dict[str, Any]], optional): Keyword arguments to be passed
-                to the model's `extract_features` method. Defaults to None.
-            batch_size (int, optional): The batch size for GPU distance matrix calculation.
-                                        Defaults to 32.
-            **kwargs: Additional keyword arguments to be passed to the `EmbeddingEvaluator`.
-                      See `ibbi.evaluate.embeddings.EmbeddingEvaluator` for more details.
+            dataset: A `BenchmarkDataset` (or any iterable of items with "image" and "objects").
+            evaluation_level (str): "object" or "image".
+            use_umap (bool): Reduce with UMAP before clustering. Defaults to True.
+            extract_kwargs (dict | None): Arguments for `model.extract_features`.
+            batch_size (int): Batch size for the distance computation of the Mantel test.
+            include_crowd (bool): Use unscored crowd specimens too (they carry true labels). Defaults to True.
+            **kwargs: Passed to `EmbeddingEvaluator`.
 
         Returns:
-            dict: A dictionary containing the results of the embedding evaluation, including
-                  clustering metrics and optionally, correlation with external data.
+            dict: Clustering metrics, sample-level results and the Mantel correlation.
         """
         if extract_kwargs is None:
             extract_kwargs = {}
         if evaluation_level not in ["image", "object"]:
             raise ValueError("evaluation_level must be either 'image' or 'object'.")
-
         print(f"Extracting embeddings for evaluation at the '{evaluation_level}' level...")
-        embeddings_list = []
-        true_labels = []
-        valid_indices = []
-
-        # Pre-calculate label mappings for efficiency
-        unique_labels_lst = list(set(cat for item in dataset for cat in item.get("objects", {}).get("category", [])))
-        unique_labels = sorted(unique_labels_lst)
-        name_to_idx = {name: i for i, name in enumerate(unique_labels)}
-        idx_to_name = dict(enumerate(unique_labels))
-
-        for i, item in enumerate(tqdm(dataset)):
+        embeddings_list, label_names = [], []
+        for item in tqdm(dataset):
+            objs = item.get("objects", {})
             if evaluation_level == "image":
-                embedding = self.model.extract_features(item["image"], **extract_kwargs)
-                if embedding is not None:
-                    embeddings_list.append(embedding)
-                    if "objects" in item and "category" in item["objects"] and item["objects"]["category"]:
-                        label_name = item["objects"]["category"][0]
-                        if label_name in name_to_idx:
-                            true_labels.append(name_to_idx[label_name])
-                            valid_indices.append(len(embeddings_list) - 1)
-
-            elif evaluation_level == "object":
-                if "objects" not in item or "bbox" not in item["objects"] or "category" not in item["objects"]:
+                emb = self.model.extract_features(item["image"], **extract_kwargs)
+                if emb is not None and objs.get("category"):
+                    embeddings_list.append(emb)
+                    label_names.append(objs["category"][0])
+                continue
+            for j, (x, y, w, h) in enumerate(objs.get("bbox", [])):
+                if w <= 1 or h <= 1 or (not include_crowd and objs.get("iscrowd", [0] * (j + 1))[j]):
                     continue
-
-                original_image = item["image"]
-                for j, bbox in enumerate(item["objects"]["bbox"]):
-                    x, y, w, h = bbox
-                    if w > 0 and h > 0:
-                        cropped_image = original_image.crop((x, y, x + w, y + h))
-                        embedding = self.model.extract_features(cropped_image, **extract_kwargs)
-                        if embedding is not None:
-                            embeddings_list.append(embedding)
-                            label_name = item["objects"]["category"][j]
-                            if label_name in name_to_idx:
-                                true_labels.append(name_to_idx[label_name])
-                                valid_indices.append(len(embeddings_list) - 1)
-
+                emb = self.model.extract_features(item["image"].crop((x, y, x + w, y + h)), **extract_kwargs)
+                if emb is not None:
+                    embeddings_list.append(emb)
+                    label_names.append(objs["category"][j])
         if not embeddings_list:
             print("Warning: Could not extract any valid embeddings from the dataset.")
             return {}
-
-        embeddings = np.array([emb.cpu().numpy().flatten() for emb in embeddings_list])
+        embeddings = np.array([np.asarray(e.detach().cpu() if hasattr(e, "detach") else e, dtype=np.float32).flatten() for e in embeddings_list])
+        names = sorted(set(label_names))
+        name_to_idx = {n: i for i, n in enumerate(names)}
+        idx_to_name = dict(enumerate(names))
+        true_labels = np.array([name_to_idx[n] for n in label_names])
         evaluator = EmbeddingEvaluator(embeddings, use_umap=use_umap, **kwargs)
-
-        results = {}
-        results["internal_cluster_validation"] = evaluator.evaluate_cluster_structure()
-
-        if true_labels:
-            true_labels = np.array(true_labels)
-            results["external_cluster_validation"] = evaluator.evaluate_against_truth(true_labels)
-            results["sample_results"] = evaluator.get_sample_results(true_labels, label_map=idx_to_name)
-
+        results: dict[str, Any] = {"internal_cluster_validation": evaluator.evaluate_cluster_structure()}
+        results["external_cluster_validation"] = evaluator.evaluate_against_truth(true_labels)
+        results["sample_results"] = evaluator.get_sample_results(true_labels, label_map=idx_to_name)
+        if len(names) >= 3:
             try:
-                if len(np.unique(true_labels)) >= 3:
-                    valid_embeddings = embeddings[valid_indices]
-                    evaluator_for_mantel = EmbeddingEvaluator(valid_embeddings, use_umap=False)
-                    mantel_corr, p_val, n, per_class_df = evaluator_for_mantel.compare_to_distance_matrix(
-                        true_labels, label_map=idx_to_name, batch_size=batch_size
-                    )
-                    results["mantel_correlation"] = {"r": mantel_corr, "p_value": p_val, "n_items": n}
-                    results["per_class_centroids"] = per_class_df
-                else:
-                    print("Not enough unique labels in the dataset subset to run the Mantel test.")
-            except (ImportError, FileNotFoundError, ValueError) as e:
+                ext = taxonomic_distance_matrix([n for n in names if n in _known_species()])
+                mantel_eval = EmbeddingEvaluator(embeddings, use_umap=False)
+                r, p, n_items, per_class = mantel_eval.compare_to_distance_matrix(
+                    true_labels, label_map=idx_to_name, ext_distance=ext, batch_size=batch_size
+                )
+                results["mantel_correlation"] = {"r": r, "p_value": p, "n_items": n_items, "distance": "taxonomic"}
+                results["per_class_centroids"] = per_class
+            except (ImportError, KeyError, ValueError) as e:
                 print(f"Could not run Mantel test: {e}")
-        else:
-            print("Dataset does not have the required 'objects' and 'category' fields for external validation.")
-            results["sample_results"] = evaluator.get_sample_results()
-
         return results
+
+    # ------------------------------------------------------------------------------------------------------------
+    def object_classification(self, dataset, **kwargs):
+        """Deprecated: use `Evaluator.benchmark`, which scores with the benchmark's crowd-aware evaluator."""
+        warnings.warn(
+            "Evaluator.object_classification() is deprecated; use Evaluator.benchmark(splits=[...]) instead. "
+            "The old evaluator did not honour the benchmark's crowd regions.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        if not isinstance(dataset, BenchmarkDataset):
+            raise TypeError("object_classification now only accepts a BenchmarkDataset from ibbi.get_dataset().")
+        return self.benchmark(splits=[dataset.split], dataset_dir=dataset.root, predict_kwargs=kwargs.get("predict_kwargs"))
+
+
+_CAT_CACHE: dict[str, dict[str, int]] = {}
+
+
+def _benchmark_category_ids(root: Path) -> dict[str, int]:
+    """species name -> global category id, read from the benchmark's COCO files (cached)."""
+    import json
+
+    key = str(root)
+    if key not in _CAT_CACHE:
+        m: dict[str, int] = {}
+        for p in sorted((Path(root) / "detection" / "annotations_coco").glob("*.json")):
+            with open(p) as f:
+                for c in json.load(f).get("categories", []):
+                    m[c["name"]] = int(c["id"])
+        _CAT_CACHE[key] = m
+    return _CAT_CACHE[key]
+
+
+def _known_species() -> set:
+    from ..utils.data import get_taxonomy
+
+    return set(get_taxonomy()["scientificName"])
 
 
 __all__ = ["Evaluator"]
