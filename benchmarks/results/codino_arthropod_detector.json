@@ -1,0 +1,53 @@
+{
+ "model": "codino_arthropod_detector",
+ "env": {
+  "python": "3.11.16",
+  "packages": {
+   "ibbi": "0.0.0",
+   "torch": "2.11.0+cu128",
+   "ultralytics": "8.3.253",
+   "transformers": "5.18.0",
+   "timm": "1.0.30",
+   "open_clip_torch": "3.3.0",
+   "pycocotools": "2.0.11"
+  },
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition"
+ },
+ "dataset_revision": "8dc5a58e09c429e7d91077437846f424f5ab0c4e",
+ "splits": [
+  "iid_test",
+  "inat_test",
+  "semantic_ood"
+ ],
+ "headline": {
+  "iid_test.class_agnostic_AP_50_95": 0.668830390798632,
+  "iid_test.class_agnostic_AP_50": 0.697755699316595,
+  "iid_test.class_agnostic_AP_75": 0.67306516957465,
+  "iid_test.class_agnostic_AR_100": 0.9146153846153847,
+  "iid_test.class_agnostic_max_recall_50": 0.9338461538461539,
+  "iid_test.class_agnostic_recall_50_at_op": 0.9230769230769231,
+  "iid_test.class_agnostic_precision_50_at_op": 0.4552352048558422,
+  "iid_test.class_agnostic_fp_per_image_at_op": 1.1580645161290322,
+  "inat_test.class_agnostic_AP_50_95": 0.9523255615194736,
+  "inat_test.class_agnostic_AP_50": 1.0,
+  "inat_test.class_agnostic_AP_75": 1.0,
+  "inat_test.class_agnostic_AR_100": 0.9612499999999999,
+  "inat_test.class_agnostic_max_recall_50": 1.0,
+  "inat_test.class_agnostic_recall_50_at_op": 0.975,
+  "inat_test.class_agnostic_precision_50_at_op": 1.0,
+  "inat_test.class_agnostic_fp_per_image_at_op": 0.0,
+  "semantic_ood.class_agnostic_AP_50_95": 0.683376002749694,
+  "semantic_ood.class_agnostic_AP_50": 0.706871594870798,
+  "semantic_ood.class_agnostic_AP_75": 0.6892936802046754,
+  "semantic_ood.class_agnostic_AR_100": 0.7796564657744438,
+  "semantic_ood.class_agnostic_max_recall_50": 0.8021694655187112,
+  "semantic_ood.class_agnostic_recall_50_at_op": 0.7807092319495355,
+  "semantic_ood.class_agnostic_precision_50_at_op": 0.8007781760951298,
+  "semantic_ood.class_agnostic_fp_per_image_at_op": 1.1834826645890144
+ },
+ "seconds": 5847.323235273361,
+ "operating_conf": 0.65,
+ "benchmark_kwargs": {
+  "conf": 0.001
+ }
+}

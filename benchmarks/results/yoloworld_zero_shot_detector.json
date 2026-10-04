@@ -1,0 +1,53 @@
+{
+ "model": "yoloworld_zero_shot_detector",
+ "env": {
+  "python": "3.11.16",
+  "packages": {
+   "ibbi": "0.0.0",
+   "torch": "2.11.0+cu128",
+   "ultralytics": "8.3.253",
+   "transformers": "5.18.0",
+   "timm": "1.0.30",
+   "open_clip_torch": "3.3.0",
+   "pycocotools": "2.0.11"
+  },
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition"
+ },
+ "dataset_revision": "8dc5a58e09c429e7d91077437846f424f5ab0c4e",
+ "splits": [
+  "iid_test",
+  "inat_test",
+  "semantic_ood"
+ ],
+ "headline": {
+  "iid_test.class_agnostic_AP_50_95": 0.11363431778944798,
+  "iid_test.class_agnostic_AP_50": 0.20712939959689092,
+  "iid_test.class_agnostic_AP_75": 0.11470999092117941,
+  "iid_test.class_agnostic_AR_100": 0.678,
+  "iid_test.class_agnostic_max_recall_50": 0.9261538461538461,
+  "iid_test.class_agnostic_recall_50_at_op": 0.26615384615384613,
+  "iid_test.class_agnostic_precision_50_at_op": 0.26533742331288346,
+  "iid_test.class_agnostic_fp_per_image_at_op": 0.7725806451612903,
+  "inat_test.class_agnostic_AP_50_95": 0.4817625625874874,
+  "inat_test.class_agnostic_AP_50": 0.6636513250390096,
+  "inat_test.class_agnostic_AP_75": 0.5579116079140285,
+  "inat_test.class_agnostic_AR_100": 0.73625,
+  "inat_test.class_agnostic_max_recall_50": 0.975,
+  "inat_test.class_agnostic_recall_50_at_op": 0.225,
+  "inat_test.class_agnostic_precision_50_at_op": 0.9473684210526315,
+  "inat_test.class_agnostic_fp_per_image_at_op": 0.013513513513513514,
+  "semantic_ood.class_agnostic_AP_50_95": 0.25248739952981847,
+  "semantic_ood.class_agnostic_AP_50": 0.4739939978244267,
+  "semantic_ood.class_agnostic_AP_75": 0.23646969425751016,
+  "semantic_ood.class_agnostic_AR_100": 0.5178394851248828,
+  "semantic_ood.class_agnostic_max_recall_50": 0.7870599266899667,
+  "semantic_ood.class_agnostic_recall_50_at_op": 0.3632682635751428,
+  "semantic_ood.class_agnostic_precision_50_at_op": 0.6361634633327113,
+  "semantic_ood.class_agnostic_fp_per_image_at_op": 1.2659394883781327
+ },
+ "seconds": 4248.315794229507,
+ "operating_conf": 0.5,
+ "benchmark_kwargs": {
+  "conf": 0.02
+ }
+}

@@ -1,0 +1,50 @@
+{
+ "model": "yolov10x_species_detector",
+ "env": {
+  "python": "3.11.16",
+  "packages": {
+   "ibbi": "0.0.0",
+   "torch": "2.11.0+cu128",
+   "ultralytics": "8.3.253",
+   "transformers": "5.18.0",
+   "timm": "1.0.30",
+   "open_clip_torch": "3.3.0",
+   "pycocotools": "2.0.11"
+  },
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition"
+ },
+ "dataset_revision": "8dc5a58e09c429e7d91077437846f424f5ab0c4e",
+ "splits": [
+  "iid_test",
+  "inat_test",
+  "semantic_ood"
+ ],
+ "headline": {
+  "iid_test.AP_50_95": 0.5606838308201837,
+  "iid_test.AP_50": 0.5824522953604306,
+  "iid_test.detection_recall": 0.9323076923076923,
+  "iid_test.acc_species_given_det": 0.6039603960396039,
+  "iid_test.species_recall": 0.563076923076923,
+  "iid_test.acc_genus_given_det": 0.6551155115511551,
+  "iid_test.class_agnostic_AR_100": 0.8993846153846154,
+  "iid_test.ECE": 0.1529197893740554,
+  "inat_test.AP_50": 0.16563531353135313,
+  "inat_test.detection_recall": 0.45,
+  "inat_test.species_recall": 0.1875,
+  "semantic_ood.class_agnostic_AR_100": 0.7236169124541811,
+  "semantic_ood.detection_recall": 0.7972039894297162,
+  "semantic_ood.acc_genus_given_det": 0.16290633019674935,
+  "semantic_ood.acc_tribe_given_det": 0.46802822925577414,
+  "summary.novelty_det_AUROC": 0.6636034199281776,
+  "summary.novelty_det_FPR@95TPR": 0.7326732673267327,
+  "summary.photography_robustness_gap_AP_50": 0.4168169818290775,
+  "summary.species_generalization_gap_AR_100": 0.1757677029304343
+ },
+ "seconds": 999.9553632736206,
+ "operating_conf": null,
+ "benchmark_kwargs": {
+  "conf": 0.001,
+  "iou": 0.7,
+  "max_det": 300
+ }
+}

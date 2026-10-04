@@ -1,72 +1,106 @@
 # Contributing to IBBI
 
-First off, thank you for considering contributing to IBBI! Your help is greatly appreciated. This document provides guidelines for contributing to the project.
+Thank you for considering a contribution to IBBI! This page explains how to get help, how to set up a development
+environment and what a pull request should contain.
 
-## Seeking Support
+## Seeking support
 
-If you have a general question about how to use `ibbi`, are not sure about a feature, or are encountering a bug, the best way to get help is by opening an issue on our [GitHub Issue Tracker](https://github.com/ChristopherMarais/ibbi/issues).
+If you have a question about how to use `ibbi`, are unsure about a feature or have found a bug, open an issue on the
+[GitHub issue tracker](https://github.com/ChristopherMarais/IBBI/issues). Please include the `ibbi` version
+(`ibbi.__version__`), your Python, PyTorch and Ultralytics versions, and a minimal example that reproduces the problem.
 
-This is the preferred method for getting support, as it allows the community and maintainers to track and respond to your query in one central place.
+## Ways to contribute
 
-## How Can I Contribute?
+- **Reporting bugs:** open an issue describing the problem, the steps to reproduce it and what you expected.
+- **Suggesting enhancements:** open an issue to discuss the idea before writing code.
+- **Improving the documentation:** fixes and new examples for the docs or the notebooks are always welcome.
+- **Adding models:** see [Adding a model](#adding-a-model) below; please open an issue first.
+- **Submitting pull requests:** for bug fixes and agreed features.
 
-There are many ways to contribute, from writing tutorials to implementing new models. Here are a few ideas:
+## Development environment
 
-- **Reporting Bugs:** If you find a bug, please open an issue on our [GitHub issue tracker](https://github.com/ChristopherMarais/ibbi/issues). Describe the issue in detail, including steps to reproduce it.
-- **Suggesting Enhancements:** Have an idea for a new feature or an improvement to an existing one? Open an issue to start a discussion.
-- **Writing Documentation:** Good documentation is key. If you find parts of our docs unclear or want to add a new tutorial, please let us know or submit a pull request.
-- **Adding New Models:** If you have trained a new model that would be a good fit for IBBI, we'd love to hear about it.
-- **Submitting Pull Requests:** If you've fixed a bug or implemented a new feature, you can submit a pull request.
+1. **Clone the repository**
 
-## Setting Up Your Development Environment
+    ```bash
+    git clone https://github.com/ChristopherMarais/IBBI.git
+    cd IBBI
+    ```
 
-To get started with development, please follow these steps.
+2. **Create an environment** (conda shown; any Python ≥ 3.11 environment works)
 
-1.  **Clone the repository:**
-    This downloads the project source code to your local machine.
+    ```bash
+    conda env create -f environment.yml
+    conda activate IBBI
+    ```
+
+3. **Install PyTorch** for your hardware ([pytorch.org](https://pytorch.org/get-started/locally/)), then the package
+   with its development tools:
+
+    ```bash
+    pip install torch torchvision                      # or the command pytorch.org gives for your system
+    poetry config virtualenvs.create false --local     # install into the active environment
+    poetry install --with dev
+    ```
+
+    Without Poetry, `pip install -e . pytest ruff` is enough to run the tests.
+
+4. **Set up the pre-commit hooks** (ruff lint and format, pyright and general checks on every commit):
+
+    ```bash
+    pre-commit install
+    ```
+
+## Tests
+
+The test suite has two levels:
+
 ```bash
-git clone https://github.com/ChristopherMarais/ibbi.git
-cd ibbi
+pytest -q tests                 # fast offline tests: synthetic benchmark, tiny models, no downloads (CPU, ~1 min)
+pytest -q tests --run-slow      # also download every model from the Hub and run it (GPU recommended)
 ```
 
-2.  **Create a Conda environment:**
-    We recommend using Conda to manage your Python environment to avoid conflicts with other projects. This command creates an environment named `ibbi` with Python 3.11.
+The fast tests run on GitHub Actions for Python 3.11 and 3.12 on every pull request, after `ruff check src tests
+benchmarks`. Please add tests for new behaviour; fixtures for a synthetic benchmark, a tiny classifier and an untrained
+YOLO model are in `tests/conftest.py`.
+
+`src/ibbi/evaluate/_reference_evaluator.py` is the benchmark's reference evaluator, vendored unchanged: do not edit or
+reformat it (it is excluded from ruff).
+
+## Documentation
+
+The documentation site is built with MkDocs Material from `docs/` and `mkdocs.yml`; the API reference is generated from
+the docstrings (Google style).
+
 ```bash
-conda env create -f environment.yml
-conda activate IBBI
+mkdocs serve                    # live preview at http://127.0.0.1:8000
+mkdocs build --strict           # check for broken links and docstring problems
 ```
 
-1.  **Install dependencies with Poetry:**
-    This project uses Poetry for dependency management. The `environment.yml` file sets up Python and pip, and then we use Poetry to install the project dependencies.
+The site at [gcmarais.com/IBBI](https://gcmarais.com/IBBI/) is deployed to the `gh-pages` branch by the
+`Deploy documentation` GitHub Action (`.github/workflows/docs.yml`) each time a release is published; it can also be
+run by hand from the Actions tab.
 
-2.  **Install dependencies with Poetry:**
-    This project uses Poetry for dependency management. These commands will install all the necessary packages for running and developing `ibbi`.
-```bash
-# Install PyTorch first, as its installation can be system-specific (CPU/GPU)
-# See https://pytorch.org/get-started/locally/ for the correct command
-pip install torch torchvision torchaudio
+The benchmark tables in `docs/benchmark.md` and the summary in `README.md` are generated by
+`benchmarks/make_tables.py` from `benchmarks/run_benchmark.py` outputs; edit the scripts, not the tables.
 
-# Configure Poetry to use the existing Conda environment
-poetry config virtualenvs.create false --local
+## Adding a model
 
-# Install all other project dependencies, including development tools
-poetry install --with dev
-```
+IBBI is an inference package: training code lives elsewhere. A new model needs:
 
-4.  **Set up pre-commit hooks:**
-    We use `pre-commit` to automatically run code formatters and linters before each commit. This ensures code quality and a consistent style across the project.
-```bash
-pre-commit install
-```
-The hooks will now run automatically every time you make a commit.
+1. weights in a Hugging Face repository with a model card (training data, selection on validation data, benchmark
+   results, licence);
+2. a wrapper in `src/ibbi/models/` implementing `predict`, `predict_proba`, `extract_features` and `get_classes`, and a
+   factory function registered with `register_model` (see `models/detectors.py`);
+3. a row in `src/ibbi/data/ibbi_model_summary.csv` and an entry in `docs/models.md`;
+4. a benchmark run with `benchmarks/run_benchmark.py` (nothing tuned on the test splits);
+5. tests (an offline test with a fake or tiny model, and a slow test that loads the real weights).
 
-## Pull Request Process
+## Pull request process
 
-1.  Create a new branch for your feature or bug fix (e.g., `git checkout -b feature/my-new-feature`).
-2.  Make your changes and commit them. Make sure your commit messages are clear and descriptive.
-3.  Ensure all tests pass and that the pre-commit hooks run without errors.
-4.  Push your branch to your fork on GitHub.
-5.  Open a pull request from your branch to the `main` branch of the IBBI repository.
-6.  In the pull request description, clearly describe the changes you've made and why. If it fixes an existing issue, please reference it (e.g., "Fixes #123").
+1. Create a branch for your change (e.g. `git checkout -b fix/zero-shot-tiling`).
+2. Make your changes with clear commit messages.
+3. Make sure `pytest -q tests` passes and the pre-commit hooks run without errors.
+4. Push the branch to your fork and open a pull request against `main`.
+5. Describe what changed and why, and reference the issue it addresses (e.g. "Fixes #123").
 
 Thank you again for your interest in contributing!

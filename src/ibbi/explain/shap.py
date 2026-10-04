@@ -136,9 +136,12 @@ def plot_shap_explanation(
         print("⚠️  Warning: SHAP values are all zero. The plot will be empty.")
         print("   This can happen if the model's prediction is not sensitive to the masking.")
 
+    # shap.image_plot wants one array per output, each [n_images, H, W, C], and labels [n_images, n_outputs]
+    values = np.asarray(shap_values_for_plot)
+    per_output = [values[..., i][np.newaxis, ...] for i in range(values.shape[-1])]
     shap.image_plot(
-        shap_values=[shap_values_for_plot] if isinstance(shap_values_for_plot, np.ndarray) else shap_values_for_plot,
-        pixel_values=image_for_plotting,
-        labels=np.array([class_names_for_plot]),
+        shap_values=per_output,
+        pixel_values=np.asarray(image_for_plotting)[np.newaxis, ...],
+        labels=np.array([list(class_names_for_plot)]),
         show=True,
     )
