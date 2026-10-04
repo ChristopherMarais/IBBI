@@ -149,6 +149,21 @@ differently.
 | rtdetr-x | 2 | 0.530 | 0.645 | 0.739 | yes |
 <!-- SEED_TABLE_END -->
 
+## Reference and fast inference paths
+
+The tables above were produced with the reference inference path (Pillow decoding, Ultralytics' CPU letterbox, Pillow
+crops). The default on CUDA is now a GPU fast path (`docs/usage.md`). Re-running the benchmark with it changes
+the headline numbers by at most a few specimens:
+
+| Model | Largest change (iid_test / semantic_ood) | inat_test (80 specimens) | Benchmark run time |
+|---|---|---|---|
+| yolo11x_arthropod_detector | class-agnostic AP −0.0002 / +0.0000 | AP +0.0018 | 987 → 654 s |
+| yolo12x_species_detector | species acc. given detection +0.0017 / genus acc. −0.0001 | 0 | 1019 → 677 s |
+| yolov10x_species_detector | iid AP −0.0017 / AR@100 +0.0003 | 0 | 1000 → 650 s |
+| pipeline: arthropod detector + DINOv3 classifier | genus acc. given detection −0.0050, species −0.0033 / genus +0.0006 | +1 specimen (+0.0125) | 1319 → 712 s |
+
+`create_pipeline(fast=False)` (and `detector.fast = False`) reproduces the tables exactly.
+
 ## Caveats
 
 * **The arthropod detector has seen most benchmark images.** About 99% of the benchmark's images come from the Bark and

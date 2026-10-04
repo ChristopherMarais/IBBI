@@ -50,11 +50,16 @@ class UltralyticsDetector:
         config (dict | None): The repository's `config.json` (image size, defaults, class mapping).
         device (str | None): "cuda", "cpu", "mps", ... Defaults to the best available device.
         name (str | None): Registry name of the model.
+        fast (bool | None): Letterbox on the GPU and pass Ultralytics a ready tensor (default: True on CUDA). Same
+            geometry as Ultralytics' CPU letterbox; resize rounding differs slightly. Set `detector.fast = False` for
+            the reference path that produced the published benchmark numbers.
     """
 
     is_species_level = False
 
-    def __init__(self, model_path: str, config: dict[str, Any] | None = None, device: str | None = None, name: str | None = None):
+    def __init__(
+        self, model_path: str, config: dict[str, Any] | None = None, device: str | None = None, name: str | None = None, fast: bool | None = None
+    ):
         from ultralytics import RTDETR, YOLO
 
         _check_ultralytics_version()
@@ -70,12 +75,35 @@ class UltralyticsDetector:
         bench = dict(self.config.get("benchmark_inference", {"conf": 0.001}))
         bench.pop("imgsz", None)
         self.benchmark_kwargs = bench
+        # fast path: letterbox on the GPU and give Ultralytics a ready tensor (see models/_gpu.py); CUDA only
+        self.fast = str(self.device).startswith("cuda") if fast is None else bool(fast)
+        self.accepts_tensors = True
         print(f"{self.name} loaded on device: {self.device}")
 
     def _run(self, images: list, **kwargs) -> list:
         kw = {"imgsz": self.imgsz, "verbose": False, "device": self.device, **self.inference_defaults, **kwargs}
+        if self.fast:
+            return [self._run_tensor(im, kw) for im in images]
         # Ultralytics expects BGR numpy arrays or paths; PIL images are converted by it.
-        return self.model.predict([load_image(im) for im in images], **kw)
+        return self.model.predict([load_image(im) if not isinstance(im, torch.Tensor) else _to_pil(im) for im in images], **kw)
+
+    def _run_tensor(self, image, kw: dict) -> Any:
+        """One image through the GPU letterbox; boxes are mapped back to the original image like Ultralytics does."""
+        from ultralytics.utils import ops
+
+        from ._gpu import load_tensor, ultralytics_letterbox
+
+        t = load_tensor(image, self.device)
+        stride = int(max(getattr(self.model.model, "stride", torch.tensor([32])).max().item(), 32))
+        x = ultralytics_letterbox(t, int(kw["imgsz"]), stride)
+        res = self.model.predict(x, **kw)[0]
+        if res.boxes is not None and len(res.boxes):
+            from ultralytics.engine.results import Boxes
+
+            data = res.boxes.data.clone()
+            data[:, :4] = ops.scale_boxes(x.shape[2:], data[:, :4], tuple(t.shape[1:]))
+            res.boxes = Boxes(data, tuple(t.shape[1:]))
+        return res
 
     @staticmethod
     def _to_dict(res, names: list[str]) -> dict[str, list]:
@@ -102,6 +130,8 @@ class UltralyticsDetector:
         """
         kwargs.pop("include_full_probabilities", None)
         images = list(image) if is_batch(image) else [image]
+        if not self.fast and any(isinstance(im, torch.Tensor) for im in images):
+            images = [_to_pil(im) if isinstance(im, torch.Tensor) else im for im in images]
         results = self._run(images, **kwargs)
         outs = [self._to_dict(r, self.classes) for r in results]
         return outs if is_batch(image) else outs[0]
@@ -123,6 +153,12 @@ class UltralyticsDetector:
     def get_classes(self) -> list[str]:
         """Class names, in class-index order."""
         return self.classes
+
+
+def _to_pil(t: torch.Tensor):
+    from PIL import Image
+
+    return Image.fromarray(t.permute(1, 2, 0).cpu().numpy())
 
 
 class SpeciesDetector(UltralyticsDetector):

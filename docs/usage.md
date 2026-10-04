@@ -180,6 +180,24 @@ rec["depth_by_op"]       # the depth under every operating point: {"0.9": 3, "0.
 Higher acceptance means fewer abstentions on known species and more over-commitment on unknown ones. Choose with
 `ibbi.create_model("hierarchical_classifier", operating_point="0.99")` or per call (`predict(..., operating_point=...)`).
 
+### Speed: the GPU fast path
+
+On CUDA the pipeline and the Ultralytics detectors use a fast path by default: JPEG files are decoded on the GPU, the
+detector's letterbox and the classifier's crops are made on the GPU, and the crops of several images are classified
+together. Pass several images per call to benefit from the pooling:
+
+```python
+pipe = ibbi.create_pipeline(batch_size=64)                    # crops per classifier pass
+results = pipe.predict(["a.jpg", "b.jpg", "c.jpg", ...])      # 16 or more images per call is a good size
+```
+
+On 200 benchmark photographs (12.6 megapixels median, RTX PRO 6000) the pipeline runs at 33.5 images per second instead
+of 7.8. Detections are the same (median box IoU 0.9994); resize and JPEG-decoder rounding changes the reported label of
+about 3% of specimens that sit at a novelty threshold (batching crops differently already changes about 1%). Benchmark
+results move by at most a few specimens (see [benchmark.md](benchmark.md#reference-and-fast-inference-paths)).
+`ibbi.create_pipeline(fast=False)` and `detector.fast = False` give the reference path that produced the published
+numbers. Without a GPU the reference path is always used.
+
 ---
 
 ## Hierarchical classifier on its own

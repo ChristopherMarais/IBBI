@@ -309,6 +309,10 @@ IBBI needs Python ≥ 3.11. A full walk-through with conda and pixi is in the [u
 
 ### Hardware Requirements
 
+* **Speed:** on a CUDA GPU the pipeline decodes, letterboxes and crops on the GPU and classifies the crops of several
+  images together: about 33 images per second on an RTX PRO 6000 (12.6-megapixel photographs), 4.3× the reference
+  path. Pass lists of images to `predict` to benefit; `fast=False` gives the reference path of the published benchmark.
+
 * **Disk Space:** about 0.1 GB per detector, 1.2 GB per classifier and 1–3.5 GB per zero-shot model. The full benchmark needs
   about 27 GB; `ibbi.get_dataset()` downloads only the split you ask for (`iid_test` and `inat_test` are small,
   `semantic_ood` is the largest).

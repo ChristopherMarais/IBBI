@@ -57,18 +57,29 @@ class Evaluator:
         name_to_cat = _benchmark_category_ids(dataset.root) if species_level else {}
         n = len(dataset) if max_images is None else min(max_images, len(dataset))
         preds: list[dict[str, Any]] = []
-        for i in tqdm(range(n), desc=f"{dataset.split}", disable=not progress):
-            item = dataset[i]
-            res = self.model.predict(item["image"], **kwargs)
-            labels = res.get("species", res.get("labels", []))
-            cats = None
-            if species_level:
-                cats = [name_to_cat.get(lbl, -1) for lbl in labels]
-                keep = [j for j, c in enumerate(cats) if c != -1]
-                res = {k: [res[k][j] for j in keep] for k in ("boxes", "scores")}
-                cats = [cats[j] for j in keep]
-            preds.extend(to_coco_results(item["image_id"], res["boxes"], res["scores"], cats))
+        # models that pool work across images (the pipeline's fast path) get several images per call
+        chunk = int(getattr(self.model, "predict_batch_images", 1)) if getattr(self.model, "fast", False) else 1
+        bar = tqdm(total=n, desc=f"{dataset.split}", disable=not progress)
+        for start in range(0, n, chunk):
+            items = [dataset[i] for i in range(start, min(n, start + chunk))]
+            results = self.model.predict([it["image"] for it in items], **kwargs) if chunk > 1 else [self.model.predict(items[0]["image"], **kwargs)]
+            bar.update(len(items))
+            for item, res in zip(items, results):
+                preds.extend(self._to_coco(item, res, species_level, name_to_cat))
+        bar.close()
         return preds
+
+    @staticmethod
+    def _to_coco(item: dict[str, Any], res: dict[str, Any], species_level: bool, name_to_cat: dict[str, int]) -> list[dict[str, Any]]:
+        """COCO result dicts of one image (species-level models: benchmark category ids; others: category 1)."""
+        labels = res.get("species", res.get("labels", []))
+        cats = None
+        if species_level:
+            cats = [name_to_cat.get(lbl, -1) for lbl in labels]
+            keep = [j for j, c in enumerate(cats) if c != -1]
+            res = {k: [res[k][j] for j in keep] for k in ("boxes", "scores")}
+            cats = [cats[j] for j in keep]
+        return to_coco_results(item["image_id"], res["boxes"], res["scores"], cats)
 
     def benchmark(
         self,
