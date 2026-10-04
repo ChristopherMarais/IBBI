@@ -3,6 +3,11 @@ name: Publish Python Package to PyPI
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 0.3.0), for re-running a release whose publish failed"
+        required: true
 
 jobs:
   pypi-publish:
@@ -28,21 +33,28 @@ jobs:
       - name: Install Poetry
         uses: snok/install-poetry@v1
 
-      - name: Install dependencies
-        run: poetry install --no-interaction
+      # Building the sdist and wheel needs only Poetry itself, not the package's dependencies.
 
       - name: Remove old build artifacts
         run: rm -rf dist/
 
-      - name: Set version from tag
+      - name: Set version
         run: |
-          # This command takes the git tag (e.g., v0.1.0), removes the 'v' prefix,
-          # and then tells poetry to set the project version to that number.
-          VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
-          poetry version $VERSION
+          # From the release tag (v0.3.0 -> 0.3.0), or from the manual input when run by hand.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          fi
+          poetry version "$VERSION"
 
       - name: Build package
         run: poetry build
+
+      - name: Check the built package
+        run: |
+          pip install twine
+          twine check dist/*
 
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
