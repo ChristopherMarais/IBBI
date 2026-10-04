@@ -21,6 +21,7 @@ DETECTORS = [
     "yolo12x_species_detector",
     "rtdetrx_species_detector",
     "yolo11x_arthropod_detector",
+    "codino_arthropod_detector",
 ]
 ZERO_SHOT = ["grounding_dino_zero_shot_detector", "owlv2_zero_shot_detector", "yoloworld_zero_shot_detector", "sam3_zero_shot_detector"]
 CLASSIFIERS = ["dinov3_hierarchical_classifier", "bioclip2_hierarchical_classifier"]

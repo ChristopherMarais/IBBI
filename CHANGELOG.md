@@ -18,7 +18,8 @@ compatibility with v0.2.
 * All v0.2 models are removed. New models (weights in new IBBI-bio repositories):
   * species detectors for 65 species: `yolov8x_`, `yolov9e_`, `yolov10x_`, `yolo11x_`, `yolo12x_`,
     `rtdetrx_species_detector`;
-  * `yolo11x_arthropod_detector`, a universal single-class arthropod detector;
+  * `yolo11x_arthropod_detector`, a universal single-class arthropod detector, and `codino_arthropod_detector`, a
+    larger and more accurate one (Co-DINO with an EVA-02-L backbone, run on plain PyTorch; CC BY-NC 4.0);
   * `dinov3_hierarchical_classifier` and `bioclip2_hierarchical_classifier`: subfamily / tribe / genus / species with
     calibrated probabilities and per-level "known / unsure" decisions;
   * zero-shot detectors `grounding_dino_`, `owlv2_`, `yoloworld_`, `sam3_zero_shot_detector`.

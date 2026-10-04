@@ -67,9 +67,10 @@ see where the models can and cannot be trusted.
     subfamily, tribe, genus and species, with a calibrated probability and a known / unsure decision per level. This is
     the most accurate way to identify the 65 trained species and the only one that can say "I don't know" for the rest.
 
-  * **Arthropod Detection:** Detect *any* arthropod in an image, whatever its species. A YOLO11x model trained on
+  * **Arthropod Detection:** Detect *any* arthropod in an image, whatever its species. Two models trained on the same
     307,421 images from 14 sources (lab photographs and scans, light traps, sticky cards and pitfall trays, camera traps,
-    field photographs). It locates specimens but does not name them.
+    field photographs): a fast YOLO11x (the default) and a larger, more accurate Co-DINO with an EVA-02-L backbone. They
+    locate specimens but do not name them.
 
   * **Hierarchical Classification with Abstention:** Name a cropped specimen at four taxonomic levels at once. The
     classifiers (fine-tuned DINOv3 ViT-L and BioCLIP 2 ViT-L) use a tree-factorised head, so the probabilities of the
@@ -301,6 +302,8 @@ IBBI needs Python ≥ 3.11. A full walk-through with conda and pixi is in the [u
 * SAM 3 is gated on the Hugging Face Hub: accept its licence at https://huggingface.co/facebook/sam3 and run
   `hf auth login` before using `sam3_zero_shot_detector`.
 * YOLO-World downloads its text encoder (CLIP) through Ultralytics on first use.
+* The Co-DINO detector is large (347 M parameters, images up to 2048 × 1280 px): use a GPU. `ibbi` runs it on plain
+  PyTorch, without MMDetection or MMCV.
 * Weights and dataset files are cached in `~/.cache/ibbi` (override with `IBBI_CACHE_DIR`; `ibbi.clean_cache()` deletes
   it). Set `IBBI_MODELS_DIR` to a folder with one sub-folder per model repository to load weights offline.
 
@@ -373,6 +376,7 @@ The most detailed version of the table, with the headline benchmark metrics, is
 | `yolo12x_species_detector` | Species detection (65 species) | YOLO12x | 59.2 M | 640 px | [ibbi_yolo12x_species_detector](https://huggingface.co/IBBI-bio/ibbi_yolo12x_species_detector) | [arXiv](https://arxiv.org/abs/2502.12524) | AGPL-3.0 |
 | `rtdetrx_species_detector` | Species detection (65 species) | RT-DETR-X | 67.4 M | 640 px | [ibbi_rtdetrx_species_detector](https://huggingface.co/IBBI-bio/ibbi_rtdetrx_species_detector) | [arXiv](https://arxiv.org/abs/2304.08069) | AGPL-3.0 |
 | `yolo11x_arthropod_detector` | Arthropod detection (single class) | YOLO11x | 56.9 M | 1024 px | [ibbi_yolo11x_arthropod_detector](https://huggingface.co/IBBI-bio/ibbi_yolo11x_arthropod_detector) | [arXiv](https://arxiv.org/abs/2410.17725) | AGPL-3.0 |
+| `codino_arthropod_detector` | Arthropod detection (single class) | Co-DINO, EVA-02 ViT-L/16 | 347 M | ≤ 2048 × 1280 px | [ibbi_codino_arthropod_detector](https://huggingface.co/IBBI-bio/ibbi_codino_arthropod_detector) | [arXiv](https://arxiv.org/abs/2211.12860) | CC BY-NC 4.0 |
 | `dinov3_hierarchical_classifier` | Hierarchical classification with abstention, embeddings | DINOv3 ViT-L/16 | 303 M | 336 px | [ibbi_dinov3l_hierarchical_classifier](https://huggingface.co/IBBI-bio/ibbi_dinov3l_hierarchical_classifier) | [arXiv](https://arxiv.org/abs/2508.10104) | DINOv3 License |
 | `bioclip2_hierarchical_classifier` | Hierarchical classification with abstention, embeddings | BioCLIP 2 ViT-L/14 | 304 M | 224 px | [ibbi_bioclip2_hierarchical_classifier](https://huggingface.co/IBBI-bio/ibbi_bioclip2_hierarchical_classifier) | [arXiv](https://arxiv.org/abs/2505.23883) | MIT |
 | `grounding_dino_zero_shot_detector` | Zero-shot detection (text prompts) | Grounding DINO-B | 232 M | 1024 px tiles + whole image | [IDEA-Research/grounding-dino-base](https://huggingface.co/IDEA-Research/grounding-dino-base) | [arXiv](https://arxiv.org/abs/2303.05499) | Apache-2.0 (upstream) |
@@ -392,6 +396,7 @@ The most detailed version of the table, with the headline benchmark metrics, is
 | Identify beetles in images that may contain species outside the 65 | `ibbi.create_pipeline()` |
 | Identify specimens that are already cropped | `hierarchical_classifier` |
 | Count or locate specimens, whatever their species | `arthropod_detector` |
+| The highest detection recall across imaging settings (field photos, traps, unseen species), with a GPU | `codino_arthropod_detector`, alone or in `ibbi.create_pipeline(detector="codino_arthropod_detector")` |
 | The fastest one-step detection when all specimens belong to the 65 species | a species detector |
 | Detect something other than arthropods, or with your own wording | a zero-shot detector with `text_prompt=` |
 | Embeddings for clustering or retrieval | `feature_extractor` |
@@ -422,7 +427,9 @@ scripts are in [`benchmarks/`](benchmarks/).
 | rtdetrx_species_detector | iid AP 0.535, detection recall 0.937, species accuracy given detection 0.647; unseen-species detection recall (AR@100) 0.739 |
 | pipeline: arthropod detector + DINOv3 classifier | iid AP 0.718, detection recall 0.932, species accuracy given detection 0.858; unseen-species detection recall (AR@100) 0.762 |
 | pipeline: arthropod detector + BioCLIP 2 classifier | iid AP 0.691, detection recall 0.932, species accuracy given detection 0.828; unseen-species detection recall (AR@100) 0.762 |
+| pipeline: Co-DINO detector + DINOv3 classifier | iid AP 0.729, detection recall 0.934, species accuracy given detection 0.850; unseen-species detection recall (AR@100) 0.778 |
 | yolo11x_arthropod_detector | class-agnostic AP: iid 0.744, iNat 0.932, unseen species 0.632 |
+| codino_arthropod_detector | class-agnostic AP: iid 0.669, iNat 0.952, unseen species 0.683 |
 | grounding_dino_zero_shot_detector | class-agnostic AP: iid 0.294, iNat 0.595, unseen species 0.243 |
 | owlv2_zero_shot_detector | class-agnostic AP: iid 0.365, iNat 0.531, unseen species 0.207 |
 | yoloworld_zero_shot_detector | class-agnostic AP: iid 0.114, iNat 0.482, unseen species 0.252 |
@@ -717,7 +724,9 @@ ibbi.get_taxonomy()               # all 175 species with their lineage, role and
 
 * **Code** of the `ibbi` package: MIT ([LICENSE.md](LICENSE.md)).
 * **Model weights** carry their own licences, set by the software and base models they derive from:
-  * Ultralytics-trained detectors (species detectors, arthropod detector): **AGPL-3.0**.
+  * Ultralytics-trained detectors (species detectors, YOLO11x arthropod detector): **AGPL-3.0**.
+  * Co-DINO arthropod detector: **CC BY-NC 4.0**. Its initial checkpoint was pretrained on Objects365, which is for
+    academic use only; the model code is derived from Co-DETR and EVA-02 (MIT) and MMDetection (Apache-2.0).
   * DINOv3 hierarchical classifier: **DINOv3 License** (Meta). It is a derivative of DINOv3 and is redistributed
     under that licence, whose text ships with the weights; publications using it must acknowledge DINOv3.
   * BioCLIP 2 hierarchical classifier: **MIT**.

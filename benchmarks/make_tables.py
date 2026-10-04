@@ -22,9 +22,11 @@ SPECIES = [
     "rtdetrx_species_detector",
     "pipeline__dinov3_hierarchical_classifier",
     "pipeline__bioclip2_hierarchical_classifier",
+    "pipeline__codino__dinov3_hierarchical_classifier",
 ]
 CLASS_AGNOSTIC = [
     "yolo11x_arthropod_detector",
+    "codino_arthropod_detector",
     "grounding_dino_zero_shot_detector",
     "owlv2_zero_shot_detector",
     "yoloworld_zero_shot_detector",
@@ -42,6 +44,7 @@ SUITE_ARCH = {
 NICE = {
     "pipeline__dinov3_hierarchical_classifier": "pipeline: arthropod detector + DINOv3 classifier",
     "pipeline__bioclip2_hierarchical_classifier": "pipeline: arthropod detector + BioCLIP 2 classifier",
+    "pipeline__codino__dinov3_hierarchical_classifier": "pipeline: Co-DINO detector + DINOv3 classifier",
 }
 
 

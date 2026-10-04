@@ -39,6 +39,8 @@ classes follow.
 
 ::: ibbi.models.detectors.ArthropodDetector
 
+::: ibbi.models.codino.CoDINODetector
+
 ::: ibbi.models.classifiers.HierarchicalClassifier
 
 ::: ibbi.models.zero_shot.ZeroShotDetector

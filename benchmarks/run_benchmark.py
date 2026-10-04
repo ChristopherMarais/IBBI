@@ -68,18 +68,21 @@ def main():
     ap.add_argument("--dataset-dir", default=None, help="benchmark root (default: download to the ibbi cache)")
     ap.add_argument("--splits", nargs="+", default=SPLITS)
     ap.add_argument("--max-images", type=int, default=None, help="quick test only")
+    ap.add_argument("--detector", default="yolo11x_arthropod_detector", help="detector of a pipeline:<classifier> run")
     ap.add_argument("--shard", default=None, help="i/n: only predict shard i of n (detectors); scored later with --merge n")
     ap.add_argument("--merge", type=int, default=None, help="n: merge the n shards written by --shard and score them")
     args = ap.parse_args()
 
     name = args.model.replace(":", "__")
+    if args.model.startswith("pipeline:") and args.detector != "yolo11x_arthropod_detector":
+        name = f"pipeline__{args.detector.split('_')[0]}__{args.model.split(':', 1)[1]}"
     out = Path(args.out) / name
     out.mkdir(parents=True, exist_ok=True)
     if args.merge:
         return merge_shards(args, name, out)
     t0 = time.time()
     if args.model.startswith("pipeline:"):
-        model = ibbi.create_pipeline("yolo11x_arthropod_detector", args.model.split(":", 1)[1])
+        model = ibbi.create_pipeline(args.detector, args.model.split(":", 1)[1])
     else:
         model = ibbi.create_model(args.model)
     res = {"model": args.model, "env": env_info(), "dataset_revision": ibbi.utils.data.BENCHMARK_REVISION, "splits": args.splits}

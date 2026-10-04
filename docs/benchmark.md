@@ -47,6 +47,7 @@ detection confidence separates known from unseen species (reference evaluator).
 | rtdetrx_species_detector | 0.535 | 0.557 | 0.937 | 0.647 | 0.606 | 0.701 | 0.035 | 0.388 | 0.739 | 0.221 | 0.569 |
 | pipeline: arthropod detector + DINOv3 classifier | 0.718 | 0.743 | 0.932 | 0.858 | 0.800 | 0.919 | 0.336 | 0.350 | 0.762 | 0.322 | 0.820 |
 | pipeline: arthropod detector + BioCLIP 2 classifier | 0.691 | 0.712 | 0.932 | 0.828 | 0.772 | 0.884 | 0.336 | 0.362 | 0.762 | 0.266 | 0.710 |
+| pipeline: Co-DINO detector + DINOv3 classifier | 0.729 | 0.749 | 0.934 | 0.850 | 0.794 | 0.913 | 0.354 | 0.350 | 0.778 | 0.322 | 0.806 |
 <!-- SPECIES_TABLE_END -->
 
 ## Class-agnostic detection (arthropod and zero-shot detectors)
@@ -57,6 +58,9 @@ detection confidence separates known from unseen species (reference evaluator).
 | yolo11x_arthropod_detector | iid_test | 0.744 | 0.774 | 0.909 | 0.932 | 0.70 | 0.922 | 0.435 | 1.25 |
 | yolo11x_arthropod_detector | inat_test | 0.932 | 0.996 | 0.945 | 1.000 | 0.70 | 0.963 | 0.987 | 0.01 |
 | yolo11x_arthropod_detector | semantic_ood | 0.632 | 0.670 | 0.763 | 0.797 | 0.70 | 0.784 | 0.795 | 1.23 |
+| codino_arthropod_detector | iid_test | 0.669 | 0.698 | 0.915 | 0.934 | 0.65 | 0.923 | 0.455 | 1.16 |
+| codino_arthropod_detector | inat_test | 0.952 | 1.000 | 0.961 | 1.000 | 0.65 | 0.975 | 1.000 | 0.00 |
+| codino_arthropod_detector | semantic_ood | 0.683 | 0.707 | 0.780 | 0.802 | 0.65 | 0.781 | 0.801 | 1.18 |
 | grounding_dino_zero_shot_detector | iid_test | 0.294 | 0.395 | 0.801 | 0.931 | 0.60 | 0.391 | 0.419 | 0.57 |
 | grounding_dino_zero_shot_detector | inat_test | 0.595 | 0.701 | 0.887 | 1.000 | 0.60 | 0.688 | 0.556 | 0.59 |
 | grounding_dino_zero_shot_detector | semantic_ood | 0.243 | 0.448 | 0.518 | 0.789 | 0.60 | 0.237 | 0.637 | 0.82 |
@@ -151,6 +155,12 @@ differently.
   Ambrosia Gallery, which is one of the sources of the arthropod detection corpus, many of them in its training split.
   Its detection recall on the benchmark, and therefore the pipelines' detection recall, is optimistic. Classification
   given a detection is not affected: the classifiers never trained on `iid_test` or `semantic_ood`.
+* **Co-DINO vs YOLO11x on `iid_test`.** The Co-DINO arthropod detector has the higher AP on field photographs and unseen
+  species and finds slightly more `iid_test` specimens, but its `iid_test` AP is lower (0.669 vs 0.744). Duplicate boxes
+  are not the cause (1.2% of its boxes at confidence ≥ 0.3 overlap another by IoU > 0.5). Both detectors reach only about
+  45% precision at their operating confidence on `iid_test` (many confident boxes that match no annotated specimen or
+  crowd region), so AP there depends strongly on how each model ranks those boxes; the cause of the gap has not been
+  established.
 * **Operating confidences do not transfer exactly.** The arthropod and zero-shot detectors' operating confidences were
   set for at most ~0.2 false alarms per image on the detector corpus validation sample. On the benchmark most of them
   give more (1.2 per image for the arthropod detector on `iid_test` and `semantic_ood`; up to 6.5 for SAM 3 on

@@ -20,6 +20,7 @@ EXPECTED_MODELS = {
     "yolo12x_species_detector",
     "rtdetrx_species_detector",
     "yolo11x_arthropod_detector",
+    "codino_arthropod_detector",
     "grounding_dino_zero_shot_detector",
     "owlv2_zero_shot_detector",
     "yoloworld_zero_shot_detector",

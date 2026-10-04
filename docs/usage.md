@@ -49,6 +49,7 @@ organisation the first time.
 
 ```python
 detector   = ibbi.create_model("arthropod_detector")        # yolo11x_arthropod_detector
+codino     = ibbi.create_model("codino_arthropod_detector") # larger and more accurate (GPU)
 species    = ibbi.create_model("species_detector")          # yolo12x_species_detector
 classifier = ibbi.create_model("hierarchical_classifier")   # dinov3_hierarchical_classifier
 zero_shot  = ibbi.create_model("zero_shot_detector")        # grounding_dino_zero_shot_detector
@@ -124,6 +125,9 @@ res["labels"]           # reported identification, e.g. "Xyleborus volvulus", "E
 res["species"]          # the classifier's best species (always one of its 65)
 res["classifications"]  # full record per detection (below)
 ```
+
+With a GPU, the more accurate Co-DINO detector can replace YOLO11x:
+`ibbi.create_pipeline(detector="codino_arthropod_detector", det_conf=0.65)`.
 
 Options: `ibbi.create_pipeline(detector="arthropod_detector", classifier="bioclip2_hierarchical_classifier",
 det_conf=0.7, operating_point="0.95")`. `det_conf=detector.operating_conf` (0.70) gives at most ~0.2 false alarms per

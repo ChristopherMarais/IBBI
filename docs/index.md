@@ -36,7 +36,7 @@ species it has never seen.
 | Feature | Entry point | Details |
 |---|---|---|
 | Two-stage identification (recommended) | `ibbi.create_pipeline()` | arthropod detector + hierarchical classifier, answers at the deepest trusted level |
-| Arthropod detection | `ibbi.create_model("arthropod_detector")` | YOLO11x trained on 307,421 images from 14 sources |
+| Arthropod detection | `ibbi.create_model("arthropod_detector")` | YOLO11x trained on 307,421 images from 14 sources; Co-DINO (EVA-02-L) for the highest accuracy |
 | Hierarchical classification | `ibbi.create_model("hierarchical_classifier")` | DINOv3 or BioCLIP 2; subfamily, tribe, genus, species with calibrated probabilities and novelty scores |
 | One-step species detection | `ibbi.create_model("species_detector")` | six architectures, 65 species |
 | Zero-shot detection | `ibbi.create_model("zero_shot_detector")` | Grounding DINO, OWLv2, YOLO-World, SAM 3 |

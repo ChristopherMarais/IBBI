@@ -39,6 +39,28 @@ benchmark results and licence terms. Benchmark numbers: [benchmark.md](benchmark
 * **Licence:** AGPL-3.0 (Ultralytics). Training data include iNaturalist 2017 (non-commercial research and education
   only) and IP102 (academic use only): the weights are released for non-commercial research.
 
+## Co-DINO arthropod detector
+
+`codino_arthropod_detector`: Co-DINO (Co-DETR, Zong, Song & Liu, ICCV 2023) with an EVA-02 ViT-L/16 backbone, single
+class `arthropod`, images resized to fit 2048 × 1280 px, 347 M parameters. The most accurate detector in `ibbi`, at a much
+higher compute cost than YOLO11x (about 1.5 images per second on one RTX PRO 6000).
+
+* **Training:** the same corpus and source balancing as the YOLO11x detector, from Co-DETR's Objects365-pretrained
+  checkpoint; 81,000 steps at 16 images per step (about 3 passes over the balanced mix), fp32, 8×B200.
+* **Selection:** step 75,000, chosen before any test by the highest recall at ≤ 0.2 false alarms per image on the corpus
+  validation sample. **Operating confidence** 0.65.
+* **Arthropod corpus test sets** (AP, Co-DINO vs YOLO11x trained on the same data): in-domain 0.680 vs 0.633, flatbug
+  imaging systems 0.653 vs 0.581, unseen imaging systems 0.389 vs 0.293. At 0.2 false alarms per image it finds 8.5–11.1
+  percentage points more arthropods (paired bootstrap, p < 0.001).
+* **Beetle benchmark** (class-agnostic AP, Co-DINO vs YOLO11x): `inat_test` 0.952 vs 0.932, `semantic_ood` 0.683 vs
+  0.632, but `iid_test` 0.669 vs 0.744 although it finds slightly more specimens there (AR@100 0.915 vs 0.909); see the
+  caveats in [benchmark.md](benchmark.md). In the pipeline with the DINOv3 classifier: iid AP 0.729 vs 0.718.
+* **Implementation:** `ibbi` runs a pure-PyTorch port of the Co-DETR inference path (no MMDetection / MMCV); on 19 test
+  images from every imaging setting it gives the same detections as the original above confidence 0.3 (box IoU ≥ 0.999,
+  scores within 0.003).
+* **Licence:** CC BY-NC 4.0 (the Objects365 initialisation is academic-only, and the training data include iNaturalist
+  2017 and IP102).
+
 ## Hierarchical classifiers
 
 | Name | Backbone | Input | Parameters | Weights | Licence |
