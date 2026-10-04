@@ -1057,10 +1057,32 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#ibbi.models.classifiers.HierarchicalClassifier.crop_tensors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        crop_tensors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ibbi.models.classifiers.HierarchicalClassifier.classify_crops" class="md-nav__link">
     <span class="md-ellipsis">
       
         classify_crops
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ibbi.models.classifiers.HierarchicalClassifier.classify_tensors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        classify_tensors
       
     </span>
   </a>
@@ -1849,7 +1871,7 @@ classifiers, <code>prompts=[...]</code> / <code>tile=0</code> for zero-shot dete
 
 
 <a href="#ibbi.create_pipeline" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">create_pipeline</span><span class="p">(</span><span class="n">detector</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Any</span> <span class="o">=</span> <span class="s1">'arthropod_detector'</span><span class="p">,</span> <span class="n">classifier</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Any</span> <span class="o">=</span> <span class="s1">'hierarchical_classifier'</span><span class="p">,</span> <span class="n">det_conf</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">operating_point</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IdentificationPipeline</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">create_pipeline</span><span class="p">(</span><span class="n">detector</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Any</span> <span class="o">=</span> <span class="s1">'arthropod_detector'</span><span class="p">,</span> <span class="n">classifier</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Any</span> <span class="o">=</span> <span class="s1">'hierarchical_classifier'</span><span class="p">,</span> <span class="n">det_conf</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">operating_point</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fast</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IdentificationPipeline</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -1947,6 +1969,38 @@ classifier.</p>
             </td>
             <td>
                   <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>fast</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>GPU fast path (default: on when running on CUDA); see <code>IdentificationPipeline</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>batch_size</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Crops per classifier forward pass in the fast path.</p>
+              </div>
+            </td>
+            <td>
+                  <code>64</code>
             </td>
           </tr>
       </tbody>
@@ -2739,6 +2793,40 @@ use <code>detector.operating_conf</code> (0.70) for fewer false alarms.</p>
                   <code>None</code>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>fast</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>GPU fast path: decode JPEG files on the GPU, letterbox for the detector and crop for the
+classifier on the GPU, and classify the crops of several images together. Defaults to True when the
+classifier runs on CUDA. Results match the reference path up to resize rounding (see <code>docs/benchmark.md</code>).</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>batch_size</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Crops per classifier forward pass in the fast path (crops of several images are pooled).</p>
+              </div>
+            </td>
+            <td>
+                  <code>64</code>
+            </td>
+          </tr>
       </tbody>
     </table>
 
@@ -2959,6 +3047,24 @@ use <code>detector.operating_conf</code> (0.70) for fewer false alarms.</p>
             <td>
               <div class="doc-md-description">
                 <p>Registry name of the model.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>fast</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Letterbox on the GPU and pass Ultralytics a ready tensor (default: True on CUDA). Same
+geometry as Ultralytics' CPU letterbox; resize rounding differs slightly. Set <code>detector.fast = False</code> for
+the reference path that produced the published benchmark numbers.</p>
               </div>
             </td>
             <td>
@@ -3732,6 +3838,26 @@ level) or "gallery" (0.99 at subfamily, 0.95 below; the default).</p>
 <div class="doc doc-object doc-function">
 
 
+<h3 id="ibbi.models.classifiers.HierarchicalClassifier.crop_tensors" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">crop_tensors</span>
+
+
+<a href="#ibbi.models.classifiers.HierarchicalClassifier.crop_tensors" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">crop_tensors</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">boxes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>GPU version of <code>crop</code> + letterbox for many boxes of one image tensor (uint8 [3, H, W]): uint8 [N, 3, res, res].</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="ibbi.models.classifiers.HierarchicalClassifier.classify_crops" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">classify_crops</span>
 
@@ -3745,6 +3871,26 @@ level) or "gallery" (0.99 at subfamily, 0.95 below; the default).</p>
         <p>Classifies specimen crops (one specimen per image). Returns one record per crop (see module docstring).</p>
 <p>Each record also has "depth" (0-4), "reported" (the human-readable result), "depth_by_op" (the depth under
 every stored operating point) and "embedding" is not included (use <code>extract_features</code>).</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ibbi.models.classifiers.HierarchicalClassifier.classify_tensors" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">classify_tensors</span>
+
+
+<a href="#ibbi.models.classifiers.HierarchicalClassifier.classify_tensors" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">classify_tensors</span><span class="p">(</span><span class="n">crops_uint8</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">operating_point</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Like <code>classify_crops</code> for crops already letterboxed by <code>crop_tensors</code> (uint8 [N, 3, res, res]).</p>
 
 
     </div>

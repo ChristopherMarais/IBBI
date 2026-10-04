@@ -598,6 +598,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#speed-the-gpu-fast-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Speed: the GPU fast path
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1231,6 +1242,19 @@ image on the detector's validation sample; the default 0.25 finds more specimens
 </table>
 <p>Higher acceptance means fewer abstentions on known species and more over-commitment on unknown ones. Choose with
 <code>ibbi.create_model("hierarchical_classifier", operating_point="0.99")</code> or per call (<code>predict(..., operating_point=...)</code>).</p>
+<h3 id="speed-the-gpu-fast-path">Speed: the GPU fast path<a class="headerlink" href="#speed-the-gpu-fast-path" title="Permanent link">&para;</a></h3>
+<p>On CUDA the pipeline and the Ultralytics detectors use a fast path by default: JPEG files are decoded on the GPU, the
+detector's letterbox and the classifier's crops are made on the GPU, and the crops of several images are classified
+together. Pass several images per call to benefit from the pooling:</p>
+<div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_pipeline</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>                    <span class="c1"># crops per classifier pass</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">pipe</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="s2">"a.jpg"</span><span class="p">,</span> <span class="s2">"b.jpg"</span><span class="p">,</span> <span class="s2">"c.jpg"</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>      <span class="c1"># 16 or more images per call is a good size</span>
+</code></pre></div>
+<p>On 200 benchmark photographs (12.6 megapixels median, RTX PRO 6000) the pipeline runs at 33.5 images per second instead
+of 7.8. Detections are the same (median box IoU 0.9994); resize and JPEG-decoder rounding changes the reported label of
+about 3% of specimens that sit at a novelty threshold (batching crops differently already changes about 1%). Benchmark
+results move by at most a few specimens (see <a href="../benchmark/#reference-and-fast-inference-paths">benchmark.md</a>).
+<code>ibbi.create_pipeline(fast=False)</code> and <code>detector.fast = False</code> give the reference path that produced the published
+numbers. Without a GPU the reference path is always used.</p>
 <hr />
 <h2 id="hierarchical-classifier-on-its-own">Hierarchical classifier on its own<a class="headerlink" href="#hierarchical-classifier-on-its-own" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="n">clf</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"hierarchical_classifier"</span><span class="p">)</span>
