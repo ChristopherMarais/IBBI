@@ -412,7 +412,23 @@ scripts are in [`benchmarks/`](benchmarks/).
 * **Unseen species** = `semantic_ood`: 110 species never seen in training.
 
 <!-- BENCHMARK_SUMMARY_START -->
-_Results are filled in by `benchmarks/make_tables.py`._
+| Model | Headline (benchmark v2.0.1) |
+|---|---|
+| yolov8x_species_detector | iid AP 0.497, detection recall 0.929, species accuracy given detection 0.586; unseen-species detection recall (AR@100) 0.732 |
+| yolov9e_species_detector | iid AP 0.519, detection recall 0.929, species accuracy given detection 0.613; unseen-species detection recall (AR@100) 0.735 |
+| yolov10x_species_detector | iid AP 0.561, detection recall 0.932, species accuracy given detection 0.604; unseen-species detection recall (AR@100) 0.724 |
+| yolo11x_species_detector | iid AP 0.485, detection recall 0.929, species accuracy given detection 0.575; unseen-species detection recall (AR@100) 0.727 |
+| yolo12x_species_detector | iid AP 0.490, detection recall 0.931, species accuracy given detection 0.577; unseen-species detection recall (AR@100) 0.723 |
+| rtdetrx_species_detector | iid AP 0.535, detection recall 0.937, species accuracy given detection 0.647; unseen-species detection recall (AR@100) 0.739 |
+| pipeline: arthropod detector + DINOv3 classifier | iid AP 0.718, detection recall 0.932, species accuracy given detection 0.858; unseen-species detection recall (AR@100) 0.762 |
+| pipeline: arthropod detector + BioCLIP 2 classifier | iid AP 0.691, detection recall 0.932, species accuracy given detection 0.828; unseen-species detection recall (AR@100) 0.762 |
+| yolo11x_arthropod_detector | class-agnostic AP: iid 0.744, iNat 0.932, unseen species 0.632 |
+| grounding_dino_zero_shot_detector | class-agnostic AP: iid 0.294, iNat 0.595, unseen species 0.243 |
+| owlv2_zero_shot_detector | class-agnostic AP: iid 0.365, iNat 0.531, unseen species 0.207 |
+| yoloworld_zero_shot_detector | class-agnostic AP: iid 0.114, iNat 0.482, unseen species 0.252 |
+| sam3_zero_shot_detector | class-agnostic AP: iid 0.218, iNat 0.362, unseen species 0.202 |
+| dinov3_hierarchical_classifier | iid species / genus accuracy 0.835 / 0.891; unseen species named at an impossible depth 0.497; genus novelty AUROC 0.561 |
+| bioclip2_hierarchical_classifier | iid species / genus accuracy 0.814 / 0.871; unseen species named at an impossible depth 0.471; genus novelty AUROC 0.625 |
 <!-- BENCHMARK_SUMMARY_END -->
 
 ---

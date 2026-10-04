@@ -1,0 +1,299 @@
+{
+ "model": "dinov3_hierarchical_classifier",
+ "env": {
+  "python": "3.11.16",
+  "packages": {
+   "ibbi": "0.0.0",
+   "torch": "2.11.0+cu128",
+   "ultralytics": "8.3.253",
+   "transformers": "5.18.0",
+   "timm": "1.0.30",
+   "open_clip_torch": "3.3.0",
+   "pycocotools": "2.0.11"
+  },
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition"
+ },
+ "dataset_revision": "8dc5a58e09c429e7d91077437846f424f5ab0c4e",
+ "splits": [
+  "iid_test",
+  "inat_test",
+  "semantic_ood"
+ ],
+ "headline": {
+  "iid_test.acc_subfamily": 0.9892307692307692,
+  "iid_test.acc_tribe": 0.9492307692307692,
+  "iid_test.acc_genus": 0.8907692307692308,
+  "iid_test.acc_species": 0.8353846153846154,
+  "iid_test.ece_species": 0.04313339762389657,
+  "iid_test.over_commit_rate": 0.0,
+  "iid_test.right_depth_and_taxon": 0.7184615384615385,
+  "iid_test.known_species_named_correctly": 0.7184615384615385,
+  "inat_test.acc_subfamily": 0.925,
+  "inat_test.acc_tribe": 0.5625,
+  "inat_test.acc_genus": 0.4875,
+  "inat_test.acc_species": 0.3625,
+  "inat_test.ece_species": 0.20981420314637944,
+  "inat_test.over_commit_rate": 0.0,
+  "inat_test.right_depth_and_taxon": 0.2,
+  "inat_test.known_species_named_correctly": 0.2,
+  "semantic_ood.acc_subfamily": 0.9792004091722786,
+  "semantic_ood.acc_tribe": 0.6190755685986794,
+  "semantic_ood.acc_genus": 0.5153209196755075,
+  "semantic_ood.over_commit_rate": 0.49725087375330324,
+  "semantic_ood.right_depth_and_taxon": 0.10178160429630892,
+  "semantic_ood.far_tribe.over_commit_rate": 0.3258203513423931,
+  "semantic_ood.mid_tribe.over_commit_rate": 0.44944148780630444,
+  "semantic_ood.near_genus.over_commit_rate": 0.5750914211256357,
+  "novelty.tribe.auroc": 0.7718454407086417,
+  "novelty.genus.auroc": 0.5605057281730995,
+  "novelty.species.auroc": 0.7389965324284211,
+  "embeddings.iid_test.mantel_r_taxonomic": 0.5416510105133057
+ },
+ "seconds": 740.9371237754822,
+ "hierarchical_scored": {
+  "per_split": {
+   "iid_test": {
+    "n": 650,
+    "acc_subfamily": 0.9892307692307692,
+    "ece_subfamily": 0.009186753126291195,
+    "acc_tribe": 0.9492307692307692,
+    "ece_tribe": 0.02080416970528096,
+    "acc_genus": 0.8907692307692308,
+    "ece_genus": 0.040675810925089415,
+    "acc_species": 0.8353846153846154,
+    "ece_species": 0.04313339762389657,
+    "mean_depth": 3.4461538461538463,
+    "depth_hist": [
+     16,
+     78,
+     29,
+     4,
+     523
+    ],
+    "over_commit_rate": 0.0,
+    "correct_at_reported_depth": 0.9092307692307692,
+    "right_depth_and_taxon": 0.7184615384615385,
+    "known_species_named_correctly": 0.7184615384615385
+   },
+   "inat_test": {
+    "n": 80,
+    "acc_subfamily": 0.925,
+    "ece_subfamily": 0.06318706944584848,
+    "acc_tribe": 0.5625,
+    "ece_tribe": 0.1816882337443531,
+    "acc_genus": 0.4875,
+    "ece_genus": 0.18340950915589932,
+    "acc_species": 0.3625,
+    "ece_species": 0.20981420314637944,
+    "mean_depth": 1.65,
+    "depth_hist": [
+     36,
+     10,
+     6,
+     2,
+     26
+    ],
+    "over_commit_rate": 0.0,
+    "correct_at_reported_depth": 0.8625,
+    "right_depth_and_taxon": 0.2,
+    "known_species_named_correctly": 0.2
+   },
+   "semantic_ood": {
+    "n": 46924,
+    "acc_subfamily": 0.9792004091722786,
+    "ece_subfamily": 0.01945371449491615,
+    "acc_tribe": 0.6190755685986794,
+    "ece_tribe": 0.3016633600388319,
+    "acc_genus": 0.5153209196755075,
+    "ece_genus": 0.27975331567419504,
+    "mean_depth": 2.573288722189072,
+    "depth_hist": [
+     2223,
+     15440,
+     5559,
+     617,
+     23085
+    ],
+    "over_commit_rate": 0.49725087375330324,
+    "correct_at_reported_depth": 0.4649006904782201,
+    "right_depth_and_taxon": 0.10178160429630892,
+    "by_band": {
+     "far_tribe": {
+      "n": 6034,
+      "ideal_depth": 1.0,
+      "over_commit_rate": 0.3258203513423931,
+      "mean_depth": 1.9592310241962214,
+      "correct_genus_when_known": NaN,
+      "correct_tribe_when_known": NaN
+     },
+     "mid_tribe": {
+      "n": 17099,
+      "ideal_depth": 2.0,
+      "over_commit_rate": 0.44944148780630444,
+      "mean_depth": 2.3694952921223464,
+      "correct_genus_when_known": NaN,
+      "correct_tribe_when_known": 0.2583191999532136
+     },
+     "near_genus": {
+      "n": 23791,
+      "ideal_depth": 3.0,
+      "over_commit_rate": 0.5750914211256357,
+      "mean_depth": 2.8754991383296202,
+      "correct_genus_when_known": 0.5153209196755075,
+      "correct_tribe_when_known": 0.8783573620276575
+     }
+    }
+   }
+  },
+  "novelty": {
+   "tribe": {
+    "auroc": 0.7718454407086417,
+    "fpr_at_95tpr": 0.8342724560822009,
+    "n_known": 41620,
+    "n_unknown": 6034
+   },
+   "genus": {
+    "auroc": 0.5605057281730995,
+    "fpr_at_95tpr": 0.8809060649288895,
+    "n_known": 24521,
+    "n_unknown": 23133
+   },
+   "species": {
+    "auroc": 0.7389965324284211,
+    "fpr_at_95tpr": 0.9254752365527236,
+    "n_known": 730,
+    "n_unknown": 46924
+   }
+  },
+  "n_crops": 47654,
+  "headline": {
+   "iid_test.acc_subfamily": 0.9892307692307692,
+   "iid_test.acc_tribe": 0.9492307692307692,
+   "iid_test.acc_genus": 0.8907692307692308,
+   "iid_test.acc_species": 0.8353846153846154,
+   "iid_test.ece_species": 0.04313339762389657,
+   "iid_test.over_commit_rate": 0.0,
+   "iid_test.right_depth_and_taxon": 0.7184615384615385,
+   "iid_test.known_species_named_correctly": 0.7184615384615385,
+   "inat_test.acc_subfamily": 0.925,
+   "inat_test.acc_tribe": 0.5625,
+   "inat_test.acc_genus": 0.4875,
+   "inat_test.acc_species": 0.3625,
+   "inat_test.ece_species": 0.20981420314637944,
+   "inat_test.over_commit_rate": 0.0,
+   "inat_test.right_depth_and_taxon": 0.2,
+   "inat_test.known_species_named_correctly": 0.2,
+   "semantic_ood.acc_subfamily": 0.9792004091722786,
+   "semantic_ood.acc_tribe": 0.6190755685986794,
+   "semantic_ood.acc_genus": 0.5153209196755075,
+   "semantic_ood.over_commit_rate": 0.49725087375330324,
+   "semantic_ood.right_depth_and_taxon": 0.10178160429630892,
+   "semantic_ood.far_tribe.over_commit_rate": 0.3258203513423931,
+   "semantic_ood.mid_tribe.over_commit_rate": 0.44944148780630444,
+   "semantic_ood.near_genus.over_commit_rate": 0.5750914211256357,
+   "novelty.tribe.auroc": 0.7718454407086417,
+   "novelty.genus.auroc": 0.5605057281730995,
+   "novelty.species.auroc": 0.7389965324284211
+  }
+ },
+ "hierarchical_all_known_specimens": {
+  "per_split": {
+   "iid_test": {
+    "n": 5017,
+    "acc_subfamily": 0.9986047438708392,
+    "ece_subfamily": 0.0011900274169523361,
+    "acc_tribe": 0.9238588798086506,
+    "ece_tribe": 0.03623296340338286,
+    "acc_genus": 0.8602750647797488,
+    "ece_genus": 0.05692422521189792,
+    "acc_species": 0.8204106039465816,
+    "ece_species": 0.03751106522732312,
+    "mean_depth": 3.4420968706398245,
+    "depth_hist": [
+     30,
+     748,
+     208,
+     19,
+     4012
+    ],
+    "over_commit_rate": 0.0,
+    "correct_at_reported_depth": 0.931831771975284,
+    "right_depth_and_taxon": 0.7325094678094479,
+    "known_species_named_correctly": 0.7325094678094479
+   },
+   "inat_test": {
+    "n": 88,
+    "acc_subfamily": 0.9318181818181818,
+    "ece_subfamily": 0.05605507235635416,
+    "acc_tribe": 0.5113636363636364,
+    "ece_tribe": 0.19356353030624718,
+    "acc_genus": 0.4431818181818182,
+    "ece_genus": 0.1853349834299562,
+    "acc_species": 0.32954545454545453,
+    "ece_species": 0.2073891005658714,
+    "mean_depth": 1.5568181818181819,
+    "depth_hist": [
+     42,
+     11,
+     6,
+     2,
+     27
+    ],
+    "over_commit_rate": 0.0,
+    "correct_at_reported_depth": 0.8636363636363636,
+    "right_depth_and_taxon": 0.18181818181818182,
+    "known_species_named_correctly": 0.18181818181818182
+   }
+  },
+  "novelty": {},
+  "n_crops": 5105,
+  "headline": {
+   "iid_test.acc_subfamily": 0.9986047438708392,
+   "iid_test.acc_tribe": 0.9238588798086506,
+   "iid_test.acc_genus": 0.8602750647797488,
+   "iid_test.acc_species": 0.8204106039465816,
+   "iid_test.ece_species": 0.03751106522732312,
+   "iid_test.over_commit_rate": 0.0,
+   "iid_test.right_depth_and_taxon": 0.7325094678094479,
+   "iid_test.known_species_named_correctly": 0.7325094678094479,
+   "inat_test.acc_subfamily": 0.9318181818181818,
+   "inat_test.acc_tribe": 0.5113636363636364,
+   "inat_test.acc_genus": 0.4431818181818182,
+   "inat_test.acc_species": 0.32954545454545453,
+   "inat_test.ece_species": 0.2073891005658714,
+   "inat_test.over_commit_rate": 0.0,
+   "inat_test.right_depth_and_taxon": 0.18181818181818182,
+   "inat_test.known_species_named_correctly": 0.18181818181818182
+  }
+ },
+ "embeddings_iid_test": {
+  "mantel_correlation": {
+   "r": 0.5416510105133057,
+   "p_value": 0.001,
+   "n_items": 65,
+   "distance": "taxonomic"
+  },
+  "external_cluster_validation": {
+   "ARI": {
+    "0": 0.8850047400457748
+   },
+   "NMI": {
+    "0": 0.8863645492088671
+   },
+   "Cluster_Purity": {
+    "0": 0.903448275862069
+   }
+  },
+  "internal_cluster_validation": {
+   "Silhouette_Score": {
+    "0": 0.7331566214561462
+   },
+   "Davies-Bouldin_Index": {
+    "0": 0.2848393538118442
+   },
+   "Calinski-Harabasz_Index": {
+    "0": 46725.52452038448
+   }
+  }
+ }
+}

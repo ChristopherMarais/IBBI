@@ -1,0 +1,53 @@
+{
+ "model": "grounding_dino_zero_shot_detector",
+ "env": {
+  "python": "3.11.16",
+  "packages": {
+   "ibbi": "0.0.0",
+   "torch": "2.11.0+cu128",
+   "ultralytics": "8.3.253",
+   "transformers": "5.18.0",
+   "timm": "1.0.30",
+   "open_clip_torch": "3.3.0",
+   "pycocotools": "2.0.11"
+  },
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition"
+ },
+ "dataset_revision": "8dc5a58e09c429e7d91077437846f424f5ab0c4e",
+ "splits": [
+  "iid_test",
+  "inat_test",
+  "semantic_ood"
+ ],
+ "headline": {
+  "iid_test.class_agnostic_AP_50_95": 0.29375176274516823,
+  "iid_test.class_agnostic_AP_50": 0.39495274762827104,
+  "iid_test.class_agnostic_AP_75": 0.321588937882726,
+  "iid_test.class_agnostic_AR_100": 0.8006153846153847,
+  "iid_test.class_agnostic_max_recall_50": 0.9307692307692308,
+  "iid_test.class_agnostic_recall_50_at_op": 0.39076923076923076,
+  "iid_test.class_agnostic_precision_50_at_op": 0.41914191419141916,
+  "iid_test.class_agnostic_fp_per_image_at_op": 0.567741935483871,
+  "inat_test.class_agnostic_AP_50_95": 0.5948326904357771,
+  "inat_test.class_agnostic_AP_50": 0.7012807345585409,
+  "inat_test.class_agnostic_AP_75": 0.6752746337797724,
+  "inat_test.class_agnostic_AR_100": 0.8875,
+  "inat_test.class_agnostic_max_recall_50": 1.0,
+  "inat_test.class_agnostic_recall_50_at_op": 0.6875,
+  "inat_test.class_agnostic_precision_50_at_op": 0.5555555555555556,
+  "inat_test.class_agnostic_fp_per_image_at_op": 0.5945945945945946,
+  "semantic_ood.class_agnostic_AP_50_95": 0.24297084295007038,
+  "semantic_ood.class_agnostic_AP_50": 0.4476867738473635,
+  "semantic_ood.class_agnostic_AP_75": 0.22276005956466913,
+  "semantic_ood.class_agnostic_AR_100": 0.5180760378484357,
+  "semantic_ood.class_agnostic_max_recall_50": 0.7893402097007928,
+  "semantic_ood.class_agnostic_recall_50_at_op": 0.23719205523825762,
+  "semantic_ood.class_agnostic_precision_50_at_op": 0.6368734264133669,
+  "semantic_ood.class_agnostic_fp_per_image_at_op": 0.8240488248279444
+ },
+ "seconds": 15576.610123634338,
+ "operating_conf": 0.6,
+ "benchmark_kwargs": {
+  "conf": 0.02
+ }
+}
