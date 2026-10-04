@@ -201,12 +201,23 @@ class HierarchicalClassifier:
 
     def _tensor(self, crops: list[Image.Image]) -> torch.Tensor:
         arr = np.stack([np.asarray(_letterbox(load_image(c), self.res, self.fill), dtype=np.uint8) for c in crops])
-        x = torch.from_numpy(arr).to(self.device).permute(0, 3, 1, 2).float() / 255.0
-        return (x - self.mean) / self.std
+        return self._normalise(torch.from_numpy(arr).to(self.device).permute(0, 3, 1, 2))
+
+    def _normalise(self, x_uint8: torch.Tensor) -> torch.Tensor:
+        return (x_uint8.to(self.device).float() / 255.0 - self.mean) / self.std
+
+    def crop_tensors(self, image: torch.Tensor, boxes) -> torch.Tensor:
+        """GPU version of `crop` + letterbox for many boxes of one image tensor (uint8 [3, H, W]): uint8 [N, 3, res, res]."""
+        from ._gpu import crop_letterbox
+
+        return crop_letterbox(image, boxes, self.pad, self.res, self.fill)
 
     @torch.no_grad()
     def _forward(self, crops: list[Image.Image]) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
-        x = self._tensor(crops)
+        return self._forward_tensor(self._tensor(crops))
+
+    @torch.no_grad()
+    def _forward_tensor(self, x: torch.Tensor) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
         if self.device.startswith("cuda"):
             with torch.autocast("cuda", dtype=torch.bfloat16):
                 emb, z = self.net(x)
@@ -255,13 +266,22 @@ class HierarchicalClassifier:
         out = []
         for i in range(0, len(crops), batch_size):
             batch = [load_image(c) for c in crops[i : i + batch_size]]
-            emb, z = self._forward(batch)
-            marg_t = self.tax.marginals(z, self.temps)
-            marg = {lvl: marg_t[lvl].numpy() for lvl in LEVELS}
-            nov = self._novelty(emb, marg)
-            for j in range(len(batch)):
-                out.append(self._record(marg, nov, j, thr))
+            out.extend(self._records(*self._forward(batch), thr))
         return out
+
+    def classify_tensors(self, crops_uint8: torch.Tensor, operating_point: str | None = None, batch_size: int = 64) -> list[dict[str, Any]]:
+        """Like `classify_crops` for crops already letterboxed by `crop_tensors` (uint8 [N, 3, res, res])."""
+        thr = self.thresholds[self._resolve_op(operating_point or self.operating_point)]
+        out = []
+        for i in range(0, len(crops_uint8), batch_size):
+            out.extend(self._records(*self._forward_tensor(self._normalise(crops_uint8[i : i + batch_size])), thr))
+        return out
+
+    def _records(self, emb: torch.Tensor, z: dict[str, torch.Tensor], thr: dict[str, float]) -> list[dict[str, Any]]:
+        marg_t = self.tax.marginals(z, self.temps)
+        marg = {lvl: marg_t[lvl].numpy() for lvl in LEVELS}
+        nov = self._novelty(emb, marg)
+        return [self._record(marg, nov, j, thr) for j in range(len(emb))]
 
     def _record(self, marg, nov, j, thr) -> dict[str, Any]:
         rec: dict[str, Any] = {}

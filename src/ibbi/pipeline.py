@@ -16,6 +16,7 @@ benchmark scores.
 from typing import Any
 
 import numpy as np
+import torch
 
 from .models._common import ImageInput, is_batch, load_image
 
@@ -29,13 +30,28 @@ class IdentificationPipeline:
         det_conf (float | None): Detector confidence threshold. Defaults to 0.25, the detector's general setting;
             use `detector.operating_conf` (0.70) for fewer false alarms.
         operating_point (str | None): Classifier operating point ("0.90", "0.95", "0.99", "gallery").
+        fast (bool | None): GPU fast path: decode JPEG files on the GPU, letterbox for the detector and crop for the
+            classifier on the GPU, and classify the crops of several images together. Defaults to True when the
+            classifier runs on CUDA. Results match the reference path up to resize rounding (see `docs/benchmark.md`).
+        batch_size (int): Crops per classifier forward pass in the fast path (crops of several images are pooled).
     """
 
     is_species_level = True
 
-    def __init__(self, detector: Any, classifier: Any, det_conf: float | None = None, operating_point: str | None = None):
+    def __init__(
+        self,
+        detector: Any,
+        classifier: Any,
+        det_conf: float | None = None,
+        operating_point: str | None = None,
+        fast: bool | None = None,
+        batch_size: int = 64,
+    ):
         self.detector = detector
         self.classifier = classifier
+        self.fast = str(getattr(classifier, "device", "")).startswith("cuda") if fast is None else bool(fast)
+        self.batch_size = int(batch_size)
+        self.predict_batch_images = 16  # images per predict() call used by the evaluator (crops pooled across them)
         self.det_conf = 0.25 if det_conf is None else float(det_conf)
         self.operating_point = operating_point
         self.name = f"{getattr(detector, 'name', 'detector')}+{getattr(classifier, 'name', 'classifier')}"
@@ -54,6 +70,9 @@ class IdentificationPipeline:
         conf = self.det_conf if det_conf is None else float(det_conf)
         op = operating_point or self.operating_point
         images = list(image) if is_batch(image) else [image]
+        if self.fast:
+            outs = self._predict_fast(images, conf, op, **kwargs)
+            return outs if is_batch(image) else outs[0]
         outs = []
         for im in images:
             img = load_image(im)
@@ -70,6 +89,39 @@ class IdentificationPipeline:
                 }
             )
         return outs if is_batch(image) else outs[0]
+
+    def _predict_fast(self, images: list, conf: float, op: str | None, **kwargs) -> list[dict[str, Any]]:
+        """GPU path: one tensor per image for the detector and the crops; one classifier pass over all crops."""
+        from .models._gpu import load_tensor
+
+        clf = self.classifier
+        dets, crops, counts = [], [], []
+        for im in images:
+            t = load_tensor(im, clf.device)
+            if getattr(self.detector, "accepts_tensors", False):
+                det = self.detector.predict(t, conf=conf, **kwargs)
+            else:
+                det = self.detector.predict(t.permute(1, 2, 0).cpu().numpy(), conf=conf, **kwargs)
+            dets.append(det)
+            counts.append(len(det["boxes"]))
+            if det["boxes"]:
+                crops.append(clf.crop_tensors(t, det["boxes"]))
+        recs_all = clf.classify_tensors(torch.cat(crops), operating_point=op, batch_size=self.batch_size) if crops else []
+        outs, k = [], 0
+        for det, n in zip(dets, counts):
+            recs = recs_all[k : k + n]
+            k += n
+            outs.append(
+                {
+                    "boxes": det["boxes"],
+                    "det_scores": det["scores"],
+                    "scores": [float(s) * r["species"]["prob"] for s, r in zip(det["scores"], recs)],
+                    "labels": [r["reported"] for r in recs],
+                    "species": [r["species"]["taxon"] for r in recs],
+                    "classifications": recs,
+                }
+            )
+        return outs
 
     def predict_proba(self, images: list[ImageInput], **kwargs) -> np.ndarray:
         """Per image, the highest (detector confidence x species probability) of every species: [N, 65]."""
@@ -99,6 +151,8 @@ def create_pipeline(
     det_conf: float | None = None,
     operating_point: str | None = None,
     device: str | None = None,
+    fast: bool | None = None,
+    batch_size: int = 64,
 ) -> IdentificationPipeline:
     """Builds the two-stage identification pipeline.
 
@@ -109,6 +163,8 @@ def create_pipeline(
         det_conf (float | None): Detector confidence threshold (default 0.25).
         operating_point (str | None): Classifier operating point.
         device (str | None): Device for models created here.
+        fast (bool | None): GPU fast path (default: on when running on CUDA); see `IdentificationPipeline`.
+        batch_size (int): Crops per classifier forward pass in the fast path.
 
     Returns:
         IdentificationPipeline
@@ -117,4 +173,4 @@ def create_pipeline(
 
     det = create_model(detector, device=device) if isinstance(detector, str) else detector
     clf = create_model(classifier, device=device) if isinstance(classifier, str) else classifier
-    return IdentificationPipeline(det, clf, det_conf=det_conf, operating_point=operating_point)
+    return IdentificationPipeline(det, clf, det_conf=det_conf, operating_point=operating_point, fast=fast, batch_size=batch_size)

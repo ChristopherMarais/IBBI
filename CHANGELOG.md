@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Faster inference on GPUs
+* GPU fast path, on by default with CUDA: JPEG decoding with nvJPEG, the Ultralytics letterbox and the classifier's
+  crops on the GPU, and crops of several images classified together (`create_pipeline(batch_size=...)`; the evaluator
+  passes 16 images per call). The identification pipeline runs 4.3× faster on 12.6-megapixel photographs (7.8 → 33.5
+  images/s on an RTX PRO 6000). Detections are unchanged; benchmark numbers move by at most a few specimens.
+  `create_pipeline(fast=False)` / `detector.fast = False` keep the reference path.
+* Measured before this change (issue #84): the pipeline spent 45% of its time in the detector's CPU pre-processing and
+  31% decoding JPEGs; the classifier was 14%. A Modular MAX port of the ViT-L classifier was 2–4× slower than PyTorch
+  at throughput batch sizes on Blackwell GPUs, so MAX is not adopted.
+
 ## v0.3.0
 
 A full update of the package around the Bark and Ambrosia Beetle Detection Benchmark v2.0.1. This release breaks
