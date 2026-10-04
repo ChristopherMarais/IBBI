@@ -6,19 +6,24 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
+        <meta name="description" content="Detection, hierarchical identification and benchmarking of bark and ambrosia beetles.">
       
       
-        <link rel="canonical" href="https://ChristopherMarais.github.io/ibbi/usage/">
+      
+        <link rel="canonical" href="https://gcmarais.com/IBBI/usage/">
       
       
         <link rel="prev" href="..">
       
       
-        <link rel="next" href="../api/">
+        <link rel="next" href="../models/">
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.17">
+        
+      
+      
+      <link rel="icon" href="../assets/images/IBBI_logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -26,10 +31,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.7e37652d.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -54,7 +59,6 @@
     
       
 
-    
     
     
   </head>
@@ -92,8 +96,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href=".." title="IBBI Documentation" class="md-header__button md-logo" aria-label="IBBI Documentation" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../assets/images/IBBI_logo.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -192,13 +195,13 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/ChristopherMarais/ibbi" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/ChristopherMarais/IBBI" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
-    ChristopherMarais/ibbi
+    ChristopherMarais/IBBI
   </div>
 </a>
       </div>
@@ -324,21 +327,20 @@
   <label class="md-nav__title" for="__drawer">
     <a href=".." title="IBBI Documentation" class="md-nav__button md-logo" aria-label="IBBI Documentation" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../assets/images/IBBI_logo.png" alt="logo">
 
     </a>
     IBBI Documentation
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/ChristopherMarais/ibbi" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/ChristopherMarais/IBBI" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
-    ChristopherMarais/ibbi
+    ChristopherMarais/IBBI
   </div>
 </a>
     </div>
@@ -357,9 +359,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     Home
+  
+
     
   </span>
+  
   
 
       </a>
@@ -400,9 +407,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     User Documentation
+  
+
     
   </span>
+  
   
 
             <span class="md-nav__icon md-icon"></span>
@@ -411,7 +423,11 @@
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
-            User Documentation
+            
+  
+    User Documentation
+  
+
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -436,9 +452,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     Usage Guide
+  
+
     
   </span>
+  
   
 
           <span class="md-nav__icon md-icon"></span>
@@ -449,9 +470,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     Usage Guide
+  
+
     
   </span>
+  
   
 
       </a>
@@ -474,7 +500,9 @@
         <li class="md-nav__item">
   <a href="#installation" class="md-nav__link">
     <span class="md-ellipsis">
-      Installation
+      
+        Installation
+      
     </span>
   </a>
   
@@ -482,9 +510,11 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#hardware-requirements" class="md-nav__link">
+  <a href="#requirements-and-notes" class="md-nav__link">
     <span class="md-ellipsis">
-      Hardware Requirements
+      
+        Requirements and notes
+      
     </span>
   </a>
   
@@ -496,28 +526,34 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#core-functions" class="md-nav__link">
+  <a href="#models" class="md-nav__link">
     <span class="md-ellipsis">
-      Core Functions
+      
+        Models
+      
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Core Functions">
+    <nav class="md-nav" aria-label="Models">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#listing-available-models" class="md-nav__link">
+  <a href="#which-model-should-i-use" class="md-nav__link">
     <span class="md-ellipsis">
-      Listing Available Models
+      
+        Which model should I use?
+      
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#creating-a-model" class="md-nav__link">
+  <a href="#examples" class="md-nav__link">
     <span class="md-ellipsis">
-      Creating a Model
+      
+        Examples
+      
     </span>
   </a>
   
@@ -529,46 +565,34 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#prediction-and-feature-extraction-examples" class="md-nav__link">
+  <a href="#two-stage-identification-recommended" class="md-nav__link">
     <span class="md-ellipsis">
-      Prediction and Feature Extraction Examples
+      
+        Two-stage identification (recommended)
+      
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Prediction and Feature Extraction Examples">
+    <nav class="md-nav" aria-label="Two-stage identification (recommended)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#example-1-bark-beetle-detection-single-class" class="md-nav__link">
+  <a href="#the-hierarchical-record" class="md-nav__link">
     <span class="md-ellipsis">
-      Example 1: Bark Beetle Detection (Single Class)
+      
+        The hierarchical record
+      
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#example-2-species-detection-multi-class" class="md-nav__link">
+  <a href="#operating-points" class="md-nav__link">
     <span class="md-ellipsis">
-      Example 2: Species Detection (Multi-Class)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#example-3-zero-shot-detection" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example 3: Zero-Shot Detection
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#example-4-feature-extraction" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example 4: Feature Extraction
+      
+        Operating points
+      
     </span>
   </a>
   
@@ -580,35 +604,79 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#advanced-usage" class="md-nav__link">
+  <a href="#hierarchical-classifier-on-its-own" class="md-nav__link">
     <span class="md-ellipsis">
-      Advanced Usage
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Advanced Usage">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#model-evaluation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Model Evaluation
+      
+        Hierarchical classifier on its own
+      
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#model-explainability-xai" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#species-detectors" class="md-nav__link">
     <span class="md-ellipsis">
-      Model Explainability (XAI)
+      
+        Species detectors
+      
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#zero-shot-detectors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zero-shot detectors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#embeddings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Embeddings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-benchmark-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The benchmark dataset
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#explainability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Explainability
+      
+    </span>
+  </a>
   
 </li>
       
@@ -616,6 +684,90 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmark/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -656,9 +808,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     API
+  
+
     
   </span>
+  
   
 
             <span class="md-nav__icon md-icon"></span>
@@ -667,7 +824,11 @@
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
-            API
+            
+  
+    API
+  
+
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -683,9 +844,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     Reference
+  
+
     
   </span>
+  
   
 
       </a>
@@ -729,9 +895,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     Development
+  
+
     
   </span>
+  
   
 
             <span class="md-nav__icon md-icon"></span>
@@ -740,7 +911,11 @@
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
-            Development
+            
+  
+    Development
+  
+
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -756,9 +931,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     Contributing
+  
+
     
   </span>
+  
   
 
       </a>
@@ -779,9 +959,14 @@
   
   
   <span class="md-ellipsis">
+    
+  
     License
+  
+
     
   </span>
+  
   
 
       </a>
@@ -807,286 +992,343 @@
           
           
             <div class="md-content" data-md-component="content">
+              
               <article class="md-content__inner md-typeset">
                 
                   
 
 
 
-<h1 id="usage-guide">Usage Guide</h1>
-<p>This guide provides an in-depth walkthrough of the <code>ibbi</code> package's functionalities. We will cover everything from installation and basic setup to advanced applications like model evaluation and explainability, complete with detailed code examples and explanations to help you integrate <code>ibbi</code> into your research workflow.</p>
-<h2 id="installation">Installation</h2>
-<p>Getting <code>ibbi</code> set up on your system is a two-step process. Since <code>ibbi</code> relies on PyTorch for its deep learning capabilities, it's crucial to install it first to ensure compatibility with your hardware, especially if you have a GPU.</p>
-<h4 id="hardware-requirements">Hardware Requirements</h4>
+<h1 id="usage-guide">Usage guide<a class="headerlink" href="#usage-guide" title="Permanent link">&para;</a></h1>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<p>IBBI needs Python ≥ 3.11 and PyTorch. Install PyTorch for your hardware first
+(<a href="https://pytorch.org/get-started/locally/">pytorch.org</a>), then install the package.</p>
+<p><strong>conda + pip</strong></p>
+<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>ibbi<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11
+conda<span class="w"> </span>activate<span class="w"> </span>ibbi
+<span class="c1"># install PyTorch following pytorch.org for your system, then:</span>
+pip<span class="w"> </span>install<span class="w"> </span>ibbi
+</code></pre></div>
+<p><strong>pixi</strong></p>
+<div class="highlight"><pre><span></span><code>pixi<span class="w"> </span>init<span class="w"> </span>ibbi-project<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>ibbi-project
+pixi<span class="w"> </span>add<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11<span class="w"> </span>pip
+pixi<span class="w"> </span>run<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>torch<span class="w"> </span>torchvision<span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w">   </span><span class="c1"># or the CPU wheel</span>
+pixi<span class="w"> </span>run<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>ibbi
+pixi<span class="w"> </span>run<span class="w"> </span>python
+</code></pre></div>
+<h4 id="requirements-and-notes">Requirements and notes<a class="headerlink" href="#requirements-and-notes" title="Permanent link">&para;</a></h4>
 <ul>
-<li>
-<p><strong>Disk Space</strong>: A minimum of 10-20 GB of disk space is recommended to accommodate the Python environment, downloaded models, and cached datasets.</p>
-</li>
-<li>
-<p><strong>CPU &amp; RAM</strong>: Running inference on a CPU is possible but can be slow. For model evaluation on large datasets (like the built-in test set), a significant amount of RAM (16GB, 32GB, or more) is highly recommended to avoid memory crashes.</p>
-</li>
-<li>
-<p><strong>GPU (Recommended)</strong>: A CUDA-enabled GPU (e.g., NVIDIA T4, RTX 3060 or better) with at least 8GB of VRAM is strongly recommended for both inference and model evaluation.</p>
-</li>
+<li>A CUDA GPU with ≥ 8 GB of memory is recommended; CPU inference works but is slow.</li>
+<li><code>ultralytics</code> is restricted to <code>&gt;=8.3.139,&lt;8.4</code>: Ultralytics 8.4 changes the predictions of the YOLOv10 and RT-DETR
+  checkpoints.</li>
+<li>SAM 3 is gated: accept its licence at https://huggingface.co/facebook/sam3 and run <code>hf auth login</code>.</li>
+<li>Files are cached in <code>~/.cache/ibbi</code> (<code>IBBI_CACHE_DIR</code> to change, <code>ibbi.clean_cache()</code> to delete). To use weights
+  offline, put each model repository in a folder and set <code>IBBI_MODELS_DIR</code> to it.</li>
 </ul>
-<p><strong>1. Install PyTorch</strong></p>
-<p>For optimal performance, particularly with GPU acceleration, it is essential to install the correct version of PyTorch for your system (Windows/Mac/Linux) and CUDA version.
-Please follow the official, system-specific instructions at <a href="https://pytorch.org/get-started/locally/">pytorch.org</a>. This will ensure you leverage the full power of your hardware.</p>
-<p><strong>2. Install IBBI</strong></p>
-<p>Once PyTorch is installed, you can install <code>ibbi</code> from the Python Package Index (PyPI) using pip. It is highly recommended to do this within a virtual environment to avoid conflicts with other projects.</p>
-<details>
-<summary>🐍 Conda Installation</summary>
+<hr />
+<h2 id="models">Models<a class="headerlink" href="#models" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">ibbi</span>
 
+<span class="n">df</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">list_models</span><span class="p">(</span><span class="n">as_df</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>          <span class="c1"># one row per model, with benchmark numbers</span>
+<span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">"Task"</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Zero-shot"</span><span class="p">)]</span>
+</code></pre></div>
+<p>Create a model by name or alias. Weights are downloaded from the <a href="https://huggingface.co/IBBI-bio">IBBI-bio</a>
+organisation the first time.</p>
+<div class="highlight"><pre><span></span><code><span class="n">detector</span>   <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"arthropod_detector"</span><span class="p">)</span>        <span class="c1"># yolo11x_arthropod_detector</span>
+<span class="n">codino</span>     <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"codino_arthropod_detector"</span><span class="p">)</span> <span class="c1"># larger and more accurate (GPU)</span>
+<span class="n">species</span>    <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"species_detector"</span><span class="p">)</span>          <span class="c1"># yolo12x_species_detector</span>
+<span class="n">classifier</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"hierarchical_classifier"</span><span class="p">)</span>   <span class="c1"># dinov3_hierarchical_classifier</span>
+<span class="n">zero_shot</span>  <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"zero_shot_detector"</span><span class="p">)</span>        <span class="c1"># grounding_dino_zero_shot_detector</span>
+<span class="n">other</span>      <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"rtdetrx_species_detector"</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">"cpu"</span><span class="p">)</span>
+</code></pre></div>
+<p>All models have the same core methods:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>predict(image or list)</code></td>
+<td>detectors: <code>{"boxes" (xyxy pixels), "scores", "labels"}</code>; classifier: a hierarchical record</td>
+</tr>
+<tr>
+<td><code>predict_proba(list of images)</code></td>
+<td><code>[N, n_classes]</code> class scores (used by LIME / SHAP)</td>
+</tr>
+<tr>
+<td><code>extract_features(image)</code></td>
+<td>an embedding tensor</td>
+</tr>
+<tr>
+<td><code>get_classes()</code></td>
+<td>class names (species, "arthropod" or the current prompts)</td>
+</tr>
+</tbody>
+</table>
+<p>Images can be file paths, URLs, RGB numpy arrays or PIL images, alone or in a list (a list returns a list of
+results). Every model has a sensible default confidence (<code>conf=0.25</code> for the detectors); the arthropod and zero-shot
+detectors also have an <code>operating_conf</code> (at most ~0.2 false alarms per image on their validation sample).</p>
+<h3 id="which-model-should-i-use">Which model should I use?<a class="headerlink" href="#which-model-should-i-use" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identify beetles in images that may contain species outside the 65 trained ones</td>
+<td><code>ibbi.create_pipeline()</code></td>
+</tr>
+<tr>
+<td>Identify specimens that are already cropped</td>
+<td><code>hierarchical_classifier</code></td>
+</tr>
+<tr>
+<td>Count or locate specimens, whatever their species</td>
+<td><code>arthropod_detector</code></td>
+</tr>
+<tr>
+<td>The fastest one-step detection when all specimens belong to the 65 species</td>
+<td>a species detector</td>
+</tr>
+<tr>
+<td>Detect something other than arthropods, or with your own wording</td>
+<td>a zero-shot detector with <code>text_prompt=</code></td>
+</tr>
+<tr>
+<td>Embeddings for clustering or retrieval</td>
+<td><code>feature_extractor</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
+<p>Two held-out benchmark trays, chosen before running any model: a trained species, <em>Platypus koryoensis</em>
+(<code>iid_test</code>), and an unseen species of a trained genus, <em>Platypus cylindrus</em> (<code>semantic_ood</code>), whose correct answer
+is "<em>Platypus</em> sp.". Arthropod detector at its operating confidence (0.70), species detector at 0.25, pipeline with
+the detector at 0.70 and the <code>gallery</code> operating point, Grounding DINO at its operating confidence (0.60).</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Trained species</th>
+<th>Unseen species</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Input</td>
+<td><img alt="" src="../assets/images/example_known_input.jpg" /></td>
+<td><img alt="" src="../assets/images/example_unseen_input.jpg" /></td>
+</tr>
+<tr>
+<td>Arthropod detector</td>
+<td><img alt="" src="../assets/images/example_known_arthropod_detector.jpg" /></td>
+<td><img alt="" src="../assets/images/example_unseen_arthropod_detector.jpg" /></td>
+</tr>
+<tr>
+<td>Species detector (YOLO12x)</td>
+<td><img alt="" src="../assets/images/example_known_species_detector.jpg" /></td>
+<td><img alt="" src="../assets/images/example_unseen_species_detector.jpg" /></td>
+</tr>
+<tr>
+<td>Pipeline (detector + DINOv3)</td>
+<td><img alt="" src="../assets/images/example_known_pipeline.jpg" /></td>
+<td><img alt="" src="../assets/images/example_unseen_pipeline.jpg" /></td>
+</tr>
+<tr>
+<td>Zero-shot (Grounding DINO)</td>
+<td><img alt="" src="../assets/images/example_known_zero_shot.jpg" /></td>
+<td><img alt="" src="../assets/images/example_unseen_zero_shot.jpg" /></td>
+</tr>
+</tbody>
+</table>
+<p>Pipeline colours: green = species, orange = genus, dark orange = tribe, pink = subfamily, red = unrecognised.</p>
+<!-- EXAMPLE_CAPTION_START -->
+<p><strong>What the examples show.</strong> On the trained species, the arthropod detector finds all 11 specimens and both the
+species detector and the pipeline name every one <em>Platypus koryoensis</em> (Grounding DINO, at its strict operating
+confidence, finds 5). On the unseen species, the species detector names 9 of the 10 specimens <em>Euplatypus compositus</em>:
+a confident answer in the wrong genus, the only kind of answer it can give. The pipeline backs off to the correct tribe
+(Platypodini) for 2 specimens but still names a wrong <em>Euplatypus</em> species for the other 8. Over-commitment on unseen
+species of trained genera is the main open problem of the classifiers (about 58% of <code>near_genus</code> specimens on the
+benchmark; see <a href="../benchmark/#hierarchical-classifiers-ground-truth-crops">benchmark results</a>).</p>
+<p><sub>Images: Bark and Ambrosia Beetle Detection Benchmark v2.0.1, <code>iid_test/c6c569ff-6a4b-4f0d-b298-8da5e4b9f2b2.jpg</code>
+(Averie M. Kulbeda) and <code>semantic_ood/1de1a58e-41c8-4b52-8647-31284228858f.jpg</code> (Isabelle C. Stratton), University of
+Florida Forest Entomology Lab, CC BY-NC 4.0. Produced with <code>ibbi</code> v0.3 default models.</sub></p>
+<!-- EXAMPLE_CAPTION_END -->
 
-<pre><code class="language-bash"># 1. Create and activate a new conda environment
-conda create -n ibbi_env python=3.11 -y
-conda activate ibbi_env
+<hr />
+<h2 id="two-stage-identification-recommended">Two-stage identification (recommended)<a class="headerlink" href="#two-stage-identification-recommended" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_pipeline</span><span class="p">()</span>                      <span class="c1"># arthropod detector + DINOv3 hierarchical classifier</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">pipe</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s2">"plate.jpg"</span><span class="p">)</span>
 
-# 2. Install PyTorch first by following the official instructions
-# for your specific system at https://pytorch.org/get-started/locally/
+<span class="n">res</span><span class="p">[</span><span class="s2">"boxes"</span><span class="p">]</span>            <span class="c1"># [[x1, y1, x2, y2], ...]</span>
+<span class="n">res</span><span class="p">[</span><span class="s2">"det_scores"</span><span class="p">]</span>       <span class="c1"># detector confidence</span>
+<span class="n">res</span><span class="p">[</span><span class="s2">"labels"</span><span class="p">]</span>           <span class="c1"># reported identification, e.g. "Xyleborus volvulus", "Euwallacea sp. (species undetermined)"</span>
+<span class="n">res</span><span class="p">[</span><span class="s2">"species"</span><span class="p">]</span>          <span class="c1"># the classifier's best species (always one of its 65)</span>
+<span class="n">res</span><span class="p">[</span><span class="s2">"classifications"</span><span class="p">]</span>  <span class="c1"># full record per detection (below)</span>
+</code></pre></div>
+<p>With a GPU, the more accurate Co-DINO detector can replace YOLO11x:
+<code>ibbi.create_pipeline(detector="codino_arthropod_detector", det_conf=0.65)</code>.</p>
+<p>Options: <code>ibbi.create_pipeline(detector="arthropod_detector", classifier="bioclip2_hierarchical_classifier",
+det_conf=0.7, operating_point="0.95")</code>. <code>det_conf=detector.operating_conf</code> (0.70) gives at most ~0.2 false alarms per
+image on the detector's validation sample; the default 0.25 finds more specimens.</p>
+<h3 id="the-hierarchical-record">The hierarchical record<a class="headerlink" href="#the-hierarchical-record" title="Permanent link">&para;</a></h3>
+<p>A real record (first specimen of the trained-species example above):</p>
+<!-- EXAMPLE_RECORD_START -->
+<div class="highlight"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">res</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_pipeline</span><span class="p">(</span><span class="n">det_conf</span><span class="o">=</span><span class="mf">0.70</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">res</span><span class="p">[</span><span class="s2">"classifications"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>           <span class="c1"># values rounded; "entropy" and the third top3 entry omitted</span>
+<span class="p">{</span>
+  <span class="s2">"subfamily"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"taxon"</span><span class="p">:</span> <span class="s2">"Platypodinae"</span><span class="p">,</span> <span class="s2">"prob"</span><span class="p">:</span> <span class="mf">1.000</span><span class="p">,</span> <span class="s2">"score"</span><span class="p">:</span> <span class="mf">0.401</span><span class="p">,</span> <span class="s2">"threshold"</span><span class="p">:</span> <span class="mf">0.012</span><span class="p">,</span> <span class="s2">"known"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">"top3"</span><span class="p">:</span> <span class="p">[[</span><span class="s2">"Platypodinae"</span><span class="p">,</span> <span class="mf">1.000</span><span class="p">],</span> <span class="p">[</span><span class="s2">"Scolytinae"</span><span class="p">,</span> <span class="mf">0.000</span><span class="p">]]},</span>
+  <span class="s2">"tribe"</span><span class="p">:</span>     <span class="p">{</span><span class="s2">"taxon"</span><span class="p">:</span> <span class="s2">"Platypodini"</span><span class="p">,</span> <span class="s2">"prob"</span><span class="p">:</span> <span class="mf">1.000</span><span class="p">,</span> <span class="s2">"score"</span><span class="p">:</span> <span class="mf">0.917</span><span class="p">,</span> <span class="s2">"threshold"</span><span class="p">:</span> <span class="mf">0.051</span><span class="p">,</span> <span class="s2">"known"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="o">...</span><span class="p">},</span>
+  <span class="s2">"genus"</span><span class="p">:</span>     <span class="p">{</span><span class="s2">"taxon"</span><span class="p">:</span> <span class="s2">"Platypus"</span><span class="p">,</span> <span class="s2">"prob"</span><span class="p">:</span> <span class="mf">0.991</span><span class="p">,</span> <span class="s2">"score"</span><span class="p">:</span> <span class="mf">0.595</span><span class="p">,</span> <span class="s2">"threshold"</span><span class="p">:</span> <span class="mf">0.051</span><span class="p">,</span> <span class="s2">"known"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">"top3"</span><span class="p">:</span> <span class="p">[[</span><span class="s2">"Platypus"</span><span class="p">,</span> <span class="mf">0.991</span><span class="p">],</span> <span class="p">[</span><span class="s2">"Treptoplatypus"</span><span class="p">,</span> <span class="mf">0.004</span><span class="p">],</span> <span class="p">[</span><span class="s2">"Crossotarsus"</span><span class="p">,</span> <span class="mf">0.002</span><span class="p">]]},</span>
+  <span class="s2">"species"</span><span class="p">:</span>   <span class="p">{</span><span class="s2">"taxon"</span><span class="p">:</span> <span class="s2">"Platypus koryoensis"</span><span class="p">,</span> <span class="s2">"prob"</span><span class="p">:</span> <span class="mf">0.991</span><span class="p">,</span> <span class="s2">"score"</span><span class="p">:</span> <span class="mf">0.748</span><span class="p">,</span> <span class="s2">"threshold"</span><span class="p">:</span> <span class="mf">0.054</span><span class="p">,</span> <span class="s2">"known"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">"top3"</span><span class="p">:</span> <span class="p">[[</span><span class="s2">"Platypus koryoensis"</span><span class="p">,</span> <span class="mf">0.991</span><span class="p">],</span> <span class="p">[</span><span class="s2">"Treptoplatypus solidus"</span><span class="p">,</span> <span class="mf">0.004</span><span class="p">],</span> <span class="p">[</span><span class="s2">"Crossotarsus kuntzeni"</span><span class="p">,</span> <span class="mf">0.002</span><span class="p">]]},</span>
+  <span class="s2">"depth_by_op"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"0.9"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"0.95"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"0.99"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"gallery"</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+  <span class="s2">"depth"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+  <span class="s2">"reported"</span><span class="p">:</span> <span class="s2">"Platypus koryoensis"</span>
+<span class="p">}</span>
+</code></pre></div>
+<!-- EXAMPLE_RECORD_END -->
 
-# 3. Install the ibbi package using pip
-pip install ibbi
-</code></pre>
-
-</details>
-
-<details>
-<summary>🟨 Pixi Installation</summary>
-
-
-<pre><code class="language-bash"># 1. Initialize a pixi project in your directory (optional)
-pixi init
-
-# 2. Install PyTorch first by following the official instructions
-# for your specific system at https://pytorch.org/get-started/locally/
-
-# 3. Add ibbi to your project. Pixi will automatically handle the
-# creation of the environment and resolve all dependencies, including PyTorch.
-pixi add --pypi ibbi
-
-# 4. Run commands or scripts within the managed environment
-# For example, to start an interactive python session:
-pixi run python
-</code></pre>
-
-</details>
-
-<p><br>For developers who want to contribute or use the latest, unreleased features, you can install the package directly from the source on GitHub:</p>
-<pre><code class="language-bash">pip install git+https://github.com/ChristopherMarais/IBBI.git
-</code></pre>
-<h2 id="core-functions">Core Functions</h2>
-<p>The <code>ibbi</code> package is designed around a simple and intuitive API. The following core functions are your primary entry points for exploring, loading, and using the models.</p>
-<h3 id="listing-available-models">Listing Available Models</h3>
-<p>Before you can use a model, you need to know what's available. The <code>ibbi.list_models()</code> function provides a comprehensive overview of all registered models, their tasks, and key performance metrics. This is the best first step to help you select the most appropriate model for your specific needs.</p>
-<pre><code class="language-python">import ibbi
-
-# Get the model list as a pandas DataFrame for easy viewing and filtering
-models_df = ibbi.list_models(as_df=True)
-
-# Display the full table to see all available models and their metrics
-print(&quot;--- Full Model Summary ---&quot;)
-print(models_df.to_string())
-
-# You can also filter the DataFrame to find models for a specific task
-print(&quot;\n--- Multi-Class Object Detection Models ---&quot;)
-multi_class_models = models_df[models_df['Tasks'].str.contains(&quot;Multi-class&quot;)]
-print(multi_class_models[['Model Name', 'mAP@[.5:.95]', 'F1-score (Macro)']])
-</code></pre>
-<h3 id="creating-a-model">Creating a Model</h3>
-<p>Once you've chosen a model, you can load it using <code>ibbi.create_model()</code>. The first time you load a model with <code>pretrained=True</code>, its weights will be downloaded from the Hugging Face Hub and stored in a local cache directory (<code>~/.cache/ibbi</code> by default). Subsequent calls will load the model instantly from your local machine.</p>
-<p>For maximum convenience, <code>ibbi</code> provides simple aliases for the primary recommended model for each major task. This is the easiest way to get started without needing to remember specific model version names.</p>
-<pre><code class="language-python"># Load a single-class object detection model using the &quot;beetle_detector&quot; alias
-# This is ideal for quickly finding any beetle in an image.
-detector = ibbi.create_model(&quot;beetle_detector&quot;, pretrained=True)
-
-# Load a multi-class species detection model using its full, specific name
-# This provides both location and species identification.
-classifier = ibbi.create_model(&quot;yolov12x_bb_multi_class_detect_model&quot;, pretrained=True)
-
-# Load a zero-shot detection model using the &quot;zero_shot_detector&quot; alias
-# This model is great for general-purpose object detection using text prompts.
-zs_detector = ibbi.create_model(&quot;zero_shot_detector&quot;, pretrained=True)
-
-# Load a feature extraction model using the &quot;feature_extractor&quot; alias
-# This is used to convert images into numerical vectors (embeddings).
-feature_extractor = ibbi.create_model(&quot;feature_extractor&quot;, pretrained=True)
-</code></pre>
-<h2 id="prediction-and-feature-extraction-examples">Prediction and Feature Extraction Examples</h2>
-<p>The models can perform inference on a variety of image sources, including a local file path, or a <code>PIL.Image</code> object that is already loaded in your Python script. This flexibility makes it easy to integrate <code>ibbi</code> into diverse data processing workflows.</p>
-<p>NOTE: We recommend to create different instances of the model for inference and feature extraction to avoid any potential conflicts.</p>
-<h3 id="example-1-bark-beetle-detection-single-class">Example 1: Bark Beetle Detection (Single Class)</h3>
-<p><strong>Use Case:</strong> These models are optimized to answer a simple but crucial question: "Is there a beetle in this image, and where?" They identify the location (bounding boxes) of any beetle without identifying the species. This is highly effective for initial screening of field-trap images or other raw collection data to quickly quantify the number of specimens.</p>
-<p><strong>Input Image:</strong></p>
-<p align="center">
-    <img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles.png" alt="Input image" width="33%">
-</p>
-
-<pre><code class="language-python">import ibbi
-
-detector = ibbi.create_model(&quot;beetle_detector&quot;, pretrained=True)
-
-# You can use a local file path
-image_source = &quot;https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles.png&quot;
-
-# Get bounding box predictions. The model returns a dictionary.
-results = detector.predict(image_source)
-
-# The result is a dictionary containing the detected boxes, confidence scores, and labels.
-print(f&quot;Detected {len(results['boxes'])} beetles.&quot;)
-# Example output for the first detected beetle:
-if results['boxes']:
-    print(f&quot;  - Box: {results['boxes'][0]}&quot;)
-    print(f&quot;  - Label: {results['labels'][0]}&quot;)
-    print(f&quot;  - Score: {results['scores'][0]:.2f}&quot;)
-</code></pre>
-<p><strong>Detection Output:</strong>
-The output image shows the detected beetles, each enclosed in a red bounding box with its confidence score.</p>
-<p align="center">
-    <img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles_od.png" alt="Detection image" width="33%">
-</p>
-
-<h3 id="example-2-species-detection-multi-class">Example 2: Species Detection (Multi-Class)</h3>
-<p><strong>Use Case:</strong> These models perform the core task of detailed biodiversity analysis by simultaneously finding the location of bark beetles and predicting their species. This is invaluable for species inventories, monitoring the spread of invasive species, and conducting ecological research where species-level data is paramount.</p>
-<pre><code class="language-python">import ibbi
-
-classifier = ibbi.create_model(&quot;species_classifier&quot;, pretrained=True)
-
-# Use the same multi-beetle image to get species-level predictions
-results = classifier.predict(image_source)
-
-# The output is a dictionary with predicted species labels for each detected box.
-print(f&quot;Detected and classified {len(results['boxes'])} beetles.&quot;)
-if results['boxes']:
-    print(f&quot;  - Top Prediction Box: {results['boxes'][0]}&quot;)
-    print(f&quot;  - Predicted Species: {results['labels'][0]}&quot;)
-    print(f&quot;  - Confidence Score: {results['scores'][0]:.2f}&quot;)
-
-</code></pre>
-<p><strong>Classification Output:</strong>
-The output image now includes species-level labels and confidence scores, allowing for precise identification of each specimen.</p>
-<p align="center">
-    <img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles_oc.png" alt="Detection image" width="33%">
-</p>
-
-<h3 id="example-3-zero-shot-detection">Example 3: Zero-Shot Detection</h3>
-<p><strong>Use Case:</strong> Zero-shot models offer incredible flexibility by allowing you to detect objects based on a text description, even if the model was not explicitly trained on that class. This is powerful for exploratory analysis, detecting general objects in your samples, or identifying other items of interest like debris or sample labels.</p>
-<pre><code class="language-python">import ibbi
-
-# Load the zero-shot detection model
-zs_detector = ibbi.create_model(&quot;zero_shot_detector&quot;, pretrained=True)
-
-# Predict objects using a text prompt. You can try other prompts too!
-# For example: text_prompt=&quot;a round object . an insect leg&quot;
-# Separate different text prompts using a full stop &quot;.&quot;
-results = zs_detector.predict(image_source, text_prompt=&quot;a beetle&quot;)
-
-print(results)
-</code></pre>
-<p><strong>Zero-Shot Output:</strong>
-The model successfully identifies objects matching the text prompt, demonstrating its ability to generalize beyond its core training data.</p>
-<p align="center">
-    <img src="https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles_zsoc.png" alt="Detection image" width="33%">
-</p>
-
-<h3 id="example-4-feature-extraction">Example 4: Feature Extraction</h3>
-<p><strong>Use Case:</strong> All models can extract feature embeddings for an image. These are dense numerical vectors that capture the complex visual information of an image in a compact form. They are highly useful for advanced downstream tasks where you need to numerically compare images, such as:</p>
+<div class="highlight"><pre><span></span><code><span class="n">rec</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">"classifications"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">rec</span><span class="p">[</span><span class="s2">"reported"</span><span class="p">]</span>          <span class="c1"># human-readable answer</span>
+<span class="n">rec</span><span class="p">[</span><span class="s2">"depth"</span><span class="p">]</span>             <span class="c1"># 0 unrecognised, 1 subfamily, 2 tribe, 3 genus, 4 species</span>
+<span class="n">rec</span><span class="p">[</span><span class="s2">"genus"</span><span class="p">]</span>             <span class="c1"># {"taxon", "prob", "score", "known", "threshold", "entropy", "top3"}</span>
+<span class="n">rec</span><span class="p">[</span><span class="s2">"depth_by_op"</span><span class="p">]</span>       <span class="c1"># the depth under every operating point: {"0.9": 3, "0.95": 3, "0.99": 4, "gallery": 3}</span>
+</code></pre></div>
 <ul>
-<li><strong>Clustering</strong>: Grouping visually similar specimens without needing prior labels.</li>
-<li><strong>Similarity Search</strong>: Building a system to find all images in a large dataset that resemble a query image.</li>
-<li><strong>Training Custom Classifiers</strong>: Using the embeddings as powerful input features for simpler machine learning models (like SVMs or Logistic Regression) for specialized tasks.</li>
+<li><code>prob</code> is the calibrated probability of the predicted taxon at that level; the levels are consistent
+  (P(subfamily) ≥ P(tribe) ≥ P(genus) ≥ P(species) along the predicted lineage).</li>
+<li><code>score</code> is the novelty score: the percentile of the specimen's familiarity among known validation beetles (higher =
+  more familiar). <code>known</code> is <code>score &gt;= threshold</code>.</li>
+<li>The reported depth is the deepest level such that every level above it is known.</li>
 </ul>
-<p>NOTE: TO get embeddings of specific objects in an image we reccomend using the zero-shot detection or the bark beetle detection models to split the iamge up into sub-iamges first.</p>
-<pre><code class="language-python">import ibbi
+<h3 id="operating-points">Operating points<a class="headerlink" href="#operating-points" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Operating point</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gallery</code> (default)</td>
+<td>accept 99% of known validation beetles at subfamily, 95% at tribe, genus and species</td>
+</tr>
+<tr>
+<td><code>0.90</code>, <code>0.95</code>, <code>0.99</code></td>
+<td>accept that share of known validation beetles at every level</td>
+</tr>
+</tbody>
+</table>
+<p>Higher acceptance means fewer abstentions on known species and more over-commitment on unknown ones. Choose with
+<code>ibbi.create_model("hierarchical_classifier", operating_point="0.99")</code> or per call (<code>predict(..., operating_point=...)</code>).</p>
+<hr />
+<h2 id="hierarchical-classifier-on-its-own">Hierarchical classifier on its own<a class="headerlink" href="#hierarchical-classifier-on-its-own" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">clf</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"hierarchical_classifier"</span><span class="p">)</span>
+<span class="n">rec</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s2">"crop.jpg"</span><span class="p">)</span>                                   <span class="c1"># one specimen per image</span>
+<span class="n">recs</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="s2">"a.jpg"</span><span class="p">,</span> <span class="s2">"b.jpg"</span><span class="p">])</span>                          <span class="c1"># several crops</span>
+<span class="n">recs</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s2">"photo.jpg"</span><span class="p">,</span> <span class="n">boxes</span><span class="o">=</span><span class="p">[[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">]])</span>     <span class="c1"># crop boxes from a larger image (box + 5%)</span>
+<span class="n">probs</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">([</span><span class="s2">"a.jpg"</span><span class="p">],</span> <span class="n">level</span><span class="o">=</span><span class="s2">"genus"</span><span class="p">)</span>             <span class="c1"># [1, 38] calibrated genus probabilities</span>
+<span class="n">clf</span><span class="o">.</span><span class="n">taxonomy_table</span>                                              <span class="c1"># the 65 species with subfamily / tribe / genus</span>
+</code></pre></div>
+<h2 id="species-detectors">Species detectors<a class="headerlink" href="#species-detectors" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">det</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"yolov10x_species_detector"</span><span class="p">)</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">det</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s2">"plate.jpg"</span><span class="p">,</span> <span class="n">conf</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="n">r</span><span class="p">[</span><span class="s2">"labels"</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">"species"</span><span class="p">]</span>                         <span class="c1"># species names</span>
+<span class="n">det</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s2">"plate.jpg"</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">"genus"</span><span class="p">)[</span><span class="s2">"labels"</span><span class="p">]</span> <span class="c1"># same boxes, labels mapped to genus</span>
+</code></pre></div>
+<p>These always answer with one of their 65 species, also for species they have never seen; use the pipeline when
+unknown species are possible.</p>
+<h2 id="zero-shot-detectors">Zero-shot detectors<a class="headerlink" href="#zero-shot-detectors" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">zs</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"owlv2_zero_shot_detector"</span><span class="p">)</span>              <span class="c1"># default prompt "a photo of an insect", 1024 px tiles</span>
+<span class="n">zs</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s2">"trap.jpg"</span><span class="p">)</span>
+<span class="n">zs</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s2">"trap.jpg"</span><span class="p">,</span> <span class="n">text_prompt</span><span class="o">=</span><span class="s2">"beetle . fly . moth"</span><span class="p">)</span>       <span class="c1"># new prompts (labels = matching prompt)</span>
+<span class="n">zs</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s2">"trap.jpg"</span><span class="p">,</span> <span class="n">tile</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">conf</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>                        <span class="c1"># whole image only, higher threshold</span>
+<span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"sam3_zero_shot_detector"</span><span class="p">,</span> <span class="n">prompts</span><span class="o">=</span><span class="p">[</span><span class="s2">"beetle"</span><span class="p">])</span>
+</code></pre></div>
+<h2 id="embeddings">Embeddings<a class="headerlink" href="#embeddings" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">fx</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"feature_extractor"</span><span class="p">)</span>       <span class="c1"># the DINOv3 classifier's embedding (2048-d)</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">fx</span><span class="o">.</span><span class="n">extract_features</span><span class="p">(</span><span class="s2">"crop.jpg"</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="the-benchmark-dataset">The benchmark dataset<a class="headerlink" href="#the-benchmark-dataset" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">train</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="s2">"train"</span><span class="p">)</span>                 <span class="c1"># downloads only that split (resumes through Hub rate limits)</span>
+<span class="n">test</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="s2">"iid_test"</span><span class="p">)</span>
+<span class="n">ood</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="s2">"semantic_ood"</span><span class="p">)</span>
+<span class="n">item</span> <span class="o">=</span> <span class="n">test</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">item</span><span class="p">[</span><span class="s2">"image"</span><span class="p">]</span>                     <span class="c1"># PIL image</span>
+<span class="n">item</span><span class="p">[</span><span class="s2">"objects"</span><span class="p">][</span><span class="s2">"bbox"</span><span class="p">]</span>           <span class="c1"># [[x, y, w, h], ...] absolute pixels (COCO)</span>
+<span class="n">item</span><span class="p">[</span><span class="s2">"objects"</span><span class="p">][</span><span class="s2">"category"</span><span class="p">]</span>       <span class="c1"># species names</span>
+<span class="n">item</span><span class="p">[</span><span class="s2">"objects"</span><span class="p">][</span><span class="s2">"iscrowd"</span><span class="p">]</span>        <span class="c1"># 1 = real specimen that is not scored</span>
+<span class="n">item</span><span class="p">[</span><span class="s2">"objects"</span><span class="p">][</span><span class="s2">"genus"</span><span class="p">]</span>          <span class="c1"># lineage of every specimen</span>
+<span class="n">small</span> <span class="o">=</span> <span class="n">test</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">))</span>    <span class="c1"># subsets; test.shuffle(seed=0)</span>
+<span class="n">ibbi</span><span class="o">.</span><span class="n">get_taxonomy</span><span class="p">()</span>               <span class="c1"># all 175 species with their benchmark role and distance band</span>
+<span class="n">ibbi</span><span class="o">.</span><span class="n">download_benchmark</span><span class="p">()</span>         <span class="c1"># the whole dataset (~27 GB) at the pinned v2.0.1 revision</span>
+</code></pre></div>
+<hr />
+<h2 id="evaluation">Evaluation<a class="headerlink" href="#evaluation" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">ev</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">Evaluator</span><span class="p">(</span><span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"species_detector"</span><span class="p">))</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">benchmark</span><span class="p">()</span>                                    <span class="c1"># iid_test, inat_test, semantic_ood</span>
+<span class="n">res</span><span class="p">[</span><span class="s2">"headline"</span><span class="p">]</span>                                         <span class="c1"># flat dict of the key metrics</span>
+<span class="n">res</span><span class="p">[</span><span class="s2">"per_split"</span><span class="p">][</span><span class="s2">"iid_test"</span><span class="p">][</span><span class="s2">"decomposition"</span><span class="p">]</span>           <span class="c1"># detection recall, species accuracy given detection, ...</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">benchmark</span><span class="p">(</span><span class="n">splits</span><span class="o">=</span><span class="p">[</span><span class="s2">"iid_test"</span><span class="p">],</span> <span class="n">max_images</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>        <span class="c1"># quick check (not comparable to published numbers)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">benchmark</span><span class="p">(</span><span class="n">output_dir</span><span class="o">=</span><span class="s2">"results/"</span><span class="p">)</span>                     <span class="c1"># predictions + the reference evaluator's reports</span>
+</code></pre></div>
+<ul>
+<li>Species-level models (species detectors, pipelines) are scored with the benchmark's reference evaluator.</li>
+<li>Class-agnostic detectors (arthropod, zero-shot) get class-agnostic AP/AR and recall / precision / false alarms per
+  image at their operating confidence.</li>
+<li>Scoring your own COCO predictions: <code>ibbi.evaluate.benchmark.evaluate_predictions({"iid_test": preds}, root)</code> and
+  <code>evaluate_class_agnostic(...)</code>.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="n">clf_ev</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">Evaluator</span><span class="p">(</span><span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"hierarchical_classifier"</span><span class="p">))</span>
+<span class="n">h</span> <span class="o">=</span> <span class="n">clf_ev</span><span class="o">.</span><span class="n">hierarchical_classification</span><span class="p">()</span>                <span class="c1"># ground-truth crops of every split</span>
+<span class="n">h</span><span class="p">[</span><span class="s2">"per_split"</span><span class="p">][</span><span class="s2">"iid_test"</span><span class="p">][</span><span class="s2">"acc_species"</span><span class="p">]</span>
+<span class="n">h</span><span class="p">[</span><span class="s2">"per_split"</span><span class="p">][</span><span class="s2">"semantic_ood"</span><span class="p">][</span><span class="s2">"by_band"</span><span class="p">]</span>               <span class="c1"># over-commit on held-out species by taxonomic band</span>
+<span class="n">h</span><span class="p">[</span><span class="s2">"novelty"</span><span class="p">][</span><span class="s2">"genus"</span><span class="p">][</span><span class="s2">"auroc"</span><span class="p">]</span>
 
-# Any model can be used, but the dedicated 'feature_extractor' is optimized for this.
-feature_extractor = ibbi.create_model(&quot;feature_extractor&quot;, pretrained=True)
+<span class="n">emb</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">Evaluator</span><span class="p">(</span><span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"feature_extractor"</span><span class="p">))</span><span class="o">.</span><span class="n">embeddings</span><span class="p">(</span><span class="n">ibbi</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="s2">"iid_test"</span><span class="p">))</span>
+<span class="n">emb</span><span class="p">[</span><span class="s2">"mantel_correlation"</span><span class="p">]</span>                               <span class="c1"># embedding distance vs taxonomic distance</span>
+</code></pre></div>
+<hr />
+<h2 id="explainability">Explainability<a class="headerlink" href="#explainability" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"hierarchical_classifier"</span><span class="p">)</span>
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
-# Extract the feature vector from the image
-features = feature_extractor.extract_features(image_source)
+<span class="c1"># LIME: superpixels that raised or lowered the top classes of one image</span>
+<span class="n">explanation</span><span class="p">,</span> <span class="n">image</span> <span class="o">=</span> <span class="n">explainer</span><span class="o">.</span><span class="n">with_lime</span><span class="p">(</span><span class="n">crop</span><span class="p">,</span> <span class="n">image_size</span><span class="o">=</span><span class="p">(</span><span class="mi">336</span><span class="p">,</span> <span class="mi">336</span><span class="p">),</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">top_labels</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">ibbi</span><span class="o">.</span><span class="n">plot_lime_explanation</span><span class="p">(</span><span class="n">explanation</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-print(f&quot;Extracted feature vector of shape: {features.shape}&quot;)
-</code></pre>
-<h2 id="advanced-usage">Advanced Usage</h2>
-<p>Beyond basic inference, <code>ibbi</code> provides powerful tools for rigorously evaluating model performance and understanding their internal decision-making processes. These features are crucial for conducting transparent and reproducible scientific research.</p>
-<h3 id="model-evaluation">Model Evaluation</h3>
-<p>The <code>ibbi.Evaluator</code> class provides a simple and standardized interface for assessing model performance across different tasks. This is essential for understanding a model's strengths and weaknesses, comparing different models objectively, and reporting robust, quantitative results in publications.</p>
-<blockquote>
-<p><strong>⚠️ Important Note on Memory Usage</strong></p>
-<p>The <code>Evaluator</code> methods (<code>.classification()</code>, <code>.embeddings()</code>) currently process the entire dataset in memory. Attempting to run evaluation on the full test dataset (~2,000 images) at once may exhaust all available RAM and crash your session.</p>
-<p>To avoid this, we <strong>strongly recommend</strong> evaluating on a smaller subset of the data, as demonstrated in the code example below (using <code>data.select(range(10))</code>). You can evaluate incrementally over several subsets to build a complete performance picture.</p>
-</blockquote>
-<pre><code class="language-python">import ibbi
-
-# --- 1. Import the test dataset included with the package ---
-data = ibbi.get_dataset()
-
-# --- Create a small subset for evaluation ---
-# Use .select() to create a new Dataset object, not data[:10]
-data_subset = data.select(range(10))
-
-# --- 2. Create a model to evaluate ---
-model = ibbi.create_model(model_name=&quot;species_classifier&quot;, pretrained=True)
-
-# --- 3. Instantiate the Evaluator ---
-evaluator = ibbi.Evaluator(model=model)
-
-# --- 4. Run Specific Evaluations ---
-
-# a) Classification Performance: Calculates metrics like accuracy, F1-score, and precision/recall.
-# This tells you how well the model identifies the correct species.
-print(&quot;\\n--- Classification Performance ---&quot;)
-classification_results = evaluator.classification(data)
-print(f&quot;  Accuracy: {classification_results['accuracy']:.4f}&quot;)
-print(f&quot;  Macro F1-Score: {classification_results['macro_f1_score']:.4f}&quot;)
-
-# b) Object Detection Performance: Calculates mean Average Precision (mAP) for bounding box accuracy.
-# This measures how well the model localizes the beetles in the image.
-print(&quot;\\n--- Object Detection Performance ---&quot;)
-od_results = evaluator.object_detection(data)
-print(f&quot;  Mean Average Precision (mAP): {od_results['mAP']:.4f}&quot;)
-
-# c) Embedding Quality: Assesses how well the model's embeddings separate species.
-# This uses clustering metrics and compares embedding distances to a phylogenetic distance matrix.
-print(&quot;\\n--- Embedding Quality ---&quot;)
-embedding_results = evaluator.embeddings(data)
-print(f&quot;  Silhouette Score: {embedding_results['internal_cluster_validation']['Silhouette_Score'].values[0]:.4f}&quot;)
-print(f&quot;  Adjusted Rand Index (ARI): {embedding_results['external_cluster_validation']['ARI'].values[0]:.4f}&quot;)
-print(f&quot;  Mantel Correlation (r): {embedding_results['mantel_correlation']['r']:.4f}&quot;)
-</code></pre>
-<h3 id="model-explainability-xai">Model Explainability (XAI)</h3>
-<p>The <code>ibbi.Explainer</code> class provides a simple interface for using popular explainable AI (XAI) techniques like LIME and SHAP. This allows you to look inside the "black box" of a deep learning model to understand which parts of an image were most influential in its predictions. This is vital for debugging unexpected predictions, and potentially discovering novel morphological characters that the model uses for identification.</p>
-<pre><code class="language-python">import ibbi
-
-# --- 1. Create a Model and Explainer ---
-model = ibbi.create_model(model_name=&quot;species_classifier&quot;, pretrained=True)
-explainer = ibbi.Explainer(model=model)
-image_to_explain = &quot;https://media.githubusercontent.com/media/ChristopherMarais/IBBI/main/docs/assets/images/beetles.png&quot;
-
-
-# --- 2. Explain with LIME ---
-# LIME is great for a quick, intuitive visualization on a single image.
-print(&quot;\\n--- Generating LIME Explanation ---&quot;)
-lime_explanation, original_image = explainer.with_lime(image=image_to_explain)
-ibbi.plot_lime_explanation(lime_explanation, original_image, top_k=1)
-
-
-# --- 3. Explain with SHAP ---
-# SHAP is more computationally intensive but provides more robust, theoretically-grounded explanations.
-# It requires a &quot;background&quot; dataset to simulate the &quot;absence&quot; of image features.
-print(&quot;\\n--- Generating SHAP Explanation ---&quot;)
-background_dataset = ibbi.get_shap_background_dataset()
-explain_dataset = [{&quot;image&quot;: ibbi.Image.open(image_to_explain)}]
-
-shap_values = explainer.with_shap(
-    explain_dataset=explain_dataset,
-    background_dataset=background_dataset,
-    num_explain_samples=1
-)
-
-# Plot the explanation for the first image
-ibbi.plot_shap_explanation(shap_values[0], model)
-</code></pre>
+<span class="c1"># SHAP: a background set is needed to simulate missing features</span>
+<span class="n">background</span> <span class="o">=</span> <span class="n">ibbi</span><span class="o">.</span><span class="n">get_shap_background_dataset</span><span class="p">(</span><span class="n">image_size</span><span class="o">=</span><span class="p">(</span><span class="mi">336</span><span class="p">,</span> <span class="mi">336</span><span class="p">),</span> <span class="n">n_images</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">explainer</span><span class="o">.</span><span class="n">with_shap</span><span class="p">([{</span><span class="s2">"image"</span><span class="p">:</span> <span class="n">crop</span><span class="p">}],</span> <span class="n">background</span><span class="p">,</span> <span class="n">num_explain_samples</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">image_size</span><span class="o">=</span><span class="p">(</span><span class="mi">336</span><span class="p">,</span> <span class="mi">336</span><span class="p">),</span> <span class="n">max_evals</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+<span class="n">ibbi</span><span class="o">.</span><span class="n">plot_shap_explanation</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">model</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>LIME (green: supports the species, red: against it)</th>
+<th>SHAP (red: supports the species, blue: against it)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img alt="" src="../assets/images/example_lime.jpg" /></td>
+<td><img alt="" src="../assets/images/example_shap.jpg" /></td>
+</tr>
+</tbody>
+</table>
+<p>Detectors are explained through their highest confidence per class, zero-shot detectors per prompt
+(<code>text_prompt=</code> sets the prompts), classifiers through their calibrated species probabilities.</p>
 
 
 
@@ -1141,10 +1383,11 @@ ibbi.plot_shap_explanation(shap_values[0], model)
     
     
       
-      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.instant", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.instant", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.92b07e13.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

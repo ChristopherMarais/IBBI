@@ -1,0 +1,1844 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Detection, hierarchical identification and benchmarking of bark and ambrosia beetles.">
+      
+      
+      
+        <link rel="canonical" href="https://gcmarais.com/IBBI/benchmark/">
+      
+      
+        <link rel="prev" href="../models/">
+      
+      
+        <link rel="next" href="../changelog/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/IBBI_logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Benchmark Results - IBBI Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#benchmark-results" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="IBBI Documentation" class="md-header__button md-logo" aria-label="IBBI Documentation" data-md-component="logo">
+      
+  <img src="../assets/images/IBBI_logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            IBBI Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Benchmark Results
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ChristopherMarais/IBBI" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ChristopherMarais/IBBI
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../usage/" class="md-tabs__link">
+          
+  
+  
+  User Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api/" class="md-tabs__link">
+          
+  
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../CONTRIBUTING/" class="md-tabs__link">
+          
+  
+  
+  Development
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="IBBI Documentation" class="md-nav__button md-logo" aria-label="IBBI Documentation" data-md-component="logo">
+      
+  <img src="../assets/images/IBBI_logo.png" alt="logo">
+
+    </a>
+    IBBI Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ChristopherMarais/IBBI" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ChristopherMarais/IBBI
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark Results
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Protocol
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#species-level-detection-and-identification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Species-level detection and identification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#class-agnostic-detection-arthropod-and-zero-shot-detectors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class-agnostic detection (arthropod and zero-shot detectors)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hierarchical-classifiers-ground-truth-crops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hierarchical classifiers (ground-truth crops)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#seeds-of-the-species-detectors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Seeds of the species detectors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caveats
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LICENSE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    License
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="benchmark-results">Benchmark results<a class="headerlink" href="#benchmark-results" title="Permanent link">&para;</a></h1>
+<p>Every model in <code>ibbi</code> v0.3 was run through <code>ibbi.Evaluator</code> on the
+<a href="https://huggingface.co/datasets/IBBI-bio/bark-ambrosia-beetle-benchmark">Bark and Ambrosia Beetle Detection Benchmark v2.0.1</a>
+(pinned revision <code>8dc5a58e</code>). The scripts are in <a href="https://github.com/ChristopherMarais/IBBI/tree/main/benchmarks"><code>benchmarks/</code></a>:
+<code>run_benchmark.py</code> runs one model, <code>make_tables.py</code> builds the tables below, and <code>benchmarks/results/</code> holds the headline
+numbers of every run with the package versions and GPU used.</p>
+<h2 id="protocol">Protocol<a class="headerlink" href="#protocol" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Splits.</strong> <code>iid_test</code>: held-out specimens of the 65 trainable species (650 scored specimens; 4,367 more on the same
+  images are crowd regions and are ignored). <code>inat_test</code>: iNaturalist field photographs of 8 trained species (80 scored).
+  <code>semantic_ood</code>: 46,924 specimens of 110 species never seen in training, banded by taxonomic distance: <code>near_genus</code>
+  (a trained genus), <code>mid_tribe</code> (a trained tribe, new genus), <code>far_tribe</code> (a new tribe).</li>
+<li><strong>Species-level models</strong> (species detectors and pipelines) are scored with the benchmark's own crowd-aware reference
+  evaluator (<code>evaluation/evaluate.py</code> of the dataset, vendored unchanged in <code>ibbi.evaluate</code>). Inference follows the
+  benchmark protocol: detectors at confidence 0.001; pipelines with the arthropod detector at confidence 0.05 and at most
+  100 detections per image (every detection is classified), each box scored as detector confidence × calibrated species
+  probability and labelled with the classifier's best species.</li>
+<li><strong>Class-agnostic detectors</strong> (arthropod detector, zero-shot detectors) are scored class-agnostically with
+  pycocotools (crowd regions ignored), plus recall, precision and false alarms per image at IoU 0.5 at each model's
+  operating confidence. Zero-shot models use the prompts and tiling chosen on the detector corpus validation sample;
+  detections are kept down to confidence 0.02.</li>
+<li><strong>Hierarchical classifiers</strong> are scored on ground-truth specimen crops (box + 5%), at the default <code>gallery</code> operating
+  point. A level is <em>known</em> for a specimen when the classifier's label space contains its lineage down to that level;
+  the <em>ideal depth</em> is the number of leading known levels; <em>over-commit</em> = reported depth &gt; ideal depth (naming a taxon
+  that cannot be right). Novelty AUROC per level: novelty score of specimens known at that level versus specimens unknown
+  at that level, all splits pooled. Embedding metrics use all <code>iid_test</code> specimens (scored and crowd).</li>
+<li><strong>Nothing was tuned on the benchmark test splits</strong> for any model in this table: settings are the models' defaults,
+  chosen on validation data (with the exception noted for the species detectors below).</li>
+</ul>
+<p>Metric names: <em>det. recall</em> = share of specimens found (IoU ≥ 0.5, any confidence); <em>species acc. | det.</em> = share of
+found specimens given the right species; <em>species recall</em> = found and correctly named; <em>AR@100</em> = COCO average recall
+with 100 detections per image (IoU 0.50:0.95); <em>AP</em> = COCO AP over IoU 0.50:0.95; <em>novelty AUROC</em> = how well the
+detection confidence separates known from unseen species (reference evaluator).</p>
+<h2 id="species-level-detection-and-identification">Species-level detection and identification<a class="headerlink" href="#species-level-detection-and-identification" title="Permanent link">&para;</a></h2>
+<!-- SPECIES_TABLE_START -->
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>iid AP</th>
+<th>iid AP50</th>
+<th>iid det. recall</th>
+<th>iid species acc. | det.</th>
+<th>iid species recall</th>
+<th>iid genus acc. | det.</th>
+<th>iNat AP50</th>
+<th>iNat det. recall</th>
+<th>OOD class-agn. AR@100</th>
+<th>OOD genus acc. | det.</th>
+<th>novelty AUROC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>yolov8x_species_detector</td>
+<td>0.497</td>
+<td>0.514</td>
+<td>0.929</td>
+<td>0.586</td>
+<td>0.545</td>
+<td>0.627</td>
+<td>0.079</td>
+<td>0.163</td>
+<td>0.732</td>
+<td>0.169</td>
+<td>0.692</td>
+</tr>
+<tr>
+<td>yolov9e_species_detector</td>
+<td>0.519</td>
+<td>0.538</td>
+<td>0.929</td>
+<td>0.613</td>
+<td>0.569</td>
+<td>0.656</td>
+<td>0.113</td>
+<td>0.388</td>
+<td>0.735</td>
+<td>0.175</td>
+<td>0.668</td>
+</tr>
+<tr>
+<td>yolov10x_species_detector</td>
+<td>0.561</td>
+<td>0.582</td>
+<td>0.932</td>
+<td>0.604</td>
+<td>0.563</td>
+<td>0.655</td>
+<td>0.166</td>
+<td>0.450</td>
+<td>0.724</td>
+<td>0.163</td>
+<td>0.664</td>
+</tr>
+<tr>
+<td>yolo11x_species_detector</td>
+<td>0.485</td>
+<td>0.501</td>
+<td>0.929</td>
+<td>0.575</td>
+<td>0.534</td>
+<td>0.629</td>
+<td>0.077</td>
+<td>0.163</td>
+<td>0.727</td>
+<td>0.141</td>
+<td>0.693</td>
+</tr>
+<tr>
+<td>yolo12x_species_detector</td>
+<td>0.490</td>
+<td>0.508</td>
+<td>0.931</td>
+<td>0.577</td>
+<td>0.537</td>
+<td>0.628</td>
+<td>0.156</td>
+<td>0.312</td>
+<td>0.723</td>
+<td>0.129</td>
+<td>0.702</td>
+</tr>
+<tr>
+<td>rtdetrx_species_detector</td>
+<td>0.535</td>
+<td>0.557</td>
+<td>0.937</td>
+<td>0.647</td>
+<td>0.606</td>
+<td>0.701</td>
+<td>0.035</td>
+<td>0.388</td>
+<td>0.739</td>
+<td>0.221</td>
+<td>0.569</td>
+</tr>
+<tr>
+<td>pipeline: arthropod detector + DINOv3 classifier</td>
+<td>0.718</td>
+<td>0.743</td>
+<td>0.932</td>
+<td>0.858</td>
+<td>0.800</td>
+<td>0.919</td>
+<td>0.336</td>
+<td>0.350</td>
+<td>0.762</td>
+<td>0.322</td>
+<td>0.820</td>
+</tr>
+<tr>
+<td>pipeline: arthropod detector + BioCLIP 2 classifier</td>
+<td>0.691</td>
+<td>0.712</td>
+<td>0.932</td>
+<td>0.828</td>
+<td>0.772</td>
+<td>0.884</td>
+<td>0.336</td>
+<td>0.362</td>
+<td>0.762</td>
+<td>0.266</td>
+<td>0.710</td>
+</tr>
+<tr>
+<td>pipeline: Co-DINO detector + DINOv3 classifier</td>
+<td>0.729</td>
+<td>0.749</td>
+<td>0.934</td>
+<td>0.850</td>
+<td>0.794</td>
+<td>0.913</td>
+<td>0.354</td>
+<td>0.350</td>
+<td>0.778</td>
+<td>0.322</td>
+<td>0.806</td>
+</tr>
+</tbody>
+</table>
+<!-- SPECIES_TABLE_END -->
+
+<h2 id="class-agnostic-detection-arthropod-and-zero-shot-detectors">Class-agnostic detection (arthropod and zero-shot detectors)<a class="headerlink" href="#class-agnostic-detection-arthropod-and-zero-shot-detectors" title="Permanent link">&para;</a></h2>
+<!-- CLASS_AGNOSTIC_TABLE_START -->
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Split</th>
+<th>AP</th>
+<th>AP50</th>
+<th>AR@100</th>
+<th>max recall@0.5</th>
+<th>op. conf</th>
+<th>recall@op</th>
+<th>precision@op</th>
+<th>false alarms / img</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>yolo11x_arthropod_detector</td>
+<td>iid_test</td>
+<td>0.744</td>
+<td>0.774</td>
+<td>0.909</td>
+<td>0.932</td>
+<td>0.70</td>
+<td>0.922</td>
+<td>0.435</td>
+<td>1.25</td>
+</tr>
+<tr>
+<td>yolo11x_arthropod_detector</td>
+<td>inat_test</td>
+<td>0.932</td>
+<td>0.996</td>
+<td>0.945</td>
+<td>1.000</td>
+<td>0.70</td>
+<td>0.963</td>
+<td>0.987</td>
+<td>0.01</td>
+</tr>
+<tr>
+<td>yolo11x_arthropod_detector</td>
+<td>semantic_ood</td>
+<td>0.632</td>
+<td>0.670</td>
+<td>0.763</td>
+<td>0.797</td>
+<td>0.70</td>
+<td>0.784</td>
+<td>0.795</td>
+<td>1.23</td>
+</tr>
+<tr>
+<td>codino_arthropod_detector</td>
+<td>iid_test</td>
+<td>0.669</td>
+<td>0.698</td>
+<td>0.915</td>
+<td>0.934</td>
+<td>0.65</td>
+<td>0.923</td>
+<td>0.455</td>
+<td>1.16</td>
+</tr>
+<tr>
+<td>codino_arthropod_detector</td>
+<td>inat_test</td>
+<td>0.952</td>
+<td>1.000</td>
+<td>0.961</td>
+<td>1.000</td>
+<td>0.65</td>
+<td>0.975</td>
+<td>1.000</td>
+<td>0.00</td>
+</tr>
+<tr>
+<td>codino_arthropod_detector</td>
+<td>semantic_ood</td>
+<td>0.683</td>
+<td>0.707</td>
+<td>0.780</td>
+<td>0.802</td>
+<td>0.65</td>
+<td>0.781</td>
+<td>0.801</td>
+<td>1.18</td>
+</tr>
+<tr>
+<td>grounding_dino_zero_shot_detector</td>
+<td>iid_test</td>
+<td>0.294</td>
+<td>0.395</td>
+<td>0.801</td>
+<td>0.931</td>
+<td>0.60</td>
+<td>0.391</td>
+<td>0.419</td>
+<td>0.57</td>
+</tr>
+<tr>
+<td>grounding_dino_zero_shot_detector</td>
+<td>inat_test</td>
+<td>0.595</td>
+<td>0.701</td>
+<td>0.887</td>
+<td>1.000</td>
+<td>0.60</td>
+<td>0.688</td>
+<td>0.556</td>
+<td>0.59</td>
+</tr>
+<tr>
+<td>grounding_dino_zero_shot_detector</td>
+<td>semantic_ood</td>
+<td>0.243</td>
+<td>0.448</td>
+<td>0.518</td>
+<td>0.789</td>
+<td>0.60</td>
+<td>0.237</td>
+<td>0.637</td>
+<td>0.82</td>
+</tr>
+<tr>
+<td>owlv2_zero_shot_detector</td>
+<td>iid_test</td>
+<td>0.365</td>
+<td>0.529</td>
+<td>0.719</td>
+<td>0.928</td>
+<td>0.72</td>
+<td>0.366</td>
+<td>0.625</td>
+<td>0.23</td>
+</tr>
+<tr>
+<td>owlv2_zero_shot_detector</td>
+<td>inat_test</td>
+<td>0.531</td>
+<td>0.771</td>
+<td>0.764</td>
+<td>1.000</td>
+<td>0.72</td>
+<td>0.662</td>
+<td>0.716</td>
+<td>0.28</td>
+</tr>
+<tr>
+<td>owlv2_zero_shot_detector</td>
+<td>semantic_ood</td>
+<td>0.207</td>
+<td>0.419</td>
+<td>0.470</td>
+<td>0.789</td>
+<td>0.72</td>
+<td>0.154</td>
+<td>0.572</td>
+<td>0.70</td>
+</tr>
+<tr>
+<td>yoloworld_zero_shot_detector</td>
+<td>iid_test</td>
+<td>0.114</td>
+<td>0.207</td>
+<td>0.678</td>
+<td>0.926</td>
+<td>0.50</td>
+<td>0.266</td>
+<td>0.265</td>
+<td>0.77</td>
+</tr>
+<tr>
+<td>yoloworld_zero_shot_detector</td>
+<td>inat_test</td>
+<td>0.482</td>
+<td>0.664</td>
+<td>0.736</td>
+<td>0.975</td>
+<td>0.50</td>
+<td>0.225</td>
+<td>0.947</td>
+<td>0.01</td>
+</tr>
+<tr>
+<td>yoloworld_zero_shot_detector</td>
+<td>semantic_ood</td>
+<td>0.252</td>
+<td>0.474</td>
+<td>0.518</td>
+<td>0.787</td>
+<td>0.50</td>
+<td>0.363</td>
+<td>0.636</td>
+<td>1.27</td>
+</tr>
+<tr>
+<td>sam3_zero_shot_detector</td>
+<td>iid_test</td>
+<td>0.218</td>
+<td>0.341</td>
+<td>0.716</td>
+<td>0.926</td>
+<td>0.95</td>
+<td>0.762</td>
+<td>0.229</td>
+<td>2.68</td>
+</tr>
+<tr>
+<td>sam3_zero_shot_detector</td>
+<td>inat_test</td>
+<td>0.362</td>
+<td>0.569</td>
+<td>0.731</td>
+<td>1.000</td>
+<td>0.95</td>
+<td>0.725</td>
+<td>0.487</td>
+<td>0.82</td>
+</tr>
+<tr>
+<td>sam3_zero_shot_detector</td>
+<td>semantic_ood</td>
+<td>0.202</td>
+<td>0.424</td>
+<td>0.460</td>
+<td>0.785</td>
+<td>0.95</td>
+<td>0.667</td>
+<td>0.385</td>
+<td>6.50</td>
+</tr>
+</tbody>
+</table>
+<!-- CLASS_AGNOSTIC_TABLE_END -->
+
+<h2 id="hierarchical-classifiers-ground-truth-crops">Hierarchical classifiers (ground-truth crops)<a class="headerlink" href="#hierarchical-classifiers-ground-truth-crops" title="Permanent link">&para;</a></h2>
+<p>Tables: accuracy per level and depth metrics per split; novelty separation per level; behaviour on held-out species by
+taxonomic band; accuracy over all known specimens (scored and crowd, 8× more specimens than the scored set); embeddings.</p>
+<!-- CLASSIFIER_TABLES_START -->
+<table>
+<thead>
+<tr>
+<th>Classifier</th>
+<th>Split</th>
+<th>n</th>
+<th>subfamily</th>
+<th>tribe</th>
+<th>genus</th>
+<th>species</th>
+<th>species ECE</th>
+<th>mean depth</th>
+<th>over-commit</th>
+<th>right depth &amp; taxon</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dinov3_hierarchical_classifier</td>
+<td>iid_test</td>
+<td>650</td>
+<td>0.989</td>
+<td>0.949</td>
+<td>0.891</td>
+<td>0.835</td>
+<td>0.043</td>
+<td>3.45</td>
+<td>0.000</td>
+<td>0.718</td>
+</tr>
+<tr>
+<td>dinov3_hierarchical_classifier</td>
+<td>inat_test</td>
+<td>80</td>
+<td>0.925</td>
+<td>0.562</td>
+<td>0.487</td>
+<td>0.362</td>
+<td>0.210</td>
+<td>1.65</td>
+<td>0.000</td>
+<td>0.200</td>
+</tr>
+<tr>
+<td>dinov3_hierarchical_classifier</td>
+<td>semantic_ood</td>
+<td>46924</td>
+<td>0.979</td>
+<td>0.619</td>
+<td>0.515</td>
+<td>–</td>
+<td>–</td>
+<td>2.57</td>
+<td>0.497</td>
+<td>0.102</td>
+</tr>
+<tr>
+<td>bioclip2_hierarchical_classifier</td>
+<td>iid_test</td>
+<td>650</td>
+<td>0.994</td>
+<td>0.945</td>
+<td>0.871</td>
+<td>0.814</td>
+<td>0.048</td>
+<td>3.45</td>
+<td>0.000</td>
+<td>0.718</td>
+</tr>
+<tr>
+<td>bioclip2_hierarchical_classifier</td>
+<td>inat_test</td>
+<td>80</td>
+<td>1.000</td>
+<td>0.637</td>
+<td>0.475</td>
+<td>0.338</td>
+<td>0.239</td>
+<td>1.60</td>
+<td>0.000</td>
+<td>0.150</td>
+</tr>
+<tr>
+<td>bioclip2_hierarchical_classifier</td>
+<td>semantic_ood</td>
+<td>46924</td>
+<td>0.966</td>
+<td>0.585</td>
+<td>0.428</td>
+<td>–</td>
+<td>–</td>
+<td>2.47</td>
+<td>0.471</td>
+<td>0.136</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Classifier</th>
+<th>subfamily AUROC</th>
+<th>tribe AUROC</th>
+<th>genus AUROC</th>
+<th>species AUROC</th>
+<th>genus FPR@95</th>
+<th>species FPR@95</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dinov3_hierarchical_classifier</td>
+<td>–</td>
+<td>0.772</td>
+<td>0.561</td>
+<td>0.739</td>
+<td>0.881</td>
+<td>0.925</td>
+</tr>
+<tr>
+<td>bioclip2_hierarchical_classifier</td>
+<td>–</td>
+<td>0.811</td>
+<td>0.625</td>
+<td>0.653</td>
+<td>0.904</td>
+<td>0.978</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Classifier</th>
+<th>Band</th>
+<th>n</th>
+<th>ideal depth</th>
+<th>mean reported depth</th>
+<th>over-commit</th>
+<th>genus correct (when known)</th>
+<th>tribe correct (when known)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dinov3_hierarchical_classifier</td>
+<td>far_tribe</td>
+<td>6034</td>
+<td>1.00</td>
+<td>1.96</td>
+<td>0.326</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>dinov3_hierarchical_classifier</td>
+<td>mid_tribe</td>
+<td>17099</td>
+<td>2.00</td>
+<td>2.37</td>
+<td>0.449</td>
+<td>nan</td>
+<td>0.258</td>
+</tr>
+<tr>
+<td>dinov3_hierarchical_classifier</td>
+<td>near_genus</td>
+<td>23791</td>
+<td>3.00</td>
+<td>2.88</td>
+<td>0.575</td>
+<td>0.515</td>
+<td>0.878</td>
+</tr>
+<tr>
+<td>bioclip2_hierarchical_classifier</td>
+<td>far_tribe</td>
+<td>6034</td>
+<td>1.00</td>
+<td>1.28</td>
+<td>0.096</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>bioclip2_hierarchical_classifier</td>
+<td>mid_tribe</td>
+<td>17099</td>
+<td>2.00</td>
+<td>2.32</td>
+<td>0.443</td>
+<td>nan</td>
+<td>0.254</td>
+</tr>
+<tr>
+<td>bioclip2_hierarchical_classifier</td>
+<td>near_genus</td>
+<td>23791</td>
+<td>3.00</td>
+<td>2.89</td>
+<td>0.585</td>
+<td>0.428</td>
+<td>0.822</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Classifier</th>
+<th>Split</th>
+<th>n (scored + crowd)</th>
+<th>genus</th>
+<th>species</th>
+<th>known species named correctly</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dinov3_hierarchical_classifier</td>
+<td>iid_test</td>
+<td>5017</td>
+<td>0.860</td>
+<td>0.820</td>
+<td>0.733</td>
+</tr>
+<tr>
+<td>dinov3_hierarchical_classifier</td>
+<td>inat_test</td>
+<td>88</td>
+<td>0.443</td>
+<td>0.330</td>
+<td>0.182</td>
+</tr>
+<tr>
+<td>bioclip2_hierarchical_classifier</td>
+<td>iid_test</td>
+<td>5017</td>
+<td>0.832</td>
+<td>0.794</td>
+<td>0.727</td>
+</tr>
+<tr>
+<td>bioclip2_hierarchical_classifier</td>
+<td>inat_test</td>
+<td>88</td>
+<td>0.455</td>
+<td>0.330</td>
+<td>0.136</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Classifier</th>
+<th>Mantel r (embedding vs taxonomic distance)</th>
+<th>p</th>
+<th>ARI</th>
+<th>NMI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dinov3_hierarchical_classifier</td>
+<td>0.542</td>
+<td>0.001</td>
+<td>0.885</td>
+<td>0.886</td>
+</tr>
+<tr>
+<td>bioclip2_hierarchical_classifier</td>
+<td>0.739</td>
+<td>0.001</td>
+<td>0.878</td>
+<td>0.881</td>
+</tr>
+</tbody>
+</table>
+<!-- CLASSIFIER_TABLES_END -->
+
+<h2 id="seeds-of-the-species-detectors">Seeds of the species detectors<a class="headerlink" href="#seeds-of-the-species-detectors" title="Permanent link">&para;</a></h2>
+<p>Each architecture was trained with three seeds in the benchmark suite; the package ships the seed with the best
+Ultralytics validation fitness. <strong>The validation split of that suite was <code>iid_test</code></strong>, so the choice of the best epoch and
+of the seed used <code>iid_test</code>, and the shipped seed's <code>iid_test</code> numbers are slightly optimistic. The table (reference
+evaluator, suite runs at batch 16) shows the seed-to-seed spread so the effect can be judged. Numbers through <code>ibbi</code>
+(batch 1, the table above) differ from the suite's by up to about ±0.015 AP because Ultralytics pads batched images
+differently.</p>
+<!-- SEED_TABLE_START -->
+<table>
+<thead>
+<tr>
+<th>Architecture</th>
+<th>Seed</th>
+<th>iid AP</th>
+<th>iid species acc. | det.</th>
+<th>OOD class-agn. AR@100</th>
+<th>shipped</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>yolov8x</td>
+<td>0</td>
+<td>0.477</td>
+<td>0.597</td>
+<td>0.738</td>
+<td></td>
+</tr>
+<tr>
+<td>yolov8x</td>
+<td>1</td>
+<td>0.505</td>
+<td>0.590</td>
+<td>0.733</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>yolov8x</td>
+<td>2</td>
+<td>0.481</td>
+<td>0.569</td>
+<td>0.732</td>
+<td></td>
+</tr>
+<tr>
+<td>yolov9e</td>
+<td>0</td>
+<td>0.503</td>
+<td>0.607</td>
+<td>0.737</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>yolov9e</td>
+<td>1</td>
+<td>0.492</td>
+<td>0.600</td>
+<td>0.740</td>
+<td></td>
+</tr>
+<tr>
+<td>yolov9e</td>
+<td>2</td>
+<td>0.505</td>
+<td>0.613</td>
+<td>0.740</td>
+<td></td>
+</tr>
+<tr>
+<td>yolov10x</td>
+<td>0</td>
+<td>0.548</td>
+<td>0.603</td>
+<td>0.733</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>yolov10x</td>
+<td>1</td>
+<td>0.541</td>
+<td>0.597</td>
+<td>0.732</td>
+<td></td>
+</tr>
+<tr>
+<td>yolov10x</td>
+<td>2</td>
+<td>0.523</td>
+<td>0.570</td>
+<td>0.737</td>
+<td></td>
+</tr>
+<tr>
+<td>yolo11x</td>
+<td>0</td>
+<td>0.494</td>
+<td>0.584</td>
+<td>0.742</td>
+<td></td>
+</tr>
+<tr>
+<td>yolo11x</td>
+<td>1</td>
+<td>0.477</td>
+<td>0.571</td>
+<td>0.737</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>yolo11x</td>
+<td>2</td>
+<td>0.493</td>
+<td>0.587</td>
+<td>0.730</td>
+<td></td>
+</tr>
+<tr>
+<td>yolo12x</td>
+<td>0</td>
+<td>0.503</td>
+<td>0.599</td>
+<td>0.731</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>yolo12x</td>
+<td>1</td>
+<td>0.504</td>
+<td>0.603</td>
+<td>0.740</td>
+<td></td>
+</tr>
+<tr>
+<td>yolo12x</td>
+<td>2</td>
+<td>0.491</td>
+<td>0.581</td>
+<td>0.738</td>
+<td></td>
+</tr>
+<tr>
+<td>rtdetr-x</td>
+<td>0</td>
+<td>0.501</td>
+<td>0.612</td>
+<td>0.730</td>
+<td></td>
+</tr>
+<tr>
+<td>rtdetr-x</td>
+<td>1</td>
+<td>0.509</td>
+<td>0.620</td>
+<td>0.738</td>
+<td></td>
+</tr>
+<tr>
+<td>rtdetr-x</td>
+<td>2</td>
+<td>0.530</td>
+<td>0.645</td>
+<td>0.739</td>
+<td>yes</td>
+</tr>
+</tbody>
+</table>
+<!-- SEED_TABLE_END -->
+
+<h2 id="caveats">Caveats<a class="headerlink" href="#caveats" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>The arthropod detector has seen most benchmark images.</strong> About 99% of the benchmark's images come from the Bark and
+  Ambrosia Gallery, which is one of the sources of the arthropod detection corpus, many of them in its training split.
+  Its detection recall on the benchmark, and therefore the pipelines' detection recall, is optimistic. Classification
+  given a detection is not affected: the classifiers never trained on <code>iid_test</code> or <code>semantic_ood</code>.</li>
+<li><strong>Co-DINO vs YOLO11x on <code>iid_test</code>.</strong> The Co-DINO arthropod detector has the higher AP on field photographs and unseen
+  species and finds slightly more <code>iid_test</code> specimens, but its <code>iid_test</code> AP is lower (0.669 vs 0.744). Duplicate boxes
+  are not the cause (1.2% of its boxes at confidence ≥ 0.3 overlap another by IoU &gt; 0.5). Both detectors reach only about
+  45% precision at their operating confidence on <code>iid_test</code> (many confident boxes that match no annotated specimen or
+  crowd region), so AP there depends strongly on how each model ranks those boxes; the cause of the gap has not been
+  established.</li>
+<li><strong>Operating confidences do not transfer exactly.</strong> The arthropod and zero-shot detectors' operating confidences were
+  set for at most ~0.2 false alarms per image on the detector corpus validation sample. On the benchmark most of them
+  give more (1.2 per image for the arthropod detector on <code>iid_test</code> and <code>semantic_ood</code>; up to 6.5 for SAM 3 on
+  <code>semantic_ood</code>), so set <code>conf</code> for your own images when false alarms matter. AP and AR do not depend on this choice.</li>
+<li><strong>Field photographs</strong> (<code>inat_test</code>) are a weak domain for every model, and the split is small (80 specimens).</li>
+<li><strong>Unseen genera are the hard case</strong> for the hierarchical classifiers: no novelty score reaches a high AUROC at genus
+  level, so unseen species and genera are still named at an impossible depth a large share of the time. The non-beetle
+  case is easy (not measurable on this benchmark, which contains only beetles; see the model cards).</li>
+<li><strong>Ultralytics version.</strong> Results were produced with Ultralytics 8.3.253, the version range the package requires.
+  Ultralytics 8.4 changes YOLOv10 and RT-DETR predictions (iid AP 0.561 → 0.505 and 0.535 → 0.599 respectively).</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.instant", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
