@@ -37,7 +37,8 @@ benchmark results and licence terms. Benchmark numbers: [benchmark.md](benchmark
 * **Operating confidence:** `operating_conf = 0.70` (≤ 0.2 false alarms per image on exhaustively labelled validation
   images). The default `conf` of `predict` is 0.25.
 * **Licence:** AGPL-3.0 (Ultralytics). Training data include iNaturalist 2017 (non-commercial research and education
-  only) and IP102 (academic use only): the weights are released for non-commercial research.
+  only) and IP102 (academic use only), whose terms limit use to non-commercial research; check them before commercial
+  use.
 
 ## Co-DINO arthropod detector
 

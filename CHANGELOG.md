@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Licences
+* The README and model docs no longer add a non-commercial condition to the AGPL-3.0 weights, which the AGPL does
+  not allow. Each set of weights is released under its stated licence; the training-data terms (CC BY-NC benchmark
+  images, iNaturalist 2017, IP102) are given as information for commercial users to check.
+
 ### Faster inference on GPUs
 * GPU fast path, on by default with CUDA: JPEG decoding with nvJPEG, the Ultralytics letterbox and the classifier's
   crops on the GPU, and crops of several images classified together (`create_pipeline(batch_size=...)`; the evaluator

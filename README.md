@@ -737,8 +737,9 @@ ibbi.get_taxonomy()               # all 175 species with their lineage, role and
   * Zero-shot models are downloaded from their authors under their own licences.
 * **Training data terms.** About 60% of the benchmark's training images are CC BY-NC, and the arthropod corpus (and
   the classifiers' non-beetle examples) include iNaturalist 2017 (non-commercial research and education only) and
-  IP102 (academic use only). Whether weights inherit the terms of their training data is unsettled; the IBBI weights
-  are released for **non-commercial research use**, and commercial users should check each model card.
+  IP102 (academic use only). The licences above are the terms under which the weights are released. Whether the
+  terms of the training data also bind the weights is unsettled, so anyone planning commercial use should check those
+  terms and each model card first.
 * **Benchmark:** annotations CC BY 4.0, images under mixed Creative Commons licences (see `image_licences.csv` in the
   dataset).
 
