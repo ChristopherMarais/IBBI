@@ -3,6 +3,7 @@
 Build the benchmark tables of docs/benchmark.md and the summary in README.md from run_benchmark.py outputs.
 
     python benchmarks/make_tables.py --results <dir with <model>/results.json> [--suite <benchmark suite dir>]
+    python benchmarks/make_tables.py --readme-only     # README summary only, from benchmarks/results/*.json
 
 Also copies each model's headline metrics to benchmarks/results/<model>.json (small files kept in the repository).
 """
@@ -53,8 +54,11 @@ def f(v, nd=3):
 
 
 def load(results: Path, name: str):
-    p = results / name / "results.json"
-    return json.loads(p.read_text()) if p.exists() else None
+    """A model's results: <results>/<model>/results.json, or the small copy <results>/<model>.json."""
+    for p in (results / name / "results.json", results / f"{name}.json"):
+        if p.is_file():
+            return json.loads(p.read_text(encoding="utf-8"))
+    return None
 
 
 def species_table(results):
@@ -169,51 +173,123 @@ def seed_table(suite: Path):
     return "\n".join(out)
 
 
+SHORT = {
+    "pipeline__dinov3_hierarchical_classifier": "Pipeline: arthropod detector + DINOv3",
+    "pipeline__bioclip2_hierarchical_classifier": "Pipeline: arthropod detector + BioCLIP 2",
+    "pipeline__codino__dinov3_hierarchical_classifier": "Pipeline: Co-DINO + DINOv3",
+}
+MEDALS = {1: "🥇", 2: "🥈", 3: "🥉"}
+
+
+def ranked_table(rows, header, sort_col, lower_better=()):
+    """A table ranked best first, with the best value of each column in bold and medals on the top three rows.
+
+    rows: [(label, [value per column])]; header: column titles; sort_col: index of the column to rank by.
+    """
+    sign = lambda j: 1 if j in lower_better else -1  # noqa: E731
+    rows = sorted(rows, key=lambda r: (r[1][sort_col] is None, sign(sort_col) * (r[1][sort_col] or 0)))
+    best = []
+    for j in range(len(header)):
+        vals = [v[j] for _, v in rows if v[j] is not None]
+        best.append(f((min if j in lower_better else max)(vals)) if vals else None)
+    out = ["| Rank | Model | " + " | ".join(header) + " |", "|:---:|---|" + ":---:|" * len(header)]
+    for i, (label, vals) in enumerate(rows, 1):
+        cells = [f"**{f(v)}**" if v is not None and f(v) == best[j] else f(v) for j, v in enumerate(vals)]
+        out.append(f"| {MEDALS.get(i, i)} | {label} | " + " | ".join(cells) + " |")
+    return "\n".join(out), rows[0][0]
+
+
 def summary_table(results):
-    out = ["| Model | Headline (benchmark v2.0.1) |", "|---|---|"]
+    """The README summary: one ranked table per task, plus the winner of each."""
+    species = []
     for m in SPECIES:
         r = load(results, m)
         if r:
             h = r["headline"]
-            out.append(
-                f"| {NICE.get(m, m)} | iid AP {f(h.get('iid_test.AP_50_95'))}, detection recall {f(h.get('iid_test.detection_recall'))}, "
-                f"species accuracy given detection {f(h.get('iid_test.acc_species_given_det'))}; unseen-species detection recall (AR@100) "
-                f"{f(h.get('semantic_ood.class_agnostic_AR_100'))} |"
-            )
+            keys = ("iid_test.AP_50_95", "iid_test.detection_recall", "iid_test.acc_species_given_det", "semantic_ood.class_agnostic_AR_100")
+            species.append((SHORT.get(m, f"`{m}`"), [h.get(k) for k in keys]))
+    agnostic = []
     for m in CLASS_AGNOSTIC:
         r = load(results, m)
         if r:
             h = r["headline"]
-            out.append(
-                f"| {m} | class-agnostic AP: iid {f(h.get('iid_test.class_agnostic_AP_50_95'))}, iNat {f(h.get('inat_test.class_agnostic_AP_50_95'))}, "
-                f"unseen species {f(h.get('semantic_ood.class_agnostic_AP_50_95'))} |"
-            )
+            aps = [h.get(f"{s}.class_agnostic_AP_50_95") for s in ("iid_test", "inat_test", "semantic_ood")]
+            mean = sum(aps) / 3 if None not in aps else None
+            agnostic.append((f"`{m}`", [aps[2], aps[0], aps[1], mean]))
+    classifiers = []
     for m in CLASSIFIERS:
         r = load(results, m)
         if r:
             p = r["hierarchical_scored"]["per_split"]
             n = r["hierarchical_scored"]["novelty"]
-            out.append(
-                f"| {m} | iid species / genus accuracy {f(p['iid_test'].get('acc_species'))} / {f(p['iid_test'].get('acc_genus'))}; "
-                f"unseen species named at an impossible depth {f(p.get('semantic_ood', {}).get('over_commit_rate'))}; genus novelty AUROC "
-                f"{f(n.get('genus', {}).get('auroc'))} |"
+            vals = [
+                p["iid_test"].get("acc_species"),
+                p["iid_test"].get("acc_genus"),
+                p.get("semantic_ood", {}).get("over_commit_rate"),
+                n.get("genus", {}).get("auroc"),
+            ]
+            classifiers.append((f"`{m}`", vals))
+
+    parts, winners = [], []
+    if species:
+        t, w = ranked_table(species, ["Box + species AP ↑", "Specimens found ↑", "Species correct ↑", "Unseen species found ↑"], 0)
+        winners.append(f"* **Identifying beetles (box + species name):** {w}")
+        parts.extend(
+            (
+                "**1. Identifying beetles in images** (species detectors and the two-stage pipelines), ranked by box + species AP",
+                t,
+                "<sub>Box + species AP = COCO AP@[.50:.95] on iid_test. Specimens found = detection recall on iid_test. "
+                "Species correct = species accuracy of the specimens found. Unseen species found = class-agnostic AR@100 on "
+                "semantic_ood.</sub>",
             )
-    return "\n".join(out)
+        )
+    if agnostic:
+        t, w = ranked_table(agnostic, ["AP: unseen species ↑", "AP: trained species ↑", "AP: field photos ↑", "Mean AP ↑"], 0)
+        winners.append(f"* **Finding specimens, whatever the species:** {w}")
+        parts.extend(
+            (
+                "**2. Finding specimens** (arthropod and zero-shot detectors, class-agnostic), ranked by AP on unseen species (how well they generalise)",
+                t,
+                "<sub>Class-agnostic COCO AP@[.50:.95] on iid_test (trained species), inat_test (field photos) and "
+                "semantic_ood (unseen species).</sub>",
+            )
+        )
+    if classifiers:
+        header = ["Species correct ↑", "Genus correct ↑", "Over-confident on unseen species ↓", "Flags new genera (AUROC) ↑"]
+        t, w = ranked_table(classifiers, header, 0, lower_better=(2,))
+        winners.append(f"* **Naming cropped specimens:** {w}")
+        parts.extend(
+            (
+                "**3. Naming cropped specimens** (hierarchical classifiers), ranked by species accuracy",
+                t,
+                "<sub>Species / genus correct = accuracy on iid_test. Over-confident on unseen species = share of "
+                "semantic_ood specimens named deeper than possible (lower is better). Flags new genera = genus novelty AUROC.</sub>",
+            )
+        )
+    head = "**Best model per task** (ranked 🥇 in the tables below; **bold** = best value in its column, ↑ higher is better, ↓ lower is better)"
+    return "\n\n".join([head, "\n".join(winners), *parts])
 
 
 def replace_block(path: Path, tag: str, text: str):
-    s = path.read_text()
+    s = path.read_text(encoding="utf-8")
     pat = re.compile(rf"(<!-- {tag}_START -->\n).*?(\n<!-- {tag}_END -->)", re.S)
     if not pat.search(s):
         raise SystemExit(f"marker {tag} not found in {path}")
-    path.write_text(pat.sub(lambda m: m.group(1) + text + m.group(2), s))
+    path.write_text(pat.sub(lambda m: m.group(1) + text + m.group(2), s), encoding="utf-8", newline="\n")
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--results", required=True, type=Path)
+    ap.add_argument("--results", type=Path, help="directory with <model>/results.json")
+    ap.add_argument("--readme-only", action="store_true", help="only rebuild the README summary, from benchmarks/results/*.json")
     ap.add_argument("--suite", type=Path, default=Path("/blue/hulcr/gmarais/PhD/benchmark_testing/full_benchmark/benchmark_suite_b200"))
     a = ap.parse_args()
+    if a.readme_only:
+        replace_block(ROOT / "README.md", "BENCHMARK_SUMMARY", summary_table(ROOT / "benchmarks" / "results"))
+        print("README summary written")
+        return
+    if a.results is None:
+        ap.error("--results is required unless --readme-only is given")
     keep = ROOT / "benchmarks" / "results"
     keep.mkdir(exist_ok=True)
     for d in sorted(a.results.iterdir()):
