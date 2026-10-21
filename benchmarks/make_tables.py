@@ -215,7 +215,7 @@ def summary_table(results):
             h = r["headline"]
             aps = [h.get(f"{s}.class_agnostic_AP_50_95") for s in ("iid_test", "inat_test", "semantic_ood")]
             mean = sum(aps) / 3 if None not in aps else None
-            agnostic.append((f"`{m}`", [mean, *aps]))
+            agnostic.append((f"`{m}`", [aps[2], aps[0], aps[1], mean]))
     classifiers = []
     for m in CLASSIFIERS:
         r = load(results, m)
@@ -244,11 +244,11 @@ def summary_table(results):
             )
         )
     if agnostic:
-        t, w = ranked_table(agnostic, ["Mean AP ↑", "AP: trained species ↑", "AP: field photos ↑", "AP: unseen species ↑"], 0)
+        t, w = ranked_table(agnostic, ["AP: unseen species ↑", "AP: trained species ↑", "AP: field photos ↑", "Mean AP ↑"], 0)
         winners.append(f"* **Finding specimens, whatever the species:** {w}")
         parts.extend(
             (
-                "**2. Finding specimens** (arthropod and zero-shot detectors, class-agnostic), ranked by mean AP over the three test splits",
+                "**2. Finding specimens** (arthropod and zero-shot detectors, class-agnostic), ranked by AP on unseen species (how well they generalise)",
                 t,
                 "<sub>Class-agnostic COCO AP@[.50:.95] on iid_test (trained species), inat_test (field photos) and "
                 "semantic_ood (unseen species).</sub>",

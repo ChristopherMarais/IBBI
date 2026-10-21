@@ -439,7 +439,7 @@ scripts are in [`benchmarks/`](benchmarks/).
 **Best model per task** (ranked 🥇 in the tables below; **bold** = best value in its column, ↑ higher is better, ↓ lower is better)
 
 * **Identifying beetles (box + species name):** Pipeline: Co-DINO + DINOv3
-* **Finding specimens, whatever the species:** `yolo11x_arthropod_detector`
+* **Finding specimens, whatever the species:** `codino_arthropod_detector`
 * **Naming cropped specimens:** `dinov3_hierarchical_classifier`
 
 **1. Identifying beetles in images** (species detectors and the two-stage pipelines), ranked by box + species AP
@@ -458,16 +458,16 @@ scripts are in [`benchmarks/`](benchmarks/).
 
 <sub>Box + species AP = COCO AP@[.50:.95] on iid_test. Specimens found = detection recall on iid_test. Species correct = species accuracy of the specimens found. Unseen species found = class-agnostic AR@100 on semantic_ood.</sub>
 
-**2. Finding specimens** (arthropod and zero-shot detectors, class-agnostic), ranked by mean AP over the three test splits
+**2. Finding specimens** (arthropod and zero-shot detectors, class-agnostic), ranked by AP on unseen species (how well they generalise)
 
-| Rank | Model | Mean AP ↑ | AP: trained species ↑ | AP: field photos ↑ | AP: unseen species ↑ |
+| Rank | Model | AP: unseen species ↑ | AP: trained species ↑ | AP: field photos ↑ | Mean AP ↑ |
 |:---:|---|:---:|:---:|:---:|:---:|
-| 🥇 | `yolo11x_arthropod_detector` | **0.769** | **0.744** | 0.932 | 0.632 |
-| 🥈 | `codino_arthropod_detector` | 0.768 | 0.669 | **0.952** | **0.683** |
-| 🥉 | `grounding_dino_zero_shot_detector` | 0.377 | 0.294 | 0.595 | 0.243 |
-| 4 | `owlv2_zero_shot_detector` | 0.368 | 0.365 | 0.531 | 0.207 |
-| 5 | `yoloworld_zero_shot_detector` | 0.283 | 0.114 | 0.482 | 0.252 |
-| 6 | `sam3_zero_shot_detector` | 0.260 | 0.218 | 0.362 | 0.202 |
+| 🥇 | `codino_arthropod_detector` | **0.683** | 0.669 | **0.952** | 0.768 |
+| 🥈 | `yolo11x_arthropod_detector` | 0.632 | **0.744** | 0.932 | **0.769** |
+| 🥉 | `yoloworld_zero_shot_detector` | 0.252 | 0.114 | 0.482 | 0.283 |
+| 4 | `grounding_dino_zero_shot_detector` | 0.243 | 0.294 | 0.595 | 0.377 |
+| 5 | `owlv2_zero_shot_detector` | 0.207 | 0.365 | 0.531 | 0.368 |
+| 6 | `sam3_zero_shot_detector` | 0.202 | 0.218 | 0.362 | 0.260 |
 
 <sub>Class-agnostic COCO AP@[.50:.95] on iid_test (trained species), inat_test (field photos) and semantic_ood (unseen species).</sub>
 
