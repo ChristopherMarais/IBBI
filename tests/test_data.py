@@ -1,6 +1,7 @@
 """ibbi.utils.data: benchmark loading, taxonomy, deprecations and download retries (offline)."""
 
 import warnings
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -67,11 +68,19 @@ def test_download_benchmark_patterns(monkeypatch, tmp_path):
         D.download_benchmark("validation", local_dir=tmp_path)
 
 
+def _http_response(status_code):
+    """A stand-in for the HTTP response HfHubHTTPError expects.
+
+    huggingface-hub 1.x builds on httpx and 2.x on httpx2, and neither is a direct dependency of ibbi, so the tests
+    don't import either; HfHubHTTPError and _snapshot_with_retry only read these attributes.
+    """
+    return SimpleNamespace(status_code=status_code, headers={}, request=None)
+
+
 def test_download_retries_on_rate_limit(monkeypatch, tmp_path):
-    import httpx
     from huggingface_hub.errors import HfHubHTTPError
 
-    R = lambda: httpx.Response(429, request=httpx.Request("GET", "https://huggingface.co"))  # noqa: E731
+    R = lambda: _http_response(429)  # noqa: E731
 
     n = {"calls": 0}
 
@@ -87,10 +96,9 @@ def test_download_retries_on_rate_limit(monkeypatch, tmp_path):
 
 
 def test_download_does_not_retry_other_errors(monkeypatch, tmp_path):
-    import httpx
     from huggingface_hub.errors import HfHubHTTPError
 
-    R = lambda: httpx.Response(404, request=httpx.Request("GET", "https://huggingface.co"))  # noqa: E731
+    R = lambda: _http_response(404)  # noqa: E731
 
     def broken(*a, **k):
         raise HfHubHTTPError("not found", response=R())
