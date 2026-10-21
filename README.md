@@ -366,27 +366,42 @@ df = ibbi.list_models(as_df=True)
 
 Use any name below with `ibbi.create_model(model_name)`.
 
-**Model Summary Table**
-
 The most detailed version of the table, with the headline benchmark metrics, is
 [`ibbi_model_summary.csv`](src/ibbi/data/ibbi_model_summary.csv); every model is described in [docs/models.md](docs/models.md).
 
-| Model Name | Task | Architecture | Parameters | Input | Weights | Paper | Licence of the weights |
-|---|---|---|---|---|---|---|---|
-| `yolov8x_species_detector` | Species detection (65 species) | YOLOv8x | 68.2 M | 640 px | [ibbi_yolov8x_species_detector](https://huggingface.co/IBBI-bio/ibbi_yolov8x_species_detector) | [arXiv](https://arxiv.org/abs/2408.15857) | AGPL-3.0 |
-| `yolov9e_species_detector` | Species detection (65 species) | YOLOv9e | 58.2 M | 640 px | [ibbi_yolov9e_species_detector](https://huggingface.co/IBBI-bio/ibbi_yolov9e_species_detector) | [arXiv](https://arxiv.org/abs/2402.13616) | AGPL-3.0 |
-| `yolov10x_species_detector` | Species detection (65 species) | YOLOv10x | 31.8 M | 640 px | [ibbi_yolov10x_species_detector](https://huggingface.co/IBBI-bio/ibbi_yolov10x_species_detector) | [arXiv](https://arxiv.org/abs/2405.14458) | AGPL-3.0 |
-| `yolo11x_species_detector` | Species detection (65 species) | YOLO11x | 56.9 M | 640 px | [ibbi_yolo11x_species_detector](https://huggingface.co/IBBI-bio/ibbi_yolo11x_species_detector) | [arXiv](https://arxiv.org/abs/2410.17725) | AGPL-3.0 |
-| `yolo12x_species_detector` | Species detection (65 species) | YOLO12x | 59.2 M | 640 px | [ibbi_yolo12x_species_detector](https://huggingface.co/IBBI-bio/ibbi_yolo12x_species_detector) | [arXiv](https://arxiv.org/abs/2502.12524) | AGPL-3.0 |
-| `rtdetrx_species_detector` | Species detection (65 species) | RT-DETR-X | 67.4 M | 640 px | [ibbi_rtdetrx_species_detector](https://huggingface.co/IBBI-bio/ibbi_rtdetrx_species_detector) | [arXiv](https://arxiv.org/abs/2304.08069) | AGPL-3.0 |
-| `yolo11x_arthropod_detector` | Arthropod detection (single class) | YOLO11x | 56.9 M | 1024 px | [ibbi_yolo11x_arthropod_detector](https://huggingface.co/IBBI-bio/ibbi_yolo11x_arthropod_detector) | [arXiv](https://arxiv.org/abs/2410.17725) | AGPL-3.0 |
-| `codino_arthropod_detector` | Arthropod detection (single class) | Co-DINO, EVA-02 ViT-L/16 | 347 M | ≤ 2048 × 1280 px | [ibbi_codino_arthropod_detector](https://huggingface.co/IBBI-bio/ibbi_codino_arthropod_detector) | [arXiv](https://arxiv.org/abs/2211.12860) | CC BY-NC 4.0 |
-| `dinov3_hierarchical_classifier` | Hierarchical classification with abstention, embeddings | DINOv3 ViT-L/16 | 303 M | 336 px | [ibbi_dinov3l_hierarchical_classifier](https://huggingface.co/IBBI-bio/ibbi_dinov3l_hierarchical_classifier) | [arXiv](https://arxiv.org/abs/2508.10104) | DINOv3 License |
-| `bioclip2_hierarchical_classifier` | Hierarchical classification with abstention, embeddings | BioCLIP 2 ViT-L/14 | 304 M | 224 px | [ibbi_bioclip2_hierarchical_classifier](https://huggingface.co/IBBI-bio/ibbi_bioclip2_hierarchical_classifier) | [arXiv](https://arxiv.org/abs/2505.23883) | MIT |
-| `grounding_dino_zero_shot_detector` | Zero-shot detection (text prompts) | Grounding DINO-B | 232 M | 1024 px tiles + whole image | [IDEA-Research/grounding-dino-base](https://huggingface.co/IDEA-Research/grounding-dino-base) | [arXiv](https://arxiv.org/abs/2303.05499) | Apache-2.0 (upstream) |
-| `owlv2_zero_shot_detector` | Zero-shot detection (text prompts) | OWLv2-L | 438 M | 1024 px tiles + whole image | [google/owlv2-large-patch14-ensemble](https://huggingface.co/google/owlv2-large-patch14-ensemble) | [arXiv](https://arxiv.org/abs/2306.09683) | Apache-2.0 (upstream) |
-| `yoloworld_zero_shot_detector` | Zero-shot detection (text prompts) | YOLO-World v2-X | 224 M | 1024 px tiles + whole image | [yolov8x-worldv2](https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8x-worldv2.pt) | [arXiv](https://arxiv.org/abs/2401.17270) | AGPL-3.0 (upstream) |
-| `sam3_zero_shot_detector` | Zero-shot detection (text prompts) | SAM 3 | 840 M | 1024 px tiles + whole image | [facebook/sam3](https://huggingface.co/facebook/sam3) (gated) | [arXiv](https://arxiv.org/abs/2511.16719) | SAM License (upstream) |
+**Species detectors** — find and name the 65 trained species in one step
+
+| Model (links to weights) | Architecture (links to paper) | Parameters | Input | Licence of the weights |
+|---|---|---:|---|---|
+| [`yolov8x_species_detector`](https://huggingface.co/IBBI-bio/ibbi_yolov8x_species_detector) | [YOLOv8x](https://arxiv.org/abs/2408.15857) | 68.2 M | 640 px | AGPL-3.0 |
+| [`yolov9e_species_detector`](https://huggingface.co/IBBI-bio/ibbi_yolov9e_species_detector) | [YOLOv9e](https://arxiv.org/abs/2402.13616) | 58.2 M | 640 px | AGPL-3.0 |
+| [`yolov10x_species_detector`](https://huggingface.co/IBBI-bio/ibbi_yolov10x_species_detector) | [YOLOv10x](https://arxiv.org/abs/2405.14458) | 31.8 M | 640 px | AGPL-3.0 |
+| [`yolo11x_species_detector`](https://huggingface.co/IBBI-bio/ibbi_yolo11x_species_detector) | [YOLO11x](https://arxiv.org/abs/2410.17725) | 56.9 M | 640 px | AGPL-3.0 |
+| [`yolo12x_species_detector`](https://huggingface.co/IBBI-bio/ibbi_yolo12x_species_detector) | [YOLO12x](https://arxiv.org/abs/2502.12524) | 59.2 M | 640 px | AGPL-3.0 |
+| [`rtdetrx_species_detector`](https://huggingface.co/IBBI-bio/ibbi_rtdetrx_species_detector) | [RT-DETR-X](https://arxiv.org/abs/2304.08069) | 67.4 M | 640 px | AGPL-3.0 |
+
+**Arthropod detectors** — find every specimen (single class), whatever its species
+
+| Model (links to weights) | Architecture (links to paper) | Parameters | Input | Licence of the weights |
+|---|---|---:|---|---|
+| [`yolo11x_arthropod_detector`](https://huggingface.co/IBBI-bio/ibbi_yolo11x_arthropod_detector) | [YOLO11x](https://arxiv.org/abs/2410.17725) | 56.9 M | 1024 px | AGPL-3.0 |
+| [`codino_arthropod_detector`](https://huggingface.co/IBBI-bio/ibbi_codino_arthropod_detector) | [Co-DINO, EVA-02 ViT-L/16](https://arxiv.org/abs/2211.12860) | 347 M | ≤ 2048 × 1280 px | CC BY-NC 4.0 |
+
+**Hierarchical classifiers** — name a cropped specimen at the deepest level they trust; also give embeddings
+
+| Model (links to weights) | Architecture (links to paper) | Parameters | Input | Licence of the weights |
+|---|---|---:|---|---|
+| [`dinov3_hierarchical_classifier`](https://huggingface.co/IBBI-bio/ibbi_dinov3l_hierarchical_classifier) | [DINOv3 ViT-L/16](https://arxiv.org/abs/2508.10104) | 303 M | 336 px | DINOv3 License |
+| [`bioclip2_hierarchical_classifier`](https://huggingface.co/IBBI-bio/ibbi_bioclip2_hierarchical_classifier) | [BioCLIP 2 ViT-L/14](https://arxiv.org/abs/2505.23883) | 304 M | 224 px | MIT |
+
+**Zero-shot detectors** — find whatever a text prompt describes (upstream weights)
+
+| Model (links to weights) | Architecture (links to paper) | Parameters | Input | Licence of the weights |
+|---|---|---:|---|---|
+| [`grounding_dino_zero_shot_detector`](https://huggingface.co/IDEA-Research/grounding-dino-base) | [Grounding DINO-B](https://arxiv.org/abs/2303.05499) | 232 M | 1024 px tiles + whole image | Apache-2.0 (upstream) |
+| [`owlv2_zero_shot_detector`](https://huggingface.co/google/owlv2-large-patch14-ensemble) | [OWLv2-L](https://arxiv.org/abs/2306.09683) | 438 M | 1024 px tiles + whole image | Apache-2.0 (upstream) |
+| [`yoloworld_zero_shot_detector`](https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8x-worldv2.pt) | [YOLO-World v2-X](https://arxiv.org/abs/2401.17270) | 224 M | 1024 px tiles + whole image | AGPL-3.0 (upstream) |
+| [`sam3_zero_shot_detector`](https://huggingface.co/facebook/sam3) (gated) | [SAM 3](https://arxiv.org/abs/2511.16719) | 840 M | 1024 px tiles + whole image | SAM License (upstream) |
 
 **Aliases:** `arthropod_detector` / `beetle_detector` → `yolo11x_arthropod_detector`; `species_detector` →
 `yolo12x_species_detector` (best validation fitness of the six); `hierarchical_classifier` / `species_classifier` /
@@ -421,25 +436,49 @@ scripts are in [`benchmarks/`](benchmarks/).
 * **Unseen species** = `semantic_ood`: 110 species never seen in training.
 
 <!-- BENCHMARK_SUMMARY_START -->
-| Model | Headline (benchmark v2.0.1) |
-|---|---|
-| yolov8x_species_detector | iid AP 0.497, detection recall 0.929, species accuracy given detection 0.586; unseen-species detection recall (AR@100) 0.732 |
-| yolov9e_species_detector | iid AP 0.519, detection recall 0.929, species accuracy given detection 0.613; unseen-species detection recall (AR@100) 0.735 |
-| yolov10x_species_detector | iid AP 0.561, detection recall 0.932, species accuracy given detection 0.604; unseen-species detection recall (AR@100) 0.724 |
-| yolo11x_species_detector | iid AP 0.485, detection recall 0.929, species accuracy given detection 0.575; unseen-species detection recall (AR@100) 0.727 |
-| yolo12x_species_detector | iid AP 0.490, detection recall 0.931, species accuracy given detection 0.577; unseen-species detection recall (AR@100) 0.723 |
-| rtdetrx_species_detector | iid AP 0.535, detection recall 0.937, species accuracy given detection 0.647; unseen-species detection recall (AR@100) 0.739 |
-| pipeline: arthropod detector + DINOv3 classifier | iid AP 0.718, detection recall 0.932, species accuracy given detection 0.858; unseen-species detection recall (AR@100) 0.762 |
-| pipeline: arthropod detector + BioCLIP 2 classifier | iid AP 0.691, detection recall 0.932, species accuracy given detection 0.828; unseen-species detection recall (AR@100) 0.762 |
-| pipeline: Co-DINO detector + DINOv3 classifier | iid AP 0.729, detection recall 0.934, species accuracy given detection 0.850; unseen-species detection recall (AR@100) 0.778 |
-| yolo11x_arthropod_detector | class-agnostic AP: iid 0.744, iNat 0.932, unseen species 0.632 |
-| codino_arthropod_detector | class-agnostic AP: iid 0.669, iNat 0.952, unseen species 0.683 |
-| grounding_dino_zero_shot_detector | class-agnostic AP: iid 0.294, iNat 0.595, unseen species 0.243 |
-| owlv2_zero_shot_detector | class-agnostic AP: iid 0.365, iNat 0.531, unseen species 0.207 |
-| yoloworld_zero_shot_detector | class-agnostic AP: iid 0.114, iNat 0.482, unseen species 0.252 |
-| sam3_zero_shot_detector | class-agnostic AP: iid 0.218, iNat 0.362, unseen species 0.202 |
-| dinov3_hierarchical_classifier | iid species / genus accuracy 0.835 / 0.891; unseen species named at an impossible depth 0.497; genus novelty AUROC 0.561 |
-| bioclip2_hierarchical_classifier | iid species / genus accuracy 0.814 / 0.871; unseen species named at an impossible depth 0.471; genus novelty AUROC 0.625 |
+**Best model per task** (ranked 🥇 in the tables below; **bold** = best value in its column, ↑ higher is better, ↓ lower is better)
+
+* **Identifying beetles (box + species name):** Pipeline: Co-DINO + DINOv3
+* **Finding specimens, whatever the species:** `yolo11x_arthropod_detector`
+* **Naming cropped specimens:** `dinov3_hierarchical_classifier`
+
+**1. Identifying beetles in images** (species detectors and the two-stage pipelines), ranked by box + species AP
+
+| Rank | Model | Box + species AP ↑ | Specimens found ↑ | Species correct ↑ | Unseen species found ↑ |
+|:---:|---|:---:|:---:|:---:|:---:|
+| 🥇 | Pipeline: Co-DINO + DINOv3 | **0.729** | 0.934 | 0.850 | **0.778** |
+| 🥈 | Pipeline: arthropod detector + DINOv3 | 0.718 | 0.932 | **0.858** | 0.762 |
+| 🥉 | Pipeline: arthropod detector + BioCLIP 2 | 0.691 | 0.932 | 0.828 | 0.762 |
+| 4 | `yolov10x_species_detector` | 0.561 | 0.932 | 0.604 | 0.724 |
+| 5 | `rtdetrx_species_detector` | 0.535 | **0.937** | 0.647 | 0.739 |
+| 6 | `yolov9e_species_detector` | 0.519 | 0.929 | 0.613 | 0.735 |
+| 7 | `yolov8x_species_detector` | 0.497 | 0.929 | 0.586 | 0.732 |
+| 8 | `yolo12x_species_detector` | 0.490 | 0.931 | 0.577 | 0.723 |
+| 9 | `yolo11x_species_detector` | 0.485 | 0.929 | 0.575 | 0.727 |
+
+<sub>Box + species AP = COCO AP@[.50:.95] on iid_test. Specimens found = detection recall on iid_test. Species correct = species accuracy of the specimens found. Unseen species found = class-agnostic AR@100 on semantic_ood.</sub>
+
+**2. Finding specimens** (arthropod and zero-shot detectors, class-agnostic), ranked by mean AP over the three test splits
+
+| Rank | Model | Mean AP ↑ | AP: trained species ↑ | AP: field photos ↑ | AP: unseen species ↑ |
+|:---:|---|:---:|:---:|:---:|:---:|
+| 🥇 | `yolo11x_arthropod_detector` | **0.769** | **0.744** | 0.932 | 0.632 |
+| 🥈 | `codino_arthropod_detector` | 0.768 | 0.669 | **0.952** | **0.683** |
+| 🥉 | `grounding_dino_zero_shot_detector` | 0.377 | 0.294 | 0.595 | 0.243 |
+| 4 | `owlv2_zero_shot_detector` | 0.368 | 0.365 | 0.531 | 0.207 |
+| 5 | `yoloworld_zero_shot_detector` | 0.283 | 0.114 | 0.482 | 0.252 |
+| 6 | `sam3_zero_shot_detector` | 0.260 | 0.218 | 0.362 | 0.202 |
+
+<sub>Class-agnostic COCO AP@[.50:.95] on iid_test (trained species), inat_test (field photos) and semantic_ood (unseen species).</sub>
+
+**3. Naming cropped specimens** (hierarchical classifiers), ranked by species accuracy
+
+| Rank | Model | Species correct ↑ | Genus correct ↑ | Over-confident on unseen species ↓ | Flags new genera (AUROC) ↑ |
+|:---:|---|:---:|:---:|:---:|:---:|
+| 🥇 | `dinov3_hierarchical_classifier` | **0.835** | **0.891** | 0.497 | 0.561 |
+| 🥈 | `bioclip2_hierarchical_classifier` | 0.814 | 0.871 | **0.471** | **0.625** |
+
+<sub>Species / genus correct = accuracy on iid_test. Over-confident on unseen species = share of semantic_ood specimens named deeper than possible (lower is better). Flags new genera = genus novelty AUROC.</sub>
 <!-- BENCHMARK_SUMMARY_END -->
 
 ---
