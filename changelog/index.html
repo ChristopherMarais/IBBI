@@ -494,6 +494,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../species_400/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    400-species classifier: species
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../benchmark/" class="md-nav__link">
         
   
@@ -594,6 +622,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#new-classifier-400-species" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New classifier: 400 species
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#licences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Licences
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#faster-inference-on-gpus" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -666,7 +716,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#licences" class="md-nav__link">
+  <a href="#licences_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Licences
@@ -918,6 +968,20 @@
 
 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
 <h2 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
+<h3 id="new-classifier-400-species">New classifier: 400 species<a class="headerlink" href="#new-classifier-400-species" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>dinov3_400species_hierarchical_classifier</code> (<a href="https://huggingface.co/IBBI-bio/ibbi_dinov3l_400sp_hierarchical_classifier">weights</a>, DINOv3 License): the same tree-factorised DINOv3
+  ViT-L/16 classifier trained on 400 bark and ambrosia beetle species (the benchmark's 65 plus 335 from the Bark and
+  Ambrosia Gallery). Its default operating point <code>strict</code> is set to avoid wrong names (unknown check: similarity to the
+  nearest training embedding). Species list: <code>docs/species_400.md</code>.</li>
+<li>Classifier novelty members <code>knn&lt;k&gt;</code> now work for any k (previously only <code>knn5</code>).</li>
+</ul>
+<h3 id="licences">Licences<a class="headerlink" href="#licences" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The README and model docs no longer add a non-commercial condition to the AGPL-3.0 weights, which the AGPL does
+  not allow. Each set of weights is released under its stated licence; the training-data terms (CC BY-NC benchmark
+  images, iNaturalist 2017, IP102) are given as information for commercial users to check.</li>
+</ul>
 <h3 id="faster-inference-on-gpus">Faster inference on GPUs<a class="headerlink" href="#faster-inference-on-gpus" title="Permanent link">&para;</a></h3>
 <ul>
 <li>GPU fast path, on by default with CUDA: JPEG decoding with nvJPEG, the Ultralytics letterbox and the classifier's
@@ -975,7 +1039,7 @@ compatibility with v0.2.</p>
   <code>open-clip-torch</code>, <code>pycocotools</code>, <code>safetensors</code> added; <code>datasets</code>, <code>ipywidgets</code>, <code>hf-xet</code>, <code>slicer</code>, <code>tabulate</code>
   dropped.</li>
 </ul>
-<h3 id="licences">Licences<a class="headerlink" href="#licences" title="Permanent link">&para;</a></h3>
+<h3 id="licences_1">Licences<a class="headerlink" href="#licences_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Package code stays MIT. Model weights carry their own licences (AGPL-3.0 for the Ultralytics-trained detectors,
   DINOv3 License for the DINOv3 classifier, MIT for the BioCLIP 2 classifier); see the README and model cards.</li>

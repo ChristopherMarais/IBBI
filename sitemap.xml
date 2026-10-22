@@ -2,34 +2,38 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://gcmarais.com/IBBI/</loc>
-         <lastmod>2026-10-04</lastmod>
+         <lastmod>2026-10-22</lastmod>
     </url>
     <url>
          <loc>https://gcmarais.com/IBBI/CONTRIBUTING/</loc>
-         <lastmod>2026-10-04</lastmod>
+         <lastmod>2026-10-22</lastmod>
     </url>
     <url>
          <loc>https://gcmarais.com/IBBI/LICENSE/</loc>
-         <lastmod>2026-10-04</lastmod>
+         <lastmod>2026-10-22</lastmod>
     </url>
     <url>
          <loc>https://gcmarais.com/IBBI/api/</loc>
-         <lastmod>2026-10-04</lastmod>
+         <lastmod>2026-10-22</lastmod>
     </url>
     <url>
          <loc>https://gcmarais.com/IBBI/benchmark/</loc>
-         <lastmod>2026-10-04</lastmod>
+         <lastmod>2026-10-22</lastmod>
     </url>
     <url>
          <loc>https://gcmarais.com/IBBI/changelog/</loc>
-         <lastmod>2026-10-04</lastmod>
+         <lastmod>2026-10-22</lastmod>
     </url>
     <url>
          <loc>https://gcmarais.com/IBBI/models/</loc>
-         <lastmod>2026-10-04</lastmod>
+         <lastmod>2026-10-22</lastmod>
+    </url>
+    <url>
+         <loc>https://gcmarais.com/IBBI/species_400/</loc>
+         <lastmod>2026-10-22</lastmod>
     </url>
     <url>
          <loc>https://gcmarais.com/IBBI/usage/</loc>
-         <lastmod>2026-10-04</lastmod>
+         <lastmod>2026-10-22</lastmod>
     </url>
 </urlset>

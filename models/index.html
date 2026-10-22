@@ -16,7 +16,7 @@
         <link rel="prev" href="../usage/">
       
       
-        <link rel="next" href="../benchmark/">
+        <link rel="next" href="../species_400/">
       
       
         
@@ -567,6 +567,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Hierarchical classifiers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#400-species-classifier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        400-species classifier
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -595,6 +612,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../species_400/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    400-species classifier: species
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -957,7 +1002,8 @@ benchmark results and licence terms. Benchmark numbers: <a href="../benchmark/">
 <li><strong>Operating confidence:</strong> <code>operating_conf = 0.70</code> (≤ 0.2 false alarms per image on exhaustively labelled validation
   images). The default <code>conf</code> of <code>predict</code> is 0.25.</li>
 <li><strong>Licence:</strong> AGPL-3.0 (Ultralytics). Training data include iNaturalist 2017 (non-commercial research and education
-  only) and IP102 (academic use only): the weights are released for non-commercial research.</li>
+  only) and IP102 (academic use only), whose terms limit use to non-commercial research; check them before commercial
+  use.</li>
 </ul>
 <h2 id="co-dino-arthropod-detector">Co-DINO arthropod detector<a class="headerlink" href="#co-dino-arthropod-detector" title="Permanent link">&para;</a></h2>
 <p><code>codino_arthropod_detector</code>: Co-DINO (Co-DETR, Zong, Song &amp; Liu, ICCV 2023) with an EVA-02 ViT-L/16 backbone, single
@@ -1009,6 +1055,14 @@ higher compute cost than YOLO11x (about 1.5 images per second on one RTX PRO 600
 <td><a href="https://huggingface.co/IBBI-bio/ibbi_bioclip2_hierarchical_classifier">ibbi_bioclip2_hierarchical_classifier</a></td>
 <td>MIT</td>
 </tr>
+<tr>
+<td><code>dinov3_400species_hierarchical_classifier</code></td>
+<td>DINOv3 ViT-L/16 (LVD-1689M)</td>
+<td>336 px</td>
+<td>303 M</td>
+<td><a href="https://huggingface.co/IBBI-bio/ibbi_dinov3l_400sp_hierarchical_classifier">ibbi_dinov3l_400sp_hierarchical_classifier</a></td>
+<td>DINOv3 License</td>
+</tr>
 </tbody>
 </table>
 <ul>
@@ -1030,6 +1084,26 @@ higher compute cost than YOLO11x (about 1.5 images per second on one RTX PRO 600
 <li><strong>Licences:</strong> the DINOv3 classifier is a derivative of DINOv3 and is distributed under the DINOv3 License (text in its
   repository; publications must acknowledge DINOv3). The BioCLIP 2 classifier is MIT. Training images include CC BY-NC
   benchmark images and iNaturalist 2017 / IP102 non-beetle crops; non-commercial research use is recommended.</li>
+</ul>
+<h3 id="400-species-classifier">400-species classifier<a class="headerlink" href="#400-species-classifier" title="Permanent link">&para;</a></h3>
+<p><code>dinov3_400species_hierarchical_classifier</code> knows <strong>400 species</strong> (115 genera, 26 tribes):
+the benchmark's 65 trainable species, 277 species from the Bark and Ambrosia Gallery that are not in the benchmark, and
+58 of the benchmark's held-out species learned from Gallery photos. See the <a href="../species_400/">species list</a>.</p>
+<ul>
+<li><strong>Training data:</strong> benchmark <code>train</code> crops plus curator-validated Gallery photos (96,508 crops), after removing every
+  photo of a benchmark test specimen (same image, near-identical image or crop, same specimen id). No benchmark test
+  image was used for training or for choosing anything.</li>
+<li><strong>Training:</strong> as the 65-species DINOv3 model, plus stronger image augmentation, extra augmentation for species with
+  fewer than 20 crops, and energy-based outlier training on ~260k photos of other insects.</li>
+<li><strong>Unknown check and operating points:</strong> the similarity of a crop to its nearest training embedding, as a percentile
+  among known validation beetles. The default operating point <code>strict</code> was set on five models of the same recipe
+  trained with about a fifth of the genera hidden, so that at most 1% of hidden species and of non-beetles get a false
+  name at each level. It names fewer specimens to species but makes very few wrong names: on the benchmark's
+  <code>iid_test</code> 46% of specimens are named correctly to species, 54% stop at a coarser level and 0.3% get a wrong name;
+  1.6% of unseen species get a species name and no non-beetle is named. <code>gallery</code>, <code>0.90</code>, <code>0.95</code> and <code>0.99</code> are also
+  available and name many more unseen species.</li>
+<li><strong>Caveats:</strong> <code>iid_test</code> numbers may be slightly optimistic (Gallery photos of the benchmark species without a
+  specimen id cannot be fully excluded); <code>semantic_ood</code> is scored on the held-out species the model does not know.</li>
 </ul>
 <h2 id="zero-shot-detectors">Zero-shot detectors<a class="headerlink" href="#zero-shot-detectors" title="Permanent link">&para;</a></h2>
 <table>
