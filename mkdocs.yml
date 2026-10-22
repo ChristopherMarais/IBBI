@@ -58,6 +58,7 @@ nav:
   - 'User Documentation':
     - 'Usage Guide': usage.md
     - 'Models': models.md
+    - '400-species classifier: species': species_400.md
     - 'Benchmark Results': benchmark.md
     - 'Changelog': changelog.md
   - 'API':

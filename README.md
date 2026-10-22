@@ -393,6 +393,7 @@ The most detailed version of the table, with the headline benchmark metrics, is
 |---|---|---:|---|---|
 | [`dinov3_hierarchical_classifier`](https://huggingface.co/IBBI-bio/ibbi_dinov3l_hierarchical_classifier) | [DINOv3 ViT-L/16](https://arxiv.org/abs/2508.10104) | 303 M | 336 px | DINOv3 License |
 | [`bioclip2_hierarchical_classifier`](https://huggingface.co/IBBI-bio/ibbi_bioclip2_hierarchical_classifier) | [BioCLIP 2 ViT-L/14](https://arxiv.org/abs/2505.23883) | 304 M | 224 px | MIT |
+| [`dinov3_400species_hierarchical_classifier`](https://huggingface.co/IBBI-bio/ibbi_dinov3l_400sp_hierarchical_classifier) | [DINOv3 ViT-L/16](https://arxiv.org/abs/2508.10104) | 303 M | 336 px | DINOv3 License |
 
 **Zero-shot detectors** — find whatever a text prompt describes (upstream weights)
 
