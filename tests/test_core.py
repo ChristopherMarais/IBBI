@@ -26,6 +26,7 @@ EXPECTED_MODELS = {
     "yoloworld_zero_shot_detector",
     "sam3_zero_shot_detector",
     "dinov3_hierarchical_classifier",
+    "dinov3_400species_hierarchical_classifier",
     "bioclip2_hierarchical_classifier",
 }
 

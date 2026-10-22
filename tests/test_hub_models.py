@@ -24,7 +24,7 @@ DETECTORS = [
     "codino_arthropod_detector",
 ]
 ZERO_SHOT = ["grounding_dino_zero_shot_detector", "owlv2_zero_shot_detector", "yoloworld_zero_shot_detector", "sam3_zero_shot_detector"]
-CLASSIFIERS = ["dinov3_hierarchical_classifier", "bioclip2_hierarchical_classifier"]
+CLASSIFIERS = ["dinov3_hierarchical_classifier", "bioclip2_hierarchical_classifier", "dinov3_400species_hierarchical_classifier"]
 
 
 @pytest.fixture(scope="module")

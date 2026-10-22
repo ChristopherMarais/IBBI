@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### New classifier: 400 species
+* `dinov3_400species_hierarchical_classifier` ([weights](https://huggingface.co/IBBI-bio/ibbi_dinov3l_400sp_hierarchical_classifier), DINOv3 License): the same tree-factorised DINOv3
+  ViT-L/16 classifier trained on 400 bark and ambrosia beetle species (the benchmark's 65 plus 335 from the Bark and
+  Ambrosia Gallery). Its default operating point `strict` is set to avoid wrong names (unknown check: similarity to the
+  nearest training embedding). Species list: `docs/species_400.md`.
+* Classifier novelty members `knn<k>` now work for any k (previously only `knn5`).
+
 ### Licences
 * The README and model docs no longer add a non-commercial condition to the AGPL-3.0 weights, which the AGPL does
   not allow. Each set of weights is released under its stated licence; the training-data terms (CC BY-NC benchmark

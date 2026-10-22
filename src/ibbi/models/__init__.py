@@ -12,7 +12,12 @@ Families:
 
 from typing import Union
 
-from .classifiers import HierarchicalClassifier, bioclip2_hierarchical_classifier, dinov3_hierarchical_classifier
+from .classifiers import (
+    HierarchicalClassifier,
+    bioclip2_hierarchical_classifier,
+    dinov3_400species_hierarchical_classifier,
+    dinov3_hierarchical_classifier,
+)
 from .codino import CoDINODetector, codino_arthropod_detector
 from .detectors import (
     ArthropodDetector,
@@ -55,6 +60,7 @@ __all__ = [
     "ZeroShotDetector",
     "bioclip2_hierarchical_classifier",
     "codino_arthropod_detector",
+    "dinov3_400species_hierarchical_classifier",
     "dinov3_hierarchical_classifier",
     "grounding_dino_zero_shot_detector",
     "owlv2_zero_shot_detector",

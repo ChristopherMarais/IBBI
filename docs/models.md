@@ -68,6 +68,7 @@ higher compute cost than YOLO11x (about 1.5 images per second on one RTX PRO 600
 |---|---|---|---|---|---|
 | `dinov3_hierarchical_classifier` (default) | DINOv3 ViT-L/16 (LVD-1689M) | 336 px | 303 M | [ibbi_dinov3l_hierarchical_classifier](https://huggingface.co/IBBI-bio/ibbi_dinov3l_hierarchical_classifier) | DINOv3 License |
 | `bioclip2_hierarchical_classifier` | BioCLIP 2 ViT-L/14 | 224 px | 304 M | [ibbi_bioclip2_hierarchical_classifier](https://huggingface.co/IBBI-bio/ibbi_bioclip2_hierarchical_classifier) | MIT |
+| `dinov3_400species_hierarchical_classifier` | DINOv3 ViT-L/16 (LVD-1689M) | 336 px | 303 M | [ibbi_dinov3l_400sp_hierarchical_classifier](https://huggingface.co/IBBI-bio/ibbi_dinov3l_400sp_hierarchical_classifier) | DINOv3 License |
 
 * **Output:** for each crop, the subfamily, tribe, genus and species with a calibrated probability, a novelty score and
   a known / unsure flag per level, and the reported identification at the deepest trusted level.
@@ -87,6 +88,27 @@ higher compute cost than YOLO11x (about 1.5 images per second on one RTX PRO 600
 * **Licences:** the DINOv3 classifier is a derivative of DINOv3 and is distributed under the DINOv3 License (text in its
   repository; publications must acknowledge DINOv3). The BioCLIP 2 classifier is MIT. Training images include CC BY-NC
   benchmark images and iNaturalist 2017 / IP102 non-beetle crops; non-commercial research use is recommended.
+
+### 400-species classifier
+
+`dinov3_400species_hierarchical_classifier` knows **400 species** (115 genera, 26 tribes):
+the benchmark's 65 trainable species, 277 species from the Bark and Ambrosia Gallery that are not in the benchmark, and
+58 of the benchmark's held-out species learned from Gallery photos. See the [species list](species_400.md).
+
+* **Training data:** benchmark `train` crops plus curator-validated Gallery photos (96,508 crops), after removing every
+  photo of a benchmark test specimen (same image, near-identical image or crop, same specimen id). No benchmark test
+  image was used for training or for choosing anything.
+* **Training:** as the 65-species DINOv3 model, plus stronger image augmentation, extra augmentation for species with
+  fewer than 20 crops, and energy-based outlier training on ~260k photos of other insects.
+* **Unknown check and operating points:** the similarity of a crop to its nearest training embedding, as a percentile
+  among known validation beetles. The default operating point `strict` was set on five models of the same recipe
+  trained with about a fifth of the genera hidden, so that at most 1% of hidden species and of non-beetles get a false
+  name at each level. It names fewer specimens to species but makes very few wrong names: on the benchmark's
+  `iid_test` 46% of specimens are named correctly to species, 54% stop at a coarser level and 0.3% get a wrong name;
+  1.6% of unseen species get a species name and no non-beetle is named. `gallery`, `0.90`, `0.95` and `0.99` are also
+  available and name many more unseen species.
+* **Caveats:** `iid_test` numbers may be slightly optimistic (Gallery photos of the benchmark species without a
+  specimen id cannot be fully excluded); `semantic_ood` is scored on the held-out species the model does not know.
 
 ## Zero-shot detectors
 

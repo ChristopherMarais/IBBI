@@ -184,7 +184,7 @@ class HierarchicalClassifier:
         return self.tax.table()
 
     def get_classes(self) -> list[str]:
-        """The 65 species the classifier knows, in output order."""
+        """The species the classifier knows, in output order (65 for the benchmark-trained models, 400 for the 400-species model)."""
         return list(self.tax.species)
 
     def crop(self, image: ImageInput, box_xyxy, pad: float | None = None) -> Image.Image:
@@ -227,10 +227,12 @@ class HierarchicalClassifier:
 
     def _novelty(self, emb: torch.Tensor, marg: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
         raw: dict[str, dict[str, np.ndarray]] = {"msp": {lvl: np.exp(marg[lvl]).max(1) for lvl in LEVELS}}
-        if any("knn5" in m for m in self.members.values()):
+        ks = sorted({int(m[3:]) for ms in self.members.values() for m in ms if m.startswith("knn")})
+        if ks:  # knn<k>: cosine similarity to the k-th nearest training embedding of the reference bank
             sim = torch.nn.functional.normalize(emb, dim=1) @ self.bank.T
-            k5 = sim.topk(5, dim=1).values[:, 4].cpu().numpy()
-            raw["knn5"] = dict.fromkeys(LEVELS, k5)
+            top = sim.topk(max(ks), dim=1).values.cpu().numpy()
+            for k in ks:
+                raw[f"knn{k}"] = dict.fromkeys(LEVELS, top[:, k - 1])
         out = {}
         for lvl in LEVELS:
             pct = [np.searchsorted(self.valsorted[(m, lvl)], raw[m][lvl], side="right") / len(self.valsorted[(m, lvl)]) for m in self.members[lvl]]
@@ -411,6 +413,33 @@ def bioclip2_hierarchical_classifier(
     """
     _check_pretrained(pretrained, "bioclip2_hierarchical_classifier")
     return _load_classifier("bioclip2_hierarchical_classifier", "ibbi_bioclip2_hierarchical_classifier", device, revision, operating_point)
+
+
+@register_model
+def dinov3_400species_hierarchical_classifier(
+    pretrained: bool = True, device: str | None = None, revision: str | None = None, operating_point: str | None = None, **kwargs
+) -> HierarchicalClassifier:
+    """Hierarchical classifier for 400 bark and ambrosia beetle species on a fine-tuned DINOv3 ViT-L/16 at 336 px.
+
+    Trained on the benchmark's 65 trainable species plus curator-validated Gallery photos of 335 more species (no benchmark
+    test image), with stronger and rare-species augmentation, energy-based outlier training on other insects, synthetic
+    outliers and a hierarchical contrastive loss. Unknown check: max calibrated probability and the similarity to the
+    nearest training embedding; the default "strict" operating point was set so that at most 1 % of unknown species and
+    non-beetles get a name at each level, on models trained with whole genera held out. The species list is in the model
+    repository (species.csv) and in the documentation.
+
+    Weights: https://huggingface.co/IBBI-bio/ibbi_dinov3l_400sp_hierarchical_classifier (DINOv3 License).
+
+    Args:
+        pretrained (bool): Must be True.
+        device (str | None): Device; defaults to the best available.
+        revision (str | None): Hub revision of the weights.
+        operating_point (str | None): "strict" (default), "0.90", "0.95", "0.99" or "gallery".
+    """
+    _check_pretrained(pretrained, "dinov3_400species_hierarchical_classifier")
+    return _load_classifier(
+        "dinov3_400species_hierarchical_classifier", "ibbi_dinov3l_400sp_hierarchical_classifier", device, revision, operating_point
+    )
 
 
 ClassifierInput = Union[ImageInput, list[ImageInput]]
